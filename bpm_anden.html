@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BPM: ¿quién puede entrar al andén? · Semana 1</title>
+<style>
+
+
+:root{
+  --navy:#12306b; --navy-2:#1d4196; --ink:#0f1b33; --text:#22304a; --muted:#64748b;
+  --bg:#eef2f8; --card:#ffffff; --line:#dbe3ef; --soft:#f6f8fc;
+  --orange:#f05a28; --magenta:#d61f5c; --meat:#b91c1c; --ok:#16a34a; --warn:#d97706; --bad:#dc2626;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;background:var(--bg);color:var(--text);padding:18px;line-height:1.45}
+.app{max-width:1200px;margin:0 auto;background:var(--card);border-radius:18px;box-shadow:0 12px 34px rgba(15,27,51,.10);overflow:hidden}
+.topbar{height:6px;background:linear-gradient(90deg,var(--meat),var(--orange),var(--magenta))}
+header{padding:16px 24px 6px}
+.back{display:inline-flex;align-items:center;gap:6px;background:#334155;color:#f8fafc;text-decoration:none;padding:8px 14px;border-radius:8px;font-weight:600;font-size:13px;border:1px solid #475569;margin-bottom:12px}
+.back:hover{background:#1e293b}
+.title-row{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+h1{margin:0;color:var(--navy);font-size:26px;letter-spacing:-.3px}
+.subtitle{color:var(--muted);font-size:14px;margin-top:2px;max-width:820px}
+.week-tag{background:var(--navy);color:#fff;font-weight:700;font-size:12px;padding:6px 12px;border-radius:999px;white-space:nowrap}
+.week-tag b{color:#ffb38f}
+.tabs{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:12px 24px 0}
+@media (max-width:480px){.tabs{grid-template-columns:1fr}}
+.tab{border:2px solid var(--line);background:#fff;border-radius:12px;padding:10px 14px;text-align:left;cursor:pointer;font:inherit;color:var(--muted)}
+.tab b{display:block;font-size:15px;color:inherit}
+.tab small{font-size:12.5px}
+.tab.on{border-color:var(--navy);background:#eef3ff;color:var(--navy)}
+.pane{display:none;padding:12px 24px 18px}
+.pane.show{display:block}
+.presets{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
+.presets .lbl{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-right:4px}
+.chip{border:1.5px solid var(--line);background:#fff;color:var(--text);padding:6px 11px;border-radius:999px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit}
+.chip:hover{border-color:var(--navy-2)}
+.chip.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.dock{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#f8fafc;margin-bottom:12px}
+.dock svg{display:block;width:100%;height:auto}
+@keyframes arrive{from{transform:translateX(560px)}to{transform:translateX(0)}}
+.truck-in{animation:arrive 1.1s cubic-bezier(.2,.8,.2,1)}
+.lab{display:grid;grid-template-columns:290px 1fr;gap:16px}
+@media (max-width:960px){.lab{grid-template-columns:1fr}}
+.col{display:flex;flex-direction:column;gap:12px;min-width:0}
+.card{background:var(--soft);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.card h3{margin:0 0 8px;font-size:14.5px;color:var(--navy)}
+.info{font-size:12.8px}
+.info div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px dashed var(--line);padding:3px 0}
+.info div:last-child{border:0}
+.info span{color:var(--muted)}
+.info b{text-align:right}
+.bubble{margin-top:8px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:12px;padding:7px 10px;font-size:12.5px;font-weight:600}
+.route{display:flex;flex-direction:column;gap:5px}
+.stn{display:flex;gap:8px;align-items:center;border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:6px 9px;font-size:12.8px;font-weight:600;color:var(--muted)}
+.stn i{font-style:normal;width:22px;height:22px;border-radius:50%;background:#e2e8f0;color:#475569;display:inline-flex;align-items:center;justify-content:center;font-size:11px;flex:0 0 auto}
+.stn .sc{margin-left:auto;font-size:11.5px;color:var(--muted)}
+.stn.on{border-color:var(--orange);background:#fff7ed;color:var(--ink)}
+.stn.on i{background:var(--orange);color:#fff}
+.stn.done{color:var(--ink)}
+.stn.done i{background:var(--ok);color:#fff}
+.panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.panel>h2{margin:0 0 4px;font-size:18px;color:var(--navy)}
+.panel>.lead{margin:0 0 10px;font-size:13.5px;color:var(--muted)}
+.vis{border:1px solid var(--line);border-radius:12px;background:#fbfcfe;overflow:hidden;margin-bottom:10px}
+.vis svg{display:block;width:100%;height:auto}
+.vis .cap{font-size:11.5px;color:var(--muted);padding:5px 10px;border-top:1px solid var(--line);background:#fff}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:700px){.two{grid-template-columns:1fr}}
+.crit{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.cr{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:7px 10px;background:#fff;font-size:13.2px}
+.cr .tg{display:flex;gap:4px}
+.cr .tg button{border:1.5px solid var(--line);background:#fff;border-radius:8px;padding:5px 9px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;color:var(--muted)}
+.cr .tg button.y.on{background:#dcfce7;border-color:var(--ok);color:#14532d}
+.cr .tg button.n.on{background:#fee2e2;border-color:var(--bad);color:#7f1d1d}
+.cr .tg button:disabled{cursor:default}
+.cr .ex{grid-column:1/-1;font-size:12.3px;padding:5px 8px;border-radius:8px}
+.cr .ex.good{background:#f0fdf4;color:#14532d}
+.cr .ex.bad{background:#fef2f2;color:#7f1d1d}
+.btn{border:0;border-radius:10px;padding:10px 14px;font-weight:700;font-size:13.5px;cursor:pointer;font-family:inherit}
+.btn:disabled{opacity:.45;cursor:default}
+.btn-accent{background:linear-gradient(90deg,var(--orange),var(--magenta));color:#fff}
+.btn-ghost{background:#fff;border:1.5px solid var(--line);color:var(--text)}
+.btn-primary{background:var(--navy);color:#fff}
+.btn-sm{padding:6px 10px;font-size:12.5px}
+.row-btn{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center}
+.fb{margin-top:10px;padding:10px 12px;border-radius:10px;font-size:13.2px}
+.fb.good{background:#f0fdf4;border:1px solid #bbf7d0;color:#14532d}
+.fb.bad{background:#fef2f2;border:1px solid #fecaca;color:#7f1d1d}
+.fb.mid{background:#fffbeb;border:1px solid #fde68a;color:#78350f}
+.paper{background:#fffdf7;border:1px solid #e7dcc3;border-radius:10px;padding:12px 14px;font-size:12.8px;box-shadow:0 2px 6px rgba(0,0,0,.05)}
+.paper h4{margin:0 0 6px;font-size:13px;letter-spacing:.5px;color:#7c5a1d}
+.paper div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px dotted #e7dcc3;padding:3px 0}
+.paper span{color:#8a7a5a}
+.seal{display:flex;align-items:center;gap:10px;margin-top:8px}
+.labels{display:flex;flex-direction:column;gap:6px}
+.lbl-card{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:#fff;font-size:12.6px}
+.lbl-card b{color:var(--navy)}
+.lbl-card.missing{border-style:dashed;color:var(--bad)}
+.stepbox{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:10px;background:#fbfcfe}
+.stepbox h4{margin:0 0 6px;font-size:13.5px;color:var(--navy)}
+.stepbox.lock{opacity:.45;pointer-events:none}
+.pos{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.pos button{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:7px 10px;font-weight:700;font-size:12.5px;cursor:pointer;font-family:inherit;color:var(--text)}
+.pos button.on{border-color:var(--navy);background:#eef3ff;color:var(--navy)}
+.pos button.ok{border-color:var(--ok)}
+.pill{display:inline-block;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px}
+.pill.clean{background:#dcfce7;color:#14532d}
+.pill.dirty{background:#fee2e2;color:#7f1d1d}
+.tgt{cursor:pointer}
+.tgt circle{transition:r .15s}
+.tgt:hover circle{r:17}
+table.tb{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff}
+table.tb th{background:var(--navy);color:#fff;text-align:left;padding:6px 8px;font-size:12px}
+table.tb td{border-bottom:1px solid var(--line);padding:6px 8px;vertical-align:top}
+.tbwrap{overflow-x:auto}
+.grp{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px;background:#fff}
+.grp h4{margin:0 0 6px;font-size:13.5px;color:var(--ink)}
+.dbtn{display:flex;gap:6px;flex-wrap:wrap}
+.dbtn button{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:8px 11px;font-weight:700;font-size:12.8px;cursor:pointer;font-family:inherit;color:var(--text)}
+.dbtn button.on[data-d=acc]{border-color:var(--ok);background:#dcfce7;color:#14532d}
+.dbtn button.on[data-d=cond]{border-color:var(--warn);background:#fef3c7;color:#78350f}
+.dbtn button.on[data-d=rech]{border-color:var(--bad);background:#fee2e2;color:#7f1d1d}
+.acts{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+@media (max-width:700px){.acts{grid-template-columns:1fr}}
+.act{display:flex;gap:8px;align-items:flex-start;border:1.5px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;font-size:12.8px;cursor:pointer}
+.act input{margin-top:2px}
+.act.on{border-color:var(--navy);background:#eef3ff}
+.act.req{border-color:var(--ok);background:#f0fdf4}
+.act.bad{border-color:var(--bad);background:#fef2f2}
+.chain{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
+@media (max-width:700px){.chain{grid-template-columns:1fr}}
+.chain div{background:#fff;border:1px solid var(--line);border-top:4px solid var(--navy);border-radius:10px;padding:7px 9px;font-size:12.3px}
+.chain div:nth-child(2){border-top-color:var(--orange)}
+.chain div:nth-child(3){border-top-color:var(--magenta)}
+.chain div:nth-child(4){border-top-color:var(--ok)}
+.chain b{display:block;font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.form{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px}
+@media (max-width:700px){.form{grid-template-columns:1fr}}
+.form label{font-size:12px;font-weight:700;color:var(--muted);display:flex;flex-direction:column;gap:3px}
+.form input{font:inherit;font-size:14px;padding:7px 9px;border-radius:8px;border:1.5px solid var(--line)}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+@media (max-width:800px){.kpis{grid-template-columns:1fr 1fr}}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 10px;text-align:center}
+.kpi small{display:block;font-size:11px;color:var(--muted);font-weight:600}
+.kpi b{font-size:17px;color:var(--navy)}
+.sumbox{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff;margin-top:10px}
+.miss{background:#fff7ed;border-left:4px solid var(--orange);padding:7px 10px;border-radius:8px;font-size:12.8px;margin:6px 0}
+details.teacher{margin:0 24px 22px;border:1px solid var(--line);border-radius:12px;padding:10px 14px;background:#fbfcfe;font-size:13.5px}
+details.teacher summary{cursor:pointer;font-weight:700;color:var(--navy)}
+details.teacher li{margin:3px 0}
+footer{padding:0 24px 18px;font-size:11.5px;color:var(--muted)}
+@media print{body{background:#fff;padding:0}.noprint,.tabs,header .back,details.teacher,footer,.pane[data-p=and]{display:none!important}.pane[data-p=bit]{display:block!important}.app{box-shadow:none}}
+
+.ctl{margin-bottom:11px}
+.ctl label{display:flex;justify-content:space-between;align-items:baseline;font-weight:600;font-size:13px;margin-bottom:3px;gap:8px}
+.ctl label .val{font-weight:800;font-size:16px;color:var(--navy);white-space:nowrap}
+.ctl input[type=range]{width:100%;cursor:pointer;accent-color:var(--navy)}
+.scale{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted)}
+.seg{display:flex;background:#e6ecf5;border-radius:10px;padding:3px;gap:3px}
+.seg button{flex:1;border:0;background:transparent;padding:7px 4px;border-radius:8px;font-weight:600;font-size:12px;color:#475569;cursor:pointer;font-family:inherit;line-height:1.2}
+.seg button.on{background:#fff;color:var(--navy);box-shadow:0 1px 3px rgba(0,0,0,.14)}
+.lg2{display:flex;gap:10px;flex-wrap:wrap;font-size:11.5px;color:var(--muted);margin-top:6px}.lg2 span{display:inline-flex;align-items:center;gap:4px}.lg2 i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.tabs.four{grid-template-columns:repeat(4,1fr)}
+@media (max-width:900px){.tabs.four{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:480px){.tabs.four{grid-template-columns:1fr}}
+.steps{display:flex;flex-direction:column;gap:6px}
+.chk{display:flex;gap:8px;align-items:center;font-size:13px}
+.legend{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);flex-wrap:wrap}
+.legend i{display:inline-block;width:150px;height:10px;border-radius:5px;background:linear-gradient(90deg,#1d4ed8,#06b6d4 13%,#22c55e 27%,#eab308 47%,#f97316 67%,#dc2626)}
+.tlist{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+@media (max-width:700px){.tlist{grid-template-columns:1fr 1fr}}
+.tm{border:1.5px solid var(--line);border-radius:12px;background:#fff;padding:8px;text-align:center;cursor:pointer;font-family:inherit;font-size:12.5px;font-weight:700;color:var(--text)}
+.tm.on{border-color:var(--navy);background:#eef3ff}
+.tm.ok{border-color:var(--ok);background:#f0fdf4}
+.tm.no{border-color:var(--bad);background:#fef2f2}
+.tm small{display:block;font-weight:600;color:var(--muted)}
+.prob{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff;margin-bottom:10px}
+.prob h4{margin:0 0 8px;color:var(--navy);font-size:14px}
+.inrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:5px 0;font-size:13.2px}
+.inrow input{width:90px;font:inherit;font-size:14px;padding:6px 8px;border-radius:8px;border:1.5px solid var(--line)}
+.inrow input.good{border-color:var(--ok);background:#f0fdf4}
+.inrow input.bad{border-color:var(--bad);background:#fef2f2}
+.vig{display:grid;grid-template-columns:110px 1fr;gap:12px;align-items:start;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:#fff;margin-bottom:10px}
+@media (max-width:600px){.vig{grid-template-columns:1fr}}
+.vig svg{width:110px;height:auto;display:block}
+
+.an-br{animation:abr 2.6s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 100%}
+.an-fast{animation-duration:.55s}
+.an-jit{animation:ajit .22s linear infinite;transform-box:fill-box}
+.an-tail{animation:atail 1.8s ease-in-out infinite;transform-box:view-box}
+@keyframes abr{0%,100%{transform:scale(1,1)}50%{transform:scale(1.012,1.035)}}
+@keyframes ajit{0%,100%{transform:translateX(0)}25%{transform:translateX(-1.4px)}75%{transform:translateX(1.4px)}}
+@keyframes atail{0%,100%{transform:rotate(0)}50%{transform:rotate(-12deg)}}
+@media (prefers-reduced-motion:reduce){.an-br,.an-jit,.an-tail{animation:none}}
+.meters{display:flex;flex-direction:column;gap:8px}
+.meter{font-size:12.5px;font-weight:700;color:var(--text)}
+.meter .bar{height:12px;border-radius:7px;background:#e2e8f0;overflow:hidden;margin-top:3px}
+.meter .bar i{display:block;height:100%;border-radius:7px;transition:width .4s}
+.res-tag{display:inline-block;font-weight:800;border-radius:999px;padding:4px 12px;font-size:13px;color:#fff}
+.lanes{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media (max-width:800px){.lanes{grid-template-columns:1fr}}
+.fill select{font:inherit;font-size:13.5px;padding:4px 6px;border-radius:8px;border:1.5px solid var(--line);margin:0 3px}
+.fill select.good{border-color:var(--ok);background:#f0fdf4}.fill select.bad{border-color:var(--bad);background:#fef2f2}
+.fill p{margin:8px 0;font-size:14px}
+.samples{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+@media (max-width:800px){.samples{grid-template-columns:repeat(2,1fr)}}
+.smp{border:1.5px solid var(--line);border-radius:12px;background:#fff;padding:6px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:700;color:var(--text)}
+.smp svg{display:block;width:100%;height:auto;border-radius:8px}
+.smp.on{border-color:var(--navy);background:#eef3ff}.smp.ok{border-color:var(--ok)}.smp.no{border-color:var(--bad)}
+
+.pick{cursor:pointer}.pick:hover{filter:drop-shadow(0 0 5px rgba(240,90,40,.85))}
+.hz{cursor:pointer}.hz:hover{filter:drop-shadow(0 0 5px rgba(240,90,40,.9))}
+.walk{animation:walk 3.4s ease-in-out infinite}
+@keyframes walk{0%,100%{transform:translateX(-26px)}50%{transform:translateX(26px)}}
+.limp{animation:walk 5s ease-in-out infinite,limp .8s ease-in-out infinite}
+@keyframes limp{0%,100%{translate:0 0;rotate:0deg}40%{translate:0 5px;rotate:2.5deg}}
+.stamp{animation:stamp .55s ease-out;transform-box:fill-box;transform-origin:center}
+@keyframes stamp{0%{opacity:0;scale:2.2}60%{opacity:1;scale:.94}100%{scale:1}}
+@media (prefers-reduced-motion:reduce){.walk,.limp,.stamp{animation:none}}
+.ckl{display:flex;flex-direction:column;gap:5px}
+.ck{display:grid;grid-template-columns:200px 1fr;gap:8px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:5px 7px;background:#fff;font-size:12.8px}
+.ck .btn{text-align:left;width:100%}
+.ck.on{background:#f8fafc}
+@media (max-width:560px){.ck{grid-template-columns:1fr}}
+.dec3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.dec3.four{grid-template-columns:repeat(2,1fr)}
+@media (max-width:560px){.dec3{grid-template-columns:1fr}}
+.dec3 .btn{background:#fff;border:1.5px solid var(--line);color:var(--text);font-size:12.8px}
+.dec3 .btn.good{border-color:var(--ok);background:#dcfce7;color:#14532d;opacity:1}
+.dec3 .btn.bad{border-color:var(--bad);background:#fee2e2;color:#7f1d1d;opacity:1}
+.pmgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;align-items:start}
+@media (max-width:960px){.pmgrid{grid-template-columns:1fr}}
+.pmgrid .dec3.four{grid-template-columns:1fr}
+.hls{display:flex;flex-direction:column;gap:4px;font-size:12.6px}
+.hl{border:1px solid var(--line);border-radius:8px;padding:5px 8px;background:#fff;color:var(--muted)}
+.hl.on{color:var(--text);background:#f8fafc}.hl b{display:block;font-size:12.6px}.hl.on b{color:var(--navy)}
+.cr .tg button.am.on{background:#dbeafe;border-color:#1d4ed8;color:#1e3a8a}
+.cr .tg button.pm.on{background:#ffedd5;border-color:#ea580c;color:#7c2d12}
+.kpis{margin-top:10px}
+
+.hlr{opacity:0;transition:opacity .2s;pointer-events:none}
+#rcWrap[data-h="0"] .h0,#rcWrap[data-h="1"] .h1,#rcWrap[data-h="2"] .h2,#rcWrap[data-h="3"] .h3{opacity:1;animation:hlp 1.2s ease-in-out infinite}
+@keyframes hlp{50%{stroke-opacity:.45}}
+#rcChk .cr{cursor:pointer}#rcChk .cr:hover{border-color:#fdba74;background:#fffaf5}
+.zin{animation:zin .45s ease-out;transform-box:fill-box;transform-origin:center}
+@keyframes zin{from{opacity:0;scale:.7}to{opacity:1;scale:1}}
+.gcl{animation:gcl .9s .55s ease-out both}.gcr{animation:gcr .9s .55s ease-out both}
+@keyframes gcl{from{translate:0 0}to{translate:-14px 0}}@keyframes gcr{from{translate:0 0}to{translate:14px 0}}
+.knife{animation:knf 1s ease-in both}
+@keyframes knf{0%{translate:0 -40px;opacity:0}15%{opacity:1}70%{translate:0 150px;opacity:1}100%{translate:0 190px;opacity:0}}
+@media (prefers-reduced-motion:reduce){.zin,.gcl,.gcr,.knife{animation:none}.knife{display:none}}
+
+.tabs.three{grid-template-columns:repeat(3,1fr)}
+@media (max-width:700px){.tabs.three{grid-template-columns:1fr}}
+.kpis.three{grid-template-columns:repeat(3,1fr)}
+.bgrid{display:grid;grid-template-columns:1.1fr 1fr;gap:12px;align-items:start}
+@media (max-width:960px){.bgrid{grid-template-columns:1fr}}
+.zn{fill:transparent;stroke:transparent;stroke-width:2.5;cursor:pointer}
+.zn:hover{stroke:#f97316;stroke-dasharray:6 4;fill:rgba(249,115,22,.06)}
+.zn.sel{stroke:#f97316;stroke-width:3}
+.zn.mk-ok{stroke:#16a34a;stroke-dasharray:none}.zn.mk-bad{stroke:#dc2626;stroke-dasharray:none}
+.go-in{animation:goin 2s ease-in forwards}@keyframes goin{60%{transform:translateX(240px);opacity:1}100%{transform:translateX(260px);opacity:0}}
+.go-out{animation:goout 2s ease-in forwards}@keyframes goout{60%{transform:translateX(-120px);opacity:1}100%{transform:translateX(-140px);opacity:.0}}
+.gumb{animation:gum 2.2s ease-in-out infinite;transform-box:fill-box;transform-origin:center}@keyframes gum{0%,100%{transform:scale(.4)}60%{transform:scale(1.15)}}
+.achu{animation:achu 3s ease-in-out infinite}@keyframes achu{0%,55%,100%{opacity:0}65%,90%{opacity:1}}
+.rub{animation:rub .35s ease-in-out infinite alternate}.rub2{animation:rub .35s ease-in-out infinite alternate-reverse}@keyframes rub{from{transform:translateX(-5px)}to{transform:translateX(5px)}}
+.water path{animation:wtr .4s linear infinite}@keyframes wtr{to{stroke-dashoffset:-18}}
+.towel{animation:twl .4s ease-out}@keyframes twl{from{opacity:0}to{opacity:1}}
+.zin2{animation:zin .4s ease-out}
+@media (prefers-reduced-motion:reduce){.go-in,.go-out,.gumb,.achu,.rub,.rub2,.water path{animation:none}}
+.lk{border:0;background:#eef3ff;border-radius:6px;padding:2px 6px;cursor:pointer;font-size:12px;margin-right:4px}
+.cr.zsel{border-color:#fdba74;background:#fffaf5}
+.wgrid{display:grid;grid-template-columns:1.2fr 1fr;gap:14px;align-items:start}
+@media (max-width:860px){.wgrid{grid-template-columns:1fr}}
+.wbtns{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+@media (max-width:480px){.wbtns{grid-template-columns:1fr}}
+.wb{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:8px 10px;font:inherit;font-size:12.6px;font-weight:600;text-align:left;cursor:pointer;color:var(--text)}
+.wb:hover{border-color:var(--navy-2);background:#f5f8ff}.wb:disabled{opacity:.5;cursor:default}
+.seq{display:flex;flex-wrap:wrap;gap:5px}
+.sq{background:#eef3ff;border:1px solid #c7d2fe;color:#1e3a8a;border-radius:999px;padding:3px 9px;font-size:12px;font-weight:600}
+.sq.x{background:#fef2f2;border-color:#fecaca;color:#991b1b}
+#wProg .bar{height:10px;border-radius:6px;background:#e2e8f0;overflow:hidden;margin-top:8px}#wProg .bar i{display:block;height:100%;background:linear-gradient(90deg,#38bdf8,#16a34a)}
+#wProg small{font-size:12px;color:var(--muted);font-weight:700}
+.evs{display:flex;flex-direction:column;gap:6px}
+.ev{display:grid;grid-template-columns:36px 1fr auto;gap:10px;align-items:center;border:1.5px solid var(--line);border-radius:12px;padding:8px 12px;background:#fff;cursor:pointer;font-size:13.5px}
+.ev .ic{font-size:22px;text-align:center}.ev .sw{font-weight:800;font-size:12.5px;color:var(--muted)}
+.ev.on{border-color:#38bdf8;background:#f0f9ff}.ev.on .sw{color:#0369a1}
+.ev.ok{border-color:var(--ok)}.ev.no{border-color:var(--bad);background:#fef2f2}
+.ev small{display:block;font-size:12px;color:var(--muted);margin-top:3px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar"></div>
+  <header>
+    <a class="back" href="index.html">⬅ Volver al Menú Principal</a>
+    <div class="title-row">
+      <div>
+        <h1>🧼 BPM: ¿quién puede entrar al andén?</h1>
+        <div class="subtitle">El primer riesgo de contaminación en el andén puede ser quien recibe. Revisa a tus compañeros en el filtro sanitario, practica el lavado de manos y decide cuándo hay que repetirlo.</div>
+      </div>
+      <div class="week-tag">Módulo III · Semana 1 · <b>Figura 5</b></div>
+    </div>
+  </header>
+
+  <div class="tabs three">
+    <button class="tab on" data-t="fil"><b>1 · Filtro sanitario</b><small>¿Quién puede entrar?</small></button>
+    <button class="tab" data-t="lav"><b>2 · Lavado de manos</b><small>Los 6 pasos y la luz UV</small></button>
+    <button class="tab" data-t="cua"><b>3 · ¿Cuándo lavarse?</b><small>Un turno en el andén</small></button>
+  </div>
+
+  <!-- ===================== 1 · FILTRO ===================== -->
+  <div class="pane show" data-p="fil">
+    <div class="panel"><h2>Filtro sanitario a la entrada del andén</h2><p class="lead">Eres responsable del filtro. Revisa a cada persona de la fila con la lupa, marca si cada zona <b>cumple</b> o <b>no cumple</b> con la NOM-251-SSA1-2009 y decide si puede entrar.</p>
+      <div class="presets" id="bQueue"></div>
+      <div class="kpis three" id="bScore"></div>
+    </div>
+    <div class="bgrid" style="margin-top:12px">
+      <div class="panel"><div class="dock" id="bScene" style="margin:0"></div></div>
+      <div class="col">
+        <div class="panel"><h2 style="font-size:15px">🔎 Lupa</h2><div class="vis" id="bLupa" style="margin:6px 0 0"></div></div>
+        <div class="panel"><h2 style="font-size:15px">📋 Lista de verificación</h2><div class="crit" id="bList"></div><h3 style="margin:12px 0 6px;font-size:14px;color:var(--navy)">Decisión</h3><div id="bDec"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== 2 · LAVADO ===================== -->
+  <div class="pane" data-p="lav">
+    <div class="panel"><h2>Lavado y desinfección de manos</h2><p class="lead">Las manos tienen microorganismos que no se ven. Elige los pasos en el orden que creas correcto y al final revisa con <b>luz UV</b>, como en las prácticas con polvo fluorescente.</p>
+      <div class="wgrid">
+        <div><div class="vis" id="wSVG" style="margin:0"></div><div id="wProg"></div></div>
+        <div>
+          <h3 style="margin:0 0 6px;font-size:14px;color:var(--navy)">Pasos disponibles</h3>
+          <div class="wbtns" id="wBtns"></div>
+          <label class="chk" style="margin-top:8px"><input type="checkbox" id="fast"> Acelerar el frotado (5 s en lugar de 20 s)</label>
+          <h3 style="margin:12px 0 6px;font-size:14px;color:var(--navy)">Lo que has hecho</h3>
+          <div class="seq" id="wSeq"></div><div id="wMsg"></div>
+          <div class="row-btn"><button class="btn btn-primary" id="wUV">🔦 Revisar con luz UV</button><button class="btn btn-ghost btn-sm" id="wRe">↺ Empezar de nuevo</button></div>
+          <div id="wRes"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== 3 · CUÁNDO ===================== -->
+  <div class="pane" data-p="cua">
+    <div class="panel"><h2>Un turno en el andén: ¿cuándo debe lavarse las manos?</h2><p class="lead">Toca los momentos en los que <b>sí</b> debe lavarse las manos antes de continuar. Después revisa.</p>
+      <div class="evs" id="evList"></div>
+      <div class="row-btn"><button class="btn btn-primary" id="evChk">Revisar</button><button class="btn btn-ghost btn-sm" id="evRe">↺ Otra vez</button></div>
+      <div id="evFb"></div>
+      <div class="miss" style="margin-top:12px"><b>Idea clave:</b> las BPM no son un trámite. Un lote aceptable puede contaminarse en el andén si quien lo recibe no aplica higiene. Los guantes <b>no sustituyen</b> el lavado de manos: también se contaminan y se cambian.</div>
+    </div>
+  </div>
+
+  <details class="teacher">
+    <summary>👩‍🏫 Notas para el docente</summary>
+    <ul>
+      <li><b>Qué cubre:</b> la sección «Buenas prácticas e higiene personal en el área cárnica», la <b>Figura 5</b> y el recuadro «Idea clave». Norma: NOM-251-SSA1-2009, prácticas de higiene del personal (Secretaría de Salud, 2010). OMS (2007): «mantener la limpieza», una de las cinco claves para la inocuidad.</li>
+      <li><b>Filtro sanitario:</b> 9 personas con fallas comunes.
+        <ul>
+          <li>Cabello fuera de la cofia, aretes, reloj y anillo.</li>
+          <li>Cubrebocas bajo la nariz o en la barbilla, chicle y celular.</li>
+          <li>Uñas largas con esmalte, bata manchada y sandalias.</li>
+          <li>Herida descubierta, barba sin cubrebarba y un caso de enfermedad.</li>
+        </ul>
+        La regla didáctica:
+        <ul>
+          <li>Lo que se puede corregir (retirar joyería, acomodar la cofia, cubrir la herida con apósito impermeable y guante) se corrige y la persona vuelve a pasar el filtro.</li>
+          <li>Una persona con <b>diarrea, vómito, fiebre o síntomas respiratorios</b> no manipula alimentos hasta recuperarse y se reporta.</li>
+        </ul></li>
+      <li><b>Lavado de manos:</b> la simulación sigue los 6 pasos de la Figura 5.
+        <ul>
+          <li><b>Frotado:</b> al menos 20 s; la OMS recomienda 40–60 s para el procedimiento completo.</li>
+          <li><b>Modelo didáctico:</b>
+            <ul>
+              <li>El jabón desprende los microorganismos y el enjuague los arrastra.</li>
+              <li>Entre los dedos y bajo las uñas solo se limpian si se frotan a propósito.</li>
+              <li>El desinfectante actúa mejor sobre manos limpias y secas.</li>
+            </ul></li>
+          <li><b>Recontaminación:</b> secarse en la bata o cerrar la llave con la mano limpia vuelve a contaminar las manos.</li>
+        </ul>
+        Puede complementarse con la práctica real de polvo o gel fluorescente y lámpara UV.</li>
+      <li><b>Momentos de lavado:</b> al entrar al área; después de ir al baño; después de tocar basura, materia prima cruda o la cara (Figura 5).
+        <ul>
+          <li>El primer evento (ponerse el equipo) es intencionalmente «no»: el orden correcto es vestirse primero y lavarse las manos al final, justo antes de entrar.</li>
+        </ul></li>
+      <li><b>Guantes:</b> no sustituyen el lavado de manos. Se colocan sobre manos limpias y se cambian cuando se rompen o se contaminan.</li>
+    </ul>
+  </details>
+  <footer>Recurso didáctico complementario · CECyBOOK Módulo III · Semana 1 · Figura 5 · NOM-251-SSA1-2009 (Secretaría de Salud, 2010) · OMS (2007) Cinco claves para la inocuidad de los alimentos · OMS (2009) Directrices sobre higiene de manos.</footer>
+</div>
+
+<script>
+const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
+const shuffle=a=>{const b=a.slice();for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;};
+/* ---------- Gráficos compartidos ---------- */
+let UID=0;
+const GDEFS=`
+ <filter id="fx-fib" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.008 0.24" numOctaves="2" seed="4"/><feColorMatrix values="0 0 0 0 0.6  0 0 0 0 0.25  0 0 0 0 0.22  2.6 0 0 0 -1.2"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-fib2" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.006 0.3" numOctaves="2" seed="9"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 0.92  0 0 0 0 0.88  2.4 0 0 0 -1.35"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-pore" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="turbulence" baseFrequency="0.7" numOctaves="1" seed="2"/><feColorMatrix values="0 0 0 0 0.66  0 0 0 0 0.5  0 0 0 0 0.4  -14 0 0 0 1.4"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-wrin" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.035 0.09" numOctaves="3" seed="7"/><feColorMatrix values="0 0 0 0 0.7  0 0 0 0 0.52  0 0 0 0 0.4  3 0 0 0 -1.55"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-marb" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.11 0.24" numOctaves="2" seed="12"/><feColorMatrix values="0 0 0 0 0.98  0 0 0 0 0.94  0 0 0 0 0.86  14 0 0 0 -9.2"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-grain" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.06 0.5" numOctaves="2" seed="5"/><feColorMatrix values="0 0 0 0 0.3  0 0 0 0 0.03  0 0 0 0 0.05  2 0 0 0 -0.9"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-frost" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="turbulence" baseFrequency="0.55" numOctaves="2" seed="21"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  6 0 0 0 -2.2"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-blot" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="3" seed="15"/><feColorMatrix values="0 0 0 0 0.52  0 0 0 0 0.56  0 0 0 0 0.46  5 0 0 0 -2.4"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-foam" x="0" y="0" width="100%" height="100%"><feTurbulence type="turbulence" baseFrequency="0.9" numOctaves="1" seed="1"/><feColorMatrix values="0 0 0 0 0.6  0 0 0 0 0.6  0 0 0 0 0.62  -5 0 0 0 1.1"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-kraft" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.9 0.06" numOctaves="2" seed="3"/><feColorMatrix values="0 0 0 0 0.42  0 0 0 0 0.28  0 0 0 0 0.12  1.6 0 0 0 -0.62"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-brush" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.004 0.9" numOctaves="2" seed="8"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  1.8 0 0 0 -0.75"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-grime" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="4" seed="31"/><feColorMatrix values="0 0 0 0 0.3  0 0 0 0 0.22  0 0 0 0 0.12  6 0 0 0 -2.6"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-blur1"><feGaussianBlur stdDeviation="1"/></filter>
+ <filter id="fx-blur2"><feGaussianBlur stdDeviation="2"/></filter>
+ <filter id="fx-blur4"><feGaussianBlur stdDeviation="4"/></filter>
+ <filter id="fx-blur8"><feGaussianBlur stdDeviation="8"/></filter>
+ <radialGradient id="g-dent"><stop offset="0" stop-color="#5b1a12" stop-opacity=".45"/><stop offset=".7" stop-color="#5b1a12" stop-opacity=".18"/><stop offset="1" stop-color="#5b1a12" stop-opacity="0"/></radialGradient>
+ <radialGradient id="g-pool" cx=".5" cy=".5" r=".6"><stop offset="0" stop-color="#c2414f" stop-opacity=".75"/><stop offset="1" stop-color="#e5808a" stop-opacity=".45"/></radialGradient>
+ <radialGradient id="g-drop" cx=".35" cy=".3" r=".75"><stop offset="0" stop-color="#ffffff" stop-opacity=".95"/><stop offset=".35" stop-color="#e7f1fb" stop-opacity=".35"/><stop offset=".85" stop-color="#7e94aa" stop-opacity=".45"/><stop offset="1" stop-color="#506579" stop-opacity=".6"/></radialGradient>
+ <linearGradient id="g-tray" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e8e9e4"/></linearGradient>
+ <linearGradient id="g-glove" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3f6fd8"/><stop offset=".5" stop-color="#7aa5f5"/><stop offset="1" stop-color="#3f6fd8"/></linearGradient>
+ <linearGradient id="g-steel" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8d969f"/><stop offset=".45" stop-color="#eef1f4"/><stop offset="1" stop-color="#7c858f"/></linearGradient>
+ <linearGradient id="g-table" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d9dde2"/><stop offset=".5" stop-color="#eef0f2"/><stop offset="1" stop-color="#c9ced4"/></linearGradient>
+ <linearGradient id="g-alu-l" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#c3c9d1"/><stop offset="1" stop-color="#e4e8ed"/></linearGradient>
+ <linearGradient id="g-alu-r" x1="1" y1="0" x2="0" y2="0"><stop offset="0" stop-color="#b9c0c9"/><stop offset="1" stop-color="#dfe4ea"/></linearGradient>
+ <linearGradient id="g-floor" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#9aa2ac"/><stop offset="1" stop-color="#c9cfd6"/></linearGradient>
+ <linearGradient id="g-ceil" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d3d8de"/><stop offset="1" stop-color="#eef1f4"/></linearGradient>
+ <linearGradient id="g-kraft" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d9b98a"/><stop offset="1" stop-color="#c39c66"/></linearGradient>
+ <linearGradient id="g-film" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".05"/><stop offset=".3" stop-color="#fff" stop-opacity=".45"/><stop offset=".38" stop-color="#fff" stop-opacity=".05"/><stop offset=".7" stop-color="#fff" stop-opacity=".2"/><stop offset=".76" stop-color="#fff" stop-opacity=".02"/><stop offset="1" stop-color="#fff" stop-opacity=".12"/></linearGradient>
+ <linearGradient id="g-drum" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1b4fa5"/><stop offset=".4" stop-color="#4f86e0"/><stop offset="1" stop-color="#173f86"/></linearGradient>
+ <linearGradient id="g-dev" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4b5563"/><stop offset="1" stop-color="#2b323b"/></linearGradient>
+ <linearGradient id="g-wood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c8a06a"/><stop offset="1" stop-color="#9a7444"/></linearGradient>
+ <pattern id="p-pad" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="16" height="16" fill="#fbfbf9"/><path d="M0 0H16M0 0V16" stroke="#e6e6e0" stroke-width="1.2"/></pattern>
+ <pattern id="p-pad-wet" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="16" height="16" fill="#fbe3e3"/><path d="M0 0H16M0 0V16" stroke="#efc4c4" stroke-width="1.2"/></pattern>`;
+document.body.insertAdjacentHTML('afterbegin',`<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>${GDEFS}</defs></svg>`);
+/* ===================== Persona (vista frontal) ===================== */
+const BDEFS=`
+ <linearGradient id="bata" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#e3e8ee"/><stop offset=".45" stop-color="#ffffff"/><stop offset="1" stop-color="#dfe5ec"/></linearGradient>
+ <linearGradient id="pant" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1e293b"/><stop offset=".5" stop-color="#334155"/><stop offset="1" stop-color="#1e293b"/></linearGradient>
+ <linearGradient id="boot" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#d7dde4"/><stop offset=".5" stop-color="#ffffff"/><stop offset="1" stop-color="#cfd6de"/></linearGradient>
+ <radialGradient id="cof" cx=".45" cy=".35" r=".7"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#dde3ea"/></radialGradient>
+ <linearGradient id="mask" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bfe3f7"/><stop offset="1" stop-color="#8ec9ea"/></linearGradient>
+ <pattern id="mesh" width="4" height="4" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r=".6" fill="#b9c3cf"/></pattern>
+ <radialGradient id="gum" cx=".35" cy=".3" r=".7"><stop offset="0" stop-color="#ffd1e6"/><stop offset="1" stop-color="#f472b6"/></radialGradient>
+ <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+ <linearGradient id="skinH" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#d9a382"/><stop offset=".5" stop-color="#f2c7a8"/><stop offset="1" stop-color="#d49a78"/></linearGradient>
+ <linearGradient id="sinkG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f8fafc"/><stop offset="1" stop-color="#cbd5e1"/></linearGradient>`;
+document.body.insertAdjacentHTML('afterbegin',`<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>${BDEFS}</defs></svg>`);
+const shade=(hex,k)=>{const n=parseInt(hex.slice(1),16);let r=n>>16,g=(n>>8)&255,b=n&255;r=Math.round(r*k);g=Math.round(g*k);b=Math.round(b*k);return `rgb(${Math.min(255,r)},${Math.min(255,g)},${Math.min(255,b)})`;};
+function handG(w,side){
+  const sk=w.skin, d=shade(sk,.85), nail=w.nails==='long'?'#dc2626':'#f6e1d8';
+  const fx=[-8.4,-3,2.4,7.6], fl=[15,17,16,13];
+  let s=`<g transform="translate(${side<0?64:176},266) scale(${side},1)">`;
+  if(w.watch&&side<0) s+=`<rect x="-13" y="-6" width="26" height="8" rx="3" fill="#1f2937"/><circle cx="0" cy="-2" r="5.5" fill="#e5e7eb" stroke="#64748b" stroke-width="1.5"/>`;
+  s+=`<path d="M-11,0 C-12,8 -12,16 -10,22 L10,22 C12,16 12,8 11,0Z" fill="${sk}" stroke="${d}" stroke-width=".8"/>`;
+  fx.forEach((x,i)=>{s+=`<rect x="${x-2.4}" y="18" width="4.8" height="${fl[i]}" rx="2.4" fill="${sk}" stroke="${d}" stroke-width=".7"/>`;
+    s+= w.nails==='long'?`<rect x="${x-2}" y="${16+fl[i]}" width="4" height="6" rx="2" fill="${nail}"/>`:`<rect x="${x-1.7}" y="${14.6+fl[i]}" width="3.4" height="3" rx="1.2" fill="${nail}"/>`;});
+  s+=`<path d="M10,6 C16,10 17,18 14,24" stroke="${sk}" stroke-width="5" stroke-linecap="round" fill="none"/><path d="M10,6 C16,10 17,18 14,24" stroke="${d}" stroke-width=".7" fill="none" opacity=".6"/>`;
+  if(w.watch&&side>0&&w.watch==='both') s+='';
+  if(w.ring&&side>0) s+=`<rect x="-5.6" y="25" width="5.2" height="2.6" rx="1" fill="#eab308" stroke="#a16207" stroke-width=".5"/>`;
+  if(w.wound&&side>0) s+=`<path d="M-7,8 L5,13" stroke="#b91c1c" stroke-width="2.2" stroke-linecap="round"/><circle cx="0" cy="12" r="1.2" fill="#dc2626"/>`;
+  if(w.sick&&side>0) s+=`<path d="M-12,26 q6 -8 12 -2 q6 -6 12 2 q-2 10 -12 10 q-10 0 -12 -10z" fill="#fff" stroke="#cbd5e1"/>`;
+  return s+`</g>`;
+}
+function personSVG(w,o={}){
+  const sk=w.skin, d=shade(sk,.82), hair=w.hair;
+  let s='';
+  s+=`<ellipse cx="120" cy="432" rx="70" ry="7" fill="#000" opacity=".18"/>`;
+  // piernas y calzado
+  s+=`<rect x="92" y="300" width="25" height="100" fill="url(#pant)"/><rect x="123" y="300" width="25" height="100" fill="url(#pant)"/>`;
+  if(w.shoes==='sandals') s+=[[104],[136]].map(([x])=>`<path d="M${x-14},418 C${x-16},400 ${x-10},394 ${x},394 C${x+10},394 ${x+16},400 ${x+14},418 Z" fill="${sk}" stroke="${d}"/>${[-10,-5,0,5,10].map(t=>`<circle cx="${x+t}" cy="419" r="2.6" fill="${sk}" stroke="${d}" stroke-width=".7"/>`).join('')}<path d="M${x-13},404 h26 M${x-12},412 h24" stroke="#92400e" stroke-width="3"/><rect x="${x-16}" y="421" width="32" height="5" rx="2" fill="#78350f"/>`).join('');
+  else s+=[[104],[136]].map(([x])=>`<path d="M${x-15},388 L${x+15},388 L${x+16},420 C${x+16},428 ${x-16},428 ${x-17},420Z" fill="url(#boot)" stroke="#94a3b8"/><rect x="${x-18}" y="422" width="35" height="6" rx="2.5" fill="#475569"/>`).join('');
+  // brazos (mangas)
+  s+=`<path d="M76,124 C60,140 54,200 52,262 L76,264 C78,210 82,170 90,140 Z" fill="url(#bata)" stroke="#cbd5e1"/><path d="M164,124 C180,140 186,200 188,262 L164,264 C162,210 158,170 150,140 Z" fill="url(#bata)" stroke="#cbd5e1"/>`;
+  // cabello largo por detrás
+  if(w.hairStyle==='long'&&w.cofia!=='ok') s+=`<path d="M86,64 C84,110 92,140 100,150 L140,150 C148,140 156,110 154,64Z" fill="${hair}"/>`;
+  // cuello
+  s+=`<rect x="109" y="96" width="22" height="26" fill="${sk}"/><path d="M109,108 q11 8 22 0" stroke="${d}" fill="none" opacity=".5"/>`;
+  // bata
+  s+=`<path d="M76,122 Q120,106 164,122 L178,182 L178,332 L62,332 L62,182 Z" fill="url(#bata)" stroke="#cbd5e1"/>
+   <path d="M104,116 L120,164 L136,116" fill="none" stroke="#cbd5e1" stroke-width="2"/><path d="M120,164 V332" stroke="#cbd5e1" stroke-width="1.5"/>
+   ${[186,214,242,270,298].map(y=>`<circle cx="126" cy="${y}" r="2.6" fill="#e2e8f0" stroke="#94a3b8"/>`).join('')}
+   <path d="M138,150 h22 v20 h-22z" fill="none" stroke="#cbd5e1" stroke-width="1.5"/><path d="M74,260 h28 v26 h-28z M138,260 h28 v26 h-28z" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
+   <text x="88" y="160" font-size="7" font-weight="800" fill="#12306b">CECyTE</text>`;
+  if(w.bata==='dirty') s+=[[86,200,12],[150,236,9],[100,290,10],[140,190,6],[70,240,7]].map(([x,y,r],i)=>`<path d="M${x-r},${y} q${r*.3},${-r} ${r},${-r*.8} q${r},${r*.1} ${r},${r} q${-r*.3},${r} ${-r},${r*.8} q${-r},0 ${-r},${-r}z" fill="${i%2?'#9a3412':'#7f1d1d'}" opacity=".45" filter="url(#fx-blur1)"/>`).join('');
+  if(w.phone) s+=`<rect x="143" y="136" width="13" height="22" rx="2.5" fill="#111827"/><rect x="145" y="139" width="9" height="12" rx="1" fill="#38bdf8"/>`;
+  if(w.necklace) s+=`<path d="M108,114 Q120,132 132,114" fill="none" stroke="#eab308" stroke-width="1.8"/><circle cx="120" cy="127" r="2.6" fill="#eab308"/>`;
+  // manos
+  s+=handG(w,-1)+handG(w,1);
+  // cabeza
+  s+=`<ellipse cx="89" cy="72" rx="6" ry="9" fill="${sk}" stroke="${d}"/><ellipse cx="151" cy="72" rx="6" ry="9" fill="${sk}" stroke="${d}"/>
+   <ellipse cx="120" cy="70" rx="30" ry="34" fill="${sk}"/><path d="M92,82 C96,100 108,106 120,106 C132,106 144,100 148,82" fill="none" stroke="${d}" opacity=".5"/>`;
+  if(w.earrings) s+=`<circle cx="89" cy="84" r="3" fill="#eab308" stroke="#a16207"/><circle cx="151" cy="84" r="3" fill="#eab308" stroke="#a16207"/>`;
+  if(w.beard) s+=`<path d="M92,74 C92,96 104,112 120,112 C136,112 148,96 148,74 C144,88 138,94 120,94 C102,94 96,88 92,74Z" fill="${hair}"/>`;
+  // cara
+  s+=`<path d="M104,58 q6 -4 12 0 M124,58 q6 -4 12 0" stroke="${shade(hair,1)}" stroke-width="2.6" stroke-linecap="round" fill="none"/>`;
+  s+= w.sick?`<path d="M104,66 q6 3 12 0 M124,66 q6 3 12 0" stroke="#1f2937" stroke-width="2" fill="none"/><ellipse cx="104" cy="78" rx="7" ry="4" fill="#ef4444" opacity=".35"/><ellipse cx="136" cy="78" rx="7" ry="4" fill="#ef4444" opacity=".35"/><path d="M146,52 q3 5 0 8 q-3 -3 0 -8z" fill="#7dd3fc"/>`
+     :`<circle cx="110" cy="66" r="3" fill="#1f2937"/><circle cx="130" cy="66" r="3" fill="#1f2937"/><circle cx="111" cy="65" r="1" fill="#fff"/><circle cx="131" cy="65" r="1" fill="#fff"/>`;
+  s+=`<path d="M120,68 C118,76 116,80 120,82 C122,82 124,81 124,80" stroke="${d}" stroke-width="1.6" fill="none"/>${w.sick?`<ellipse cx="121" cy="80" rx="4" ry="3" fill="#ef4444" opacity=".55"/>`:''}
+   <path d="M111,92 q9 6 18 0" stroke="#9f4a3a" stroke-width="2" fill="none" stroke-linecap="round"/>`;
+  if(w.gum) s+=`<g class="gumb"><circle cx="120" cy="94" r="9" fill="url(#gum)" opacity=".92"/><ellipse cx="117" cy="91" rx="3" ry="2" fill="#fff" opacity=".7"/></g>`;
+  // cabello / cofia
+  if(w.cofia==='none') s+=`<path d="M88,66 C86,36 104,30 120,30 C138,30 154,36 152,66 C148,52 136,44 120,44 C104,44 92,52 88,66Z" fill="${hair}"/>`;
+  else {
+    if(w.cofia==='out') s+=`<path d="M96,60 C100,70 106,70 108,62 C112,72 118,70 120,62" stroke="${hair}" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M90,62 C86,76 88,90 86,100 M150,62 C154,76 152,90 156,100" stroke="${hair}" stroke-width="5" fill="none" stroke-linecap="round"/>${w.hairStyle==='long'?`<path d="M152,70 C168,90 166,120 158,140" stroke="${hair}" stroke-width="9" fill="none" stroke-linecap="round"/>`:''}`;
+    s+=`<path d="M80,62 C76,28 100,18 120,18 C140,18 164,28 160,62 C150,58 136,56 120,56 C104,56 90,58 80,62Z" fill="url(#cof)"/><path d="M80,62 C76,28 100,18 120,18 C140,18 164,28 160,62 C150,58 136,56 120,56 C104,56 90,58 80,62Z" fill="url(#mesh)"/>
+     <path d="M80,62 C92,56 106,55 120,55 C134,55 148,56 160,62" stroke="#c4ccd6" stroke-width="2.4" fill="none" stroke-dasharray="3 2"/>`;
+  }
+  // cubrebocas
+  if(w.mask!=='none'){const y=w.mask==='ok'?72:w.mask==='nose'?84:100;
+    s+=`<path d="M89,${y+4} L98,${y+2} M151,${y+4} L142,${y+2} M89,${y+18} L98,${y+22} M151,${y+18} L142,${y+22}" stroke="#e2e8f0" stroke-width="1.6"/>
+     <path d="M98,${y} Q120,${y-5} 142,${y} L144,${y+20} Q120,${y+30} 96,${y+20}Z" fill="url(#mask)" stroke="#7bb6d8"/>${[8,14,20].map(t=>`<path d="M99,${y+t-2} Q120,${y+t-6} 141,${y+t-2}" stroke="#7bb6d8" stroke-width=".9" fill="none"/>`).join('')}`;}
+  if(w.sick) s+=`<g class="achu"><path d="M150,40 h64 a8 8 0 0 1 8 8 v16 a8 8 0 0 1 -8 8 h-50 l-10 8 l2 -8 h-6 a8 8 0 0 1 -8 -8 v-16 a8 8 0 0 1 8 -8z" fill="#fff" stroke="#94a3b8"/><text x="185" y="61" text-anchor="middle" font-size="12" font-weight="800" fill="#334155">¡Achú!</text></g>`;
+  if(o.say) s+=`<g><rect x="4" y="2" width="232" height="${o.sayH||34}" rx="10" fill="#fff" stroke="#94a3b8"/><path d="M110,${(o.sayH||34)+2} l8 10 l4 -10" fill="#fff" stroke="#94a3b8"/><rect x="111" y="${(o.sayH||34)-1}" width="10" height="4" fill="#fff"/>${o.say.map((t,i)=>`<text x="120" y="${20+i*14}" text-anchor="middle" font-size="11" font-weight="700" fill="#0f1b33">${t}</text>`).join('')}</g>`;
+  return s;
+}
+
+/* ===================== 1 · FILTRO SANITARIO ===================== */
+const ZONES=[['pelo','💇 Cabello, cofia y orejas',[70,10,100,56]],['cara','😷 Cubrebocas, boca y barba',[80,66,80,54]],['ropa','🥼 Bata y bolsillos',[52,104,136,232]],['manos','✋ Manos, uñas y muñecas',[36,252,168,64]],['pies','🥾 Calzado',[72,380,96,56]],['salud','🤒 ¿Cómo se siente?',[0,0,240,150]]];
+const DEC_B={pasa:'✅ Puede entrar',cor:'🔁 Corregir antes de entrar',no:'⛔ Hoy no manipula alimentos'};
+const W=[
+ {k:'w1',name:'Ana',skin:'#f1c7a5',hair:'#3b2416',hairStyle:'long',cofia:'ok',mask:'ok',shoes:'boots',bata:'ok',nails:'ok',say:['Me siento bien, maestra.'],bad:{}},
+ {k:'w2',name:'Luis',skin:'#c98d68',hair:'#1f140e',hairStyle:'short',cofia:'out',mask:'ok',shoes:'boots',bata:'ok',nails:'ok',watch:1,say:['Todo bien, profe.'],bad:{pelo:'Se le sale el cabello por la frente y los lados: la cofia debe cubrir todo el cabello.',manos:'Trae reloj: no se permite joyería ni reloj.'}},
+ {k:'w3',name:'Sofía',skin:'#e8b996',hair:'#5a3220',hairStyle:'long',cofia:'ok',mask:'nose',shoes:'boots',bata:'ok',nails:'long',earrings:1,ring:1,say:['Bien, solo tengo un poco de sueño.'],bad:{pelo:'Trae aretes: se quitan antes de entrar.',cara:'El cubrebocas no cubre la nariz.',manos:'Uñas largas con esmalte y un anillo.'}},
+ {k:'w4',name:'Diego',skin:'#b97a55',hair:'#140d09',hairStyle:'short',cofia:'ok',mask:'ok',shoes:'sandals',bata:'dirty',nails:'ok',say:['Bien. Es la bata de la semana pasada.'],bad:{ropa:'La bata está manchada: debe estar limpia y ser de color claro.',pies:'Trae sandalias: el calzado debe ser cerrado y antiderrapante.'}},
+ {k:'w5',name:'Mariana',skin:'#f3cdb0',hair:'#6b4423',hairStyle:'long',cofia:'ok',mask:'chin',shoes:'boots',bata:'ok',nails:'ok',gum:1,phone:1,say:['¡Bien! Ahorita me acomodo el cubrebocas.'],bad:{cara:'Cubrebocas en la barbilla y mascando chicle.',ropa:'Trae el celular en la bolsa de la bata.'}},
+ {k:'w6',name:'Jorge',skin:'#d6a07c',hair:'#2b1a10',hairStyle:'short',cofia:'ok',mask:'ok',shoes:'boots',bata:'ok',nails:'ok',wound:1,say:['Me corté ayer en mi casa,','pero ya no me sangra.'],sayH:46,bad:{manos:'Herida descubierta en la mano: se cubre con un apósito impermeable y un guante antes de entrar.'}},
+ {k:'w7',name:'Pedro',skin:'#e0aa85',hair:'#3a2618',hairStyle:'short',cofia:'ok',mask:'ok',shoes:'boots',bata:'ok',nails:'ok',sick:1,say:['Desde ayer tengo diarrea','y creo que fiebre…'],sayH:46,bad:{salud:'Tiene diarrea, fiebre y estornuda: no debe manipular alimentos hasta recuperarse. Se avisa al docente o supervisor.'}},
+ {k:'w8',name:'Raúl',skin:'#c4875f',hair:'#2a1a0f',hairStyle:'short',cofia:'ok',mask:'ok',beard:1,shoes:'boots',bata:'ok',nails:'ok',say:['Muy bien, gracias.'],bad:{cara:'La barba queda fuera del cubrebocas: necesita cubrebarba.'}},
+ {k:'w9',name:'Valeria',skin:'#a86f4c',hair:'#120c08',hairStyle:'long',cofia:'ok',mask:'ok',shoes:'boots',bata:'ok',nails:'ok',say:['Muy bien, lista para trabajar.'],bad:{}}
+];
+W.forEach(w=>w.ans=w.bad.salud?'no':Object.keys(w.bad).length?'cor':'pasa');
+let WS={}, WK='w1', WZ=null;
+W.forEach(w=>WS[w.k]={mk:{},seen:{},dec:null});
+function bScene(w){
+  const r=WS[w.k], cls=r.dec?(r.dec==='pasa'?'go-in':'go-out'):'';
+  let s=`<svg viewBox="0 0 520 470"><rect width="520" height="470" fill="#eef3f8"/>${Array.from({length:14},(_,i)=>`<path d="M${i*40} 0 V400" stroke="#dde4ec" stroke-width="1.5"/>`).join('')}${Array.from({length:10},(_,i)=>`<path d="M0 ${i*40} H520" stroke="#dde4ec" stroke-width="1.5"/>`).join('')}
+   <rect y="400" width="520" height="70" fill="#cfd8e2"/>${Array.from({length:13},(_,i)=>`<path d="M${i*44} 400 L${i*44-30} 470" stroke="#bcc7d3"/>`).join('')}
+   <g transform="translate(14,150)"><rect x="0" y="80" width="86" height="12" rx="4" fill="#94a3b8"/><path d="M6,92 h74 l-8 34 h-58z" fill="url(#sinkG)" stroke="#94a3b8"/><path d="M40,80 v-24 h18 v6" stroke="#64748b" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <rect x="62" y="20" width="18" height="30" rx="4" fill="#38bdf8"/><rect x="66" y="12" width="10" height="10" rx="2" fill="#0369a1"/><text x="71" y="62" text-anchor="middle" font-size="7" fill="#334155">jabón</text>
+    <rect x="6" y="10" width="34" height="40" rx="4" fill="#f8fafc" stroke="#94a3b8"/><path d="M12,50 h22 v10 h-22z" fill="#fff" stroke="#cbd5e1"/><text x="23" y="34" text-anchor="middle" font-size="7" fill="#334155">toallas</text>
+    <rect x="0" y="-40" width="86" height="40" rx="6" fill="#fff" stroke="#16a34a"/><text x="43" y="-24" text-anchor="middle" font-size="8.5" font-weight="800" fill="#166534">LÁVATE LAS</text><text x="43" y="-12" text-anchor="middle" font-size="8.5" font-weight="800" fill="#166534">MANOS 🧼</text></g>
+   <g transform="translate(400,96)"><rect x="-6" y="-6" width="112" height="310" rx="4" fill="#94a3b8"/><rect width="100" height="298" fill="#e2e8f0" stroke="#64748b"/><rect x="8" y="8" width="84" height="120" rx="3" fill="#cbd5e1" opacity=".7"/><path d="M8,8 h84 v120 h-84z" fill="#bfdbfe" opacity=".35"/>
+    <rect x="80" y="160" width="12" height="4" rx="2" fill="#475569"/><rect x="-6" y="-48" width="112" height="36" rx="5" fill="#12306b"/><text x="50" y="-34" text-anchor="middle" font-size="9" font-weight="800" fill="#fff">ANDÉN DE RECEPCIÓN</text><text x="50" y="-21" text-anchor="middle" font-size="6.4" fill="#bfdbfe">Solo personal con equipo completo</text></g>
+   <rect x="372" y="402" width="148" height="30" rx="6" fill="#1d4ed8" opacity=".55"/><text x="446" y="452" text-anchor="middle" font-size="9" fill="#334155">tapete sanitizante</text>
+   <g class="wkr ${cls}"><g transform="translate(150,20)">${personSVG(w)}
+    ${ZONES.filter(z=>z[0]!=='salud').map(([z,l,b])=>`<rect class="zn ${r.mk[z]?'mk-'+r.mk[z]:''} ${WZ===z?'sel':''}" data-z="${z}" x="${b[0]}" y="${b[1]}" width="${b[2]}" height="${b[3]}" rx="10"/>`).join('')}</g></g>
+   <text x="260" y="462" text-anchor="middle" font-size="11.5" fill="#475569">${r.dec?'':'Haz clic en una parte del cuerpo para revisarla con la lupa'}</text>
+   ${r.dec?`<g class="towel"><rect x="130" y="16" width="260" height="34" rx="10" fill="#fff" stroke="${r.dec==='pasa'?'#16a34a':r.dec==='cor'?'#d97706':'#dc2626'}" stroke-width="2"/><text x="260" y="38" text-anchor="middle" font-size="13" font-weight="800" fill="#0f1b33">${r.dec==='pasa'?`🧼 ${w.name} se lava las manos y entra`:r.dec==='cor'?`🔁 ${w.name} va al vestidor a corregir`:`🏠 ${w.name} no entra hoy: se reporta`}</text></g>`:''}</svg>`;
+  return s;
+}
+function bLupa(w,z){
+  if(!z) return `<div style="padding:40px 16px;text-align:center;color:var(--muted);font-size:13px">🔎 Elige una zona (haz clic sobre la persona o en la lista) para verla de cerca.</div>`;
+  const b=ZONES.find(x=>x[0]===z)[2];
+  if(z==='salud') return `<svg viewBox="0 -10 240 170">${personSVG(w,{say:w.say,sayH:w.sayH})}</svg>`;
+  return `<svg viewBox="${b.join(' ')}" class="zin2">${personSVG(w)}</svg>`;
+}
+function renderB(){
+  const w=W.find(x=>x.k===WK), r=WS[w.k];
+  $('#bQueue').innerHTML=W.map((x,i)=>{const q=WS[x.k];return `<button class="chip ${x.k===WK?'on':''}" data-w="${x.k}">${i+1} · ${x.name} ${q.dec?(q.dec===x.ans?'✓':'✗'):''}</button>`;}).join('');
+  $$('#bQueue [data-w]').forEach(b=>b.onclick=()=>{WK=b.dataset.w;WZ=null;renderB();});
+  $('#bScene').innerHTML=bScene(w);
+  $$('#bScene .zn').forEach(el=>el.onclick=()=>{if(r.dec)return;WZ=el.dataset.z;r.seen[WZ]=1;renderB();});
+  $('#bLupa').innerHTML=bLupa(w,WZ)+(WZ?`<div class="cap"><b>${ZONES.find(x=>x[0]===WZ)[1]}</b> · ${WZ==='salud'?'Pregúntale y escucha lo que dice.':'Observa con atención.'}</div>`:'');
+  const n=Object.keys(r.mk).length, nb=Object.keys(w.bad).length;
+  $('#bList').innerHTML=ZONES.map(([z,l])=>{const m=r.mk[z], tr=w.bad[z]?'bad':'ok';return `<div class="cr ${WZ===z?'zsel':''}" data-row="${z}"><span><button class="lk" data-look="${z}">${r.seen[z]?'👁':'🔎'}</button> ${l}</span><div class="tg"><button class="y ${m==='ok'?'on':''}" data-m="ok" data-z="${z}" ${r.dec?'disabled':''}>Cumple</button><button class="n ${m==='bad'?'on':''}" data-m="bad" data-z="${z}" ${r.dec?'disabled':''}>No cumple</button></div>${r.dec?`<div class="ex ${m===tr?'good':'bad'}">${m===tr?'✓':'✗'} ${w.bad[z]||'Cumple.'}</div>`:''}</div>`;}).join('');
+  $$('#bList [data-look]').forEach(b=>b.onclick=e=>{e.stopPropagation();if(r.dec&&false)return;WZ=b.dataset.look;r.seen[WZ]=1;renderB();});
+  $$('#bList [data-m]').forEach(b=>b.onclick=()=>{r.mk[b.dataset.z]=b.dataset.m;r.seen[b.dataset.z]=1;WZ=b.dataset.z;renderB();});
+  const all=n===ZONES.length;
+  $('#bDec').innerHTML=`${!all&&!r.dec?`<div class="fb mid">Revisa y marca las 6 zonas antes de decidir (${n} de 6).</div>`:''}
+   <div class="dec3">${Object.entries(DEC_B).map(([k,l])=>`<button class="btn ${r.dec===k?(k===w.ans?'good':'bad'):''} ${r.dec&&k===w.ans?'good':''}" data-dc="${k}" ${!all||r.dec?'disabled':''}>${l}</button>`).join('')}</div>
+   ${r.dec?`<div class="fb ${r.dec===w.ans?'good':'bad'}">${r.dec===w.ans?'✅ Correcto.':'❌ No. Lo adecuado es <b>'+DEC_B[w.ans].slice(2)+'</b>.'} ${w.ans==='pasa'?`${w.name} cumple con todo: se lava las manos y entra al andén.`:w.ans==='cor'?`${w.name} debe corregir ${nb===1?'un punto':nb+' puntos'}, lavarse las manos y volver a pasar el filtro.`:`${w.name} no debe manipular alimentos mientras esté enfermo: se reporta y se le asigna otra actividad o se retira.`}</div>
+    <div class="row-btn">${W.find(x=>!WS[x.k].dec)?'<button class="btn btn-primary" id="bNext">Siguiente persona ➜</button>':`<span style="font-weight:800;color:var(--navy)">🏁 ${W.filter(x=>WS[x.k].dec===x.ans).length} de ${W.length} decisiones correctas.</span>`}<button class="btn btn-ghost btn-sm" id="bRe">↺ Reiniciar fila</button></div>`:''}`;
+  $$('#bDec [data-dc]').forEach(b=>b.onclick=()=>{r.dec=b.dataset.dc;WZ=null;renderB();});
+  if($('#bNext'))$('#bNext').onclick=()=>{WK=W.find(x=>!WS[x.k].dec).k;WZ=null;renderB();};
+  if($('#bRe'))$('#bRe').onclick=()=>{W.forEach(x=>WS[x.k]={mk:{},seen:{},dec:null});WK='w1';WZ=null;renderB();};
+  const done=W.filter(x=>WS[x.k].dec);
+  $('#bScore').innerHTML=`<div class="kpi"><small>Revisados</small><b>${done.length} de ${W.length}</b></div><div class="kpi"><small>Decisiones correctas</small><b>${done.filter(x=>WS[x.k].dec===x.ans).length}</b></div><div class="kpi"><small>Zonas bien marcadas</small><b>${done.reduce((a,x)=>a+ZONES.filter(([z])=>WS[x.k].mk[z]===(x.bad[z]?'bad':'ok')).length,0)} de ${done.length*6}</b></div>`;
+}
+
+/* ===================== 2 · LAVADO DE MANOS ===================== */
+const STEPS=[
+ {k:'enj1',t:'Enjuagar manos y antebrazos con agua',ok:1},
+ {k:'jab',t:'Aplicar jabón y frotar vigorosamente (20 s)',ok:2},
+ {k:'dedo',t:'Limpiar entre dedos y bajo las uñas',ok:3},
+ {k:'enj2',t:'Enjuagar con agua corriente',ok:4},
+ {k:'sec',t:'Secar con toalla desechable o aire',ok:5},
+ {k:'des',t:'Aplicar desinfectante',ok:6},
+ {k:'bata',t:'Secarse las manos en la bata',ok:0},
+ {k:'llave',t:'Cerrar la llave con la mano recién lavada',ok:0}
+];
+const HP=[[-22,-66,52],[-7.5,-66,60],[7.5,-66,56],[22,-66,44]];
+function inFinger(x,y){return HP.some(([cx,top,h])=>Math.abs(x-cx)<6.5&&y<top&&y>top-h+6);}
+let G=[], HW={}, HSEQ=[], UV=false, RUB=null;
+function seedGerms(){
+  G=[];let id=0;
+  const add=(reg,n,gen)=>{for(let i=0;i<n;i++){const [x,y]=gen(i);G.push({id:id++,reg,x,y,on:1,loose:0,hand:i%2?1:-1,st:Math.random()<.05});}};
+  const R=(a)=>((Math.sin((a+1)*78.233+G.length*3.1)*43758.5453)%1+1)%1;
+  add('palma',40,i=>[-26+R(i)*52,-64+R(i+50)*58]);
+  add('dedos',26,i=>{const f=HP[i%4];return [f[0]-4+R(i)*8,f[1]-8-R(i+20)*(f[2]-22)];});
+  add('entre',16,i=>{const g=[-14.7,0,14.7][i%3];return [g+(R(i)-.5)*4,-66+R(i+9)*10];});
+  add('unas',16,i=>{const f=HP[i%4];return [f[0]+(R(i)-.5)*6,f[1]-f[2]+8+R(i+3)*4];});
+  add('pulgar',12,i=>{const t=R(i);return [34+t*14,-34-t*20+(R(i+5)-.5)*6];});
+  add('muneca',18,i=>[-22+R(i)*44,6+R(i+7)*44]);
+  HW={wet:0,soap:0,rub:0,foam:0,dedos:0,dry:0,des:0,msg:''};HSEQ=[];UV=false;
+}
+function handPath(){
+  return `<path d="M-30,0 C-32,-24 -32,-50 -30,-66 L30,-66 C33,-50 36,-36 34,-20 C33,-10 31,-4 28,0 Z"/>`+HP.map(([cx,top,h])=>`<rect x="${cx-6.8}" y="${top-h}" width="13.6" height="${h+8}" rx="6.8"/>`).join('')+`<rect x="26" y="-74" width="13" height="46" rx="6.5" transform="rotate(38 32 -30)"/><rect x="-26" y="0" width="52" height="64"/>`;
+}
+function washSVG(){
+  const uv=UV, sk=uv?'#4c3a6b':'url(#skinH)', bg=uv?'#140f2e':'#e9eef4';
+  const hand=(dx,flip)=>{let s=`<g transform="translate(${dx},240) scale(${flip*1.2},1.2)"><g fill="${sk}" stroke="${uv?'#2e2450':'#c08a6a'}" stroke-width="1">${handPath()}</g>
+     ${HP.map(([cx,top,h])=>`<rect x="${cx-4.6}" y="${top-h+2}" width="9.2" height="7" rx="3.4" fill="${uv?'#5b4a80':'#f6e1d8'}" stroke="${uv?'#3b2f5c':'#d9b3a2'}" stroke-width=".7"/>`).join('')}
+     <path d="M-20,-30 C-6,-26 8,-30 22,-40 M-24,-14 C-8,-8 10,-12 26,-22" stroke="${uv?'#3b2f5c':'#c99579'}" stroke-width="1.2" fill="none" opacity=".7"/>`;
+    G.filter(g=>g.on&&g.hand===flip).forEach(g=>{s+= uv?`<circle cx="${g.x}" cy="${g.y}" r="${g.loose?1.6:2.3}" fill="${g.loose?'#86efac':'#bef264'}" filter="url(#glow)"/>`:`<circle cx="${g.x}" cy="${g.y}" r="${g.loose?1.4:1.9}" fill="${g.loose?'#86efac':'#65a30d'}" opacity="${g.loose?.6:.75}"/>`;});
+    if(HW.foam&&!uv) for(let i=0;i<Math.round(HW.foam*46);i++){const a=((Math.sin((i+1)*12.9898)*43758.5453)%1+1)%1,b=((Math.sin((i+1)*78.233)*43758.5453)%1+1)%1;s+=`<circle cx="${-28+a*58}" cy="${-110+b*150}" r="${2+((i*7)%5)}" fill="#fff" opacity=".85" stroke="#dbeafe" stroke-width=".6"/>`;}
+    return s+`</g>`;};
+  let s=`<svg viewBox="0 0 420 330"><rect width="420" height="330" fill="${bg}"/>
+   ${uv?`<text x="210" y="22" text-anchor="middle" font-size="13" font-weight="800" fill="#bef264">🔦 Luz UV: lo que brilla son los microorganismos que quedan</text>`:`<path d="M170,0 v24 h80 v-24" fill="#94a3b8"/><path d="M210,24 v18" stroke="#64748b" stroke-width="8" stroke-linecap="round"/>`}
+   ${HW.water&&!uv?`<g class="water">${[196,204,212,220].map(x=>`<path d="M${x},44 v230" stroke="#7dd3fc" stroke-width="3" stroke-dasharray="10 8" opacity=".8"/>`).join('')}</g>`:''}
+   <g class="${HW.rubbing?'rub':''}">${hand(118,1)}</g><g class="${HW.rubbing?'rub2':''}">${hand(302,-1)}</g>`;
+  if(HW.towel&&!uv) s+=`<g class="towel"><rect x="160" y="150" width="100" height="70" rx="6" fill="#fff" stroke="#cbd5e1"/><path d="M170,170 h80 M170,186 h80 M170,202 h80" stroke="#e2e8f0"/></g>`;
+  if(HW.gel&&!uv) s+=`<g class="towel"><rect x="196" y="40" width="28" height="50" rx="6" fill="#a5f3fc" stroke="#0891b2"/><rect x="202" y="28" width="16" height="14" rx="3" fill="#0e7490"/><circle cx="210" cy="104" r="5" fill="#a5f3fc" opacity=".9"/></g>`;
+  const left=G.filter(g=>g.on).length;
+  s+=`<g transform="translate(12,${uv?36:300})"><rect width="160" height="24" rx="6" fill="${uv?'#1e1b4b':'#fff'}" stroke="${uv?'#4338ca':'#cbd5e1'}"/><text x="10" y="16" font-size="11.5" font-weight="800" fill="${uv?'#bef264':'#334155'}">🦠 Quedan: ${left} de 128</text></g>`;
+  return s+`</svg>`;
+}
+function loosen(regs,f){G.filter(g=>g.on&&!g.loose&&!g.st&&regs.includes(g.reg)).forEach(g=>{if(Math.random()<f)g.loose=1;});}
+function removeLoose(){G.forEach(g=>{if(g.loose)g.on=0;});}
+function addGerms(n,reg){for(let i=0;i<n;i++){const hand=i%2?1:-1;G.push({id:G.length,reg,x:-24+Math.random()*48,y:-60+Math.random()*54,on:1,loose:0,hand});}}
+function doStep(k){
+  if(RUB) return;
+  HSEQ.push(k);HW.msg='';HW.water=0;HW.towel=0;HW.gel=0;
+  if(k==='enj1'||k==='enj2'){HW.water=1;HW.wet=1;
+    if(HW.soap){removeLoose();HW.soap=0;HW.foam=0;HW.rinsed=1;HW.msg='💧 El agua arrastra la espuma con los microorganismos que se desprendieron.';}
+    else{G.filter(g=>g.on&&['palma','muneca'].includes(g.reg)).forEach(g=>{if(Math.random()<.12)g.on=0;});HW.msg=k==='enj1'?'💧 Mojar las manos prepara la piel para el jabón. El agua sola casi no elimina microorganismos.':'💧 Sin jabón, el agua sola casi no elimina microorganismos.';}
+    renderW();setTimeout(()=>{HW.water=0;renderW();},1400);return;}
+  if(k==='jab'){HW.soap=1;HW.msg=HW.wet?'':'⚠️ Primero se mojan las manos: así el jabón se distribuye y hace espuma.';
+    const t0=performance.now(), dur=$('#fast').checked?5000:20000;HW.rubbing=1;
+    const nt=dur/250, pf=k=>1-Math.pow(1-k,1/nt);
+    RUB=setInterval(()=>{const q=Math.min(1,(performance.now()-t0)/dur);HW.rub=q;HW.foam=Math.max(HW.foam,q);loosen(['palma','pulgar','muneca'],pf(.95));loosen(['dedos'],pf(.8));loosen(['entre','unas'],pf(.15));renderW(true);
+      if(q>=1){clearInterval(RUB);RUB=null;HW.rubbing=0;renderW();}},250);
+    renderW();return;}
+  if(k==='dedo'){if(HW.soap){loosen(['entre','unas','dedos'],0.92);HW.msg='🖐️ Entre los dedos y bajo las uñas es donde más se quedan los microorganismos.';}else{loosen(['entre','unas'],0.15);HW.msg='⚠️ Sin jabón, frotar entre los dedos ayuda muy poco.';}HW.rubbing=1;renderW();setTimeout(()=>{HW.rubbing=0;renderW();},900);return;}
+  if(k==='sec'){HW.towel=1;HW.dry=1;HW.msg=HW.soap?'⚠️ Te secaste con jabón todavía en las manos: faltó enjuagar.':'🧻 La toalla desechable se usa una vez y se tira.';G.forEach(g=>{if(g.on&&g.loose&&Math.random()<.6)g.on=0;});renderW();setTimeout(()=>{HW.towel=0;renderW();},1200);return;}
+  if(k==='des'){HW.gel=1;const f=HW.dry?0.85:0.45;G.forEach(g=>{if(g.on&&Math.random()<(g.st?f*.5:f))g.on=0;});HW.msg=HW.dry?'🧴 El desinfectante actúa mejor sobre manos limpias y secas.':'⚠️ Sobre manos mojadas el desinfectante se diluye y actúa menos.';renderW();setTimeout(()=>{HW.gel=0;renderW();},1200);return;}
+  if(k==='bata'){addGerms(26,'palma');HW.dry=1;HW.msg='❌ La bata está sucia: al secarte en ella vuelves a contaminar tus manos.';renderW();return;}
+  if(k==='llave'){addGerms(18,'palma');HW.msg='❌ La llave la tocaste con las manos sucias al inicio: al cerrarla te recontaminas. Usa la toalla, el codo o una llave de pedal o de sensor.';renderW();return;}
+}
+let WORD=shuffle(STEPS.map(x=>x.k));
+function renderW(light){
+  $('#wSVG').innerHTML=washSVG();
+  if(light) {$('#wProg').innerHTML=HW.rubbing?`<div class="bar"><i style="width:${Math.round(HW.rub*100)}%"></i></div><small>Frotando… ${Math.round(HW.rub*20)} de 20 s</small>`:'';return;}
+  $('#wProg').innerHTML=HW.rubbing&&RUB?`<div class="bar"><i style="width:${Math.round(HW.rub*100)}%"></i></div><small>Frotando… ${Math.round(HW.rub*20)} de 20 s</small>`:'';
+  $('#wBtns').innerHTML=WORD.map(k=>{const st=STEPS.find(x=>x.k===k);return `<button class="wb" data-k="${k}" ${UV?'disabled':''}>${st.t}</button>`;}).join('');
+  $$('#wBtns [data-k]').forEach(b=>b.onclick=()=>doStep(b.dataset.k));
+  $('#wSeq').innerHTML=HSEQ.length?HSEQ.map((k,i)=>`<span class="sq ${STEPS.find(x=>x.k===k).ok?'':'x'}">${i+1}. ${STEPS.find(x=>x.k===k).t.split(' (')[0]}</span>`).join(''):'<span style="color:var(--muted);font-size:12.5px">Aún no haces ningún paso.</span>';
+  $('#wMsg').innerHTML=HW.msg?`<div class="fb mid" style="margin-top:6px">${HW.msg}</div>`:'';
+  if(UV){const left=G.filter(g=>g.on), pct=Math.round((1-left.length/128)*100), ideal=['enj1','jab','dedo','enj2','sec','des'], seqOK=JSON.stringify(HSEQ)===JSON.stringify(ideal);
+    const by={};left.forEach(g=>by[g.reg]=(by[g.reg]||0)+1);const nm={palma:'palmas',dedos:'dedos',entre:'entre los dedos',unas:'bajo las uñas',pulgar:'pulgares',muneca:'muñecas y antebrazos'};
+    const worst=Object.entries(by).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([r,n])=>`${nm[r]} (${n})`).join(' y ');
+    $('#wRes').innerHTML=`<div class="fb ${pct>=95&&seqOK?'good':pct>=80?'mid':'bad'}"><b>Se eliminó el ${pct} % de los microorganismos.</b> ${seqOK?'✅ Seguiste los 6 pasos en el orden de la Figura 5.':'El orden de la Figura 5 es: 1 enjuagar → 2 jabón y frotar → 3 entre dedos y uñas → 4 enjuagar → 5 secar → 6 desinfectante.'} ${left.length?`Donde más quedaron: ${worst}.`:''}</div>`;}
+  else $('#wRes').innerHTML='';
+}
+$('#wUV').onclick=()=>{if(RUB)return;UV=!UV;$('#wUV').textContent=UV?'💡 Luz normal':'🔦 Revisar con luz UV';renderW();};
+$('#wRe').onclick=()=>{if(RUB){clearInterval(RUB);RUB=null;}seedGerms();WORD=shuffle(STEPS.map(x=>x.k));$('#wUV').textContent='🔦 Revisar con luz UV';renderW();};
+
+/* ===================== 3 · ¿CUÁNDO LAVARSE? ===================== */
+const EV=[
+ ['🧥','Se pone la bata, la cofia y el cubrebocas en el vestidor.',0,'Primero se coloca el equipo y después se lava las manos, para no tocar el uniforme con las manos ya lavadas.'],
+ ['🚪','Entra al andén de recepción.',1,'Siempre al entrar al área de trabajo.'],
+ ['📦','Abre las cajas y revisa las pechugas crudas.',0,'Se trabaja con las manos ya lavadas (o con guantes limpios).'],
+ ['📝','Termina con la carne cruda y va a llenar la bitácora.',1,'Después de tocar materia prima cruda, antes de tocar papeles, equipo o superficies limpias.'],
+ ['😷','Se acomoda el cubrebocas y se toca la cara.',1,'Tocarse la cara, la nariz o el cabello contamina las manos.'],
+ ['🗑️','Saca la bolsa de basura al contenedor.',1,'Después de tocar basura.'],
+ ['🚻','Va al baño y regresa al área.',1,'Después de ir al baño, siempre.'],
+ ['🔍','Lee la etiqueta de una caja sin tocar el producto.',0,'Leer no contamina las manos.'],
+ ['🤝','Escucha las indicaciones del docente.',0,'No hay contacto con nada sucio.']
+];
+let EA={}, ECHK=false;
+function renderE(){
+  $('#evList').innerHTML=EV.map(([ic,t,a,e],i)=>`<div class="ev ${EA[i]?'on':''} ${ECHK?(!!EA[i]===!!a?'ok':'no'):''}" data-i="${i}"><span class="ic">${ic}</span><span class="tx">${t}${ECHK?`<small>${!!EA[i]===!!a?'✓':'✗'} ${a?'Sí se lava las manos.':'No hace falta en este momento.'} ${e}</small>`:''}</span><span class="sw">${EA[i]?'🧼 Lavar':'—'}</span></div>`).join('');
+  $$('#evList .ev').forEach(el=>el.onclick=()=>{if(ECHK)return;const i=+el.dataset.i;EA[i]=!EA[i];renderE();});
+  const ok=EV.filter((x,i)=>!!EA[i]===!!x[2]).length;
+  $('#evFb').innerHTML=ECHK?`<div class="fb ${ok===EV.length?'good':'mid'}">${ok} de ${EV.length} correctas. Recuerda la regla de la Figura 5: <b>repetir al entrar al área, después de ir al baño y después de tocar basura, materia prima cruda o la cara.</b></div>`:'';
+}
+$('#evChk').onclick=()=>{ECHK=true;renderE();};
+$('#evRe').onclick=()=>{EA={};ECHK=false;renderE();};
+
+/* ===================== Pestañas ===================== */
+function show(t){$$('.tab').forEach(x=>x.classList.toggle('on',x.dataset.t===t));$$('.pane').forEach(p=>p.classList.toggle('show',p.dataset.p===t));window.scrollTo({top:0,behavior:'smooth'});}
+$$('.tab').forEach(b=>b.onclick=()=>show(b.dataset.t));
+seedGerms();renderB();renderW();renderE();
+</script>
+</body>
+</html>

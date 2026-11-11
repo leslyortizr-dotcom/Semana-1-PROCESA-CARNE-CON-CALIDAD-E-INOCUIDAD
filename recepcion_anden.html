@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Andén de recepción · Semana 1</title>
+<style>
+:root{
+  --navy:#12306b; --navy-2:#1d4196; --ink:#0f1b33; --text:#22304a; --muted:#64748b;
+  --bg:#eef2f8; --card:#ffffff; --line:#dbe3ef; --soft:#f6f8fc;
+  --orange:#f05a28; --magenta:#d61f5c; --meat:#b91c1c; --ok:#16a34a; --warn:#d97706; --bad:#dc2626;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;background:var(--bg);color:var(--text);padding:18px;line-height:1.45}
+.app{max-width:1200px;margin:0 auto;background:var(--card);border-radius:18px;box-shadow:0 12px 34px rgba(15,27,51,.10);overflow:hidden}
+.topbar{height:6px;background:linear-gradient(90deg,var(--meat),var(--orange),var(--magenta))}
+header{padding:16px 24px 6px}
+.back{display:inline-flex;align-items:center;gap:6px;background:#334155;color:#f8fafc;text-decoration:none;padding:8px 14px;border-radius:8px;font-weight:600;font-size:13px;border:1px solid #475569;margin-bottom:12px}
+.back:hover{background:#1e293b}
+.title-row{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+h1{margin:0;color:var(--navy);font-size:26px;letter-spacing:-.3px}
+.subtitle{color:var(--muted);font-size:14px;margin-top:2px;max-width:820px}
+.week-tag{background:var(--navy);color:#fff;font-weight:700;font-size:12px;padding:6px 12px;border-radius:999px;white-space:nowrap}
+.week-tag b{color:#ffb38f}
+.tabs{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:12px 24px 0}
+@media (max-width:480px){.tabs{grid-template-columns:1fr}}
+.tab{border:2px solid var(--line);background:#fff;border-radius:12px;padding:10px 14px;text-align:left;cursor:pointer;font:inherit;color:var(--muted)}
+.tab b{display:block;font-size:15px;color:inherit}
+.tab small{font-size:12.5px}
+.tab.on{border-color:var(--navy);background:#eef3ff;color:var(--navy)}
+.pane{display:none;padding:12px 24px 18px}
+.pane.show{display:block}
+.presets{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
+.presets .lbl{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-right:4px}
+.chip{border:1.5px solid var(--line);background:#fff;color:var(--text);padding:6px 11px;border-radius:999px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit}
+.chip:hover{border-color:var(--navy-2)}
+.chip.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.dock{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#f8fafc;margin-bottom:12px}
+.dock svg{display:block;width:100%;height:auto}
+@keyframes arrive{from{transform:translateX(560px)}to{transform:translateX(0)}}
+.truck-in{animation:arrive 1.1s cubic-bezier(.2,.8,.2,1)}
+.lab{display:grid;grid-template-columns:290px 1fr;gap:16px}
+@media (max-width:960px){.lab{grid-template-columns:1fr}}
+.col{display:flex;flex-direction:column;gap:12px;min-width:0}
+.card{background:var(--soft);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.card h3{margin:0 0 8px;font-size:14.5px;color:var(--navy)}
+.info{font-size:12.8px}
+.info div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px dashed var(--line);padding:3px 0}
+.info div:last-child{border:0}
+.info span{color:var(--muted)}
+.info b{text-align:right}
+.bubble{margin-top:8px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:12px;padding:7px 10px;font-size:12.5px;font-weight:600}
+.route{display:flex;flex-direction:column;gap:5px}
+.stn{display:flex;gap:8px;align-items:center;border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:6px 9px;font-size:12.8px;font-weight:600;color:var(--muted)}
+.stn i{font-style:normal;width:22px;height:22px;border-radius:50%;background:#e2e8f0;color:#475569;display:inline-flex;align-items:center;justify-content:center;font-size:11px;flex:0 0 auto}
+.stn .sc{margin-left:auto;font-size:11.5px;color:var(--muted)}
+.stn.on{border-color:var(--orange);background:#fff7ed;color:var(--ink)}
+.stn.on i{background:var(--orange);color:#fff}
+.stn.done{color:var(--ink)}
+.stn.done i{background:var(--ok);color:#fff}
+.panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.panel>h2{margin:0 0 4px;font-size:18px;color:var(--navy)}
+.panel>.lead{margin:0 0 10px;font-size:13.5px;color:var(--muted)}
+.vis{border:1px solid var(--line);border-radius:12px;background:#fbfcfe;overflow:hidden;margin-bottom:10px}
+.vis svg{display:block;width:100%;height:auto}
+.vis .cap{font-size:11.5px;color:var(--muted);padding:5px 10px;border-top:1px solid var(--line);background:#fff}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:700px){.two{grid-template-columns:1fr}}
+.crit{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.cr{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:7px 10px;background:#fff;font-size:13.2px}
+.cr .tg{display:flex;gap:4px}
+.cr .tg button{border:1.5px solid var(--line);background:#fff;border-radius:8px;padding:5px 9px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;color:var(--muted)}
+.cr .tg button.y.on{background:#dcfce7;border-color:var(--ok);color:#14532d}
+.cr .tg button.n.on{background:#fee2e2;border-color:var(--bad);color:#7f1d1d}
+.cr .tg button:disabled{cursor:default}
+.cr .ex{grid-column:1/-1;font-size:12.3px;padding:5px 8px;border-radius:8px}
+.cr .ex.good{background:#f0fdf4;color:#14532d}
+.cr .ex.bad{background:#fef2f2;color:#7f1d1d}
+.btn{border:0;border-radius:10px;padding:10px 14px;font-weight:700;font-size:13.5px;cursor:pointer;font-family:inherit}
+.btn:disabled{opacity:.45;cursor:default}
+.btn-accent{background:linear-gradient(90deg,var(--orange),var(--magenta));color:#fff}
+.btn-ghost{background:#fff;border:1.5px solid var(--line);color:var(--text)}
+.btn-primary{background:var(--navy);color:#fff}
+.btn-sm{padding:6px 10px;font-size:12.5px}
+.row-btn{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center}
+.fb{margin-top:10px;padding:10px 12px;border-radius:10px;font-size:13.2px}
+.fb.good{background:#f0fdf4;border:1px solid #bbf7d0;color:#14532d}
+.fb.bad{background:#fef2f2;border:1px solid #fecaca;color:#7f1d1d}
+.fb.mid{background:#fffbeb;border:1px solid #fde68a;color:#78350f}
+.paper{background:#fffdf7;border:1px solid #e7dcc3;border-radius:10px;padding:12px 14px;font-size:12.8px;box-shadow:0 2px 6px rgba(0,0,0,.05)}
+.paper h4{margin:0 0 6px;font-size:13px;letter-spacing:.5px;color:#7c5a1d}
+.paper div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px dotted #e7dcc3;padding:3px 0}
+.paper span{color:#8a7a5a}
+.seal{display:flex;align-items:center;gap:10px;margin-top:8px}
+.labels{display:flex;flex-direction:column;gap:6px}
+.lbl-card{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:#fff;font-size:12.6px}
+.lbl-card b{color:var(--navy)}
+.lbl-card.missing{border-style:dashed;color:var(--bad)}
+.stepbox{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:10px;background:#fbfcfe}
+.stepbox h4{margin:0 0 6px;font-size:13.5px;color:var(--navy)}
+.stepbox.lock{opacity:.45;pointer-events:none}
+.pos{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.pos button{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:7px 10px;font-weight:700;font-size:12.5px;cursor:pointer;font-family:inherit;color:var(--text)}
+.pos button.on{border-color:var(--navy);background:#eef3ff;color:var(--navy)}
+.pos button.ok{border-color:var(--ok)}
+.pill{display:inline-block;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px}
+.pill.clean{background:#dcfce7;color:#14532d}
+.pill.dirty{background:#fee2e2;color:#7f1d1d}
+.tgt{cursor:pointer}
+.tgt circle{transition:r .15s}
+.tgt:hover circle{r:17}
+table.tb{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff}
+table.tb th{background:var(--navy);color:#fff;text-align:left;padding:6px 8px;font-size:12px}
+table.tb td{border-bottom:1px solid var(--line);padding:6px 8px;vertical-align:top}
+.tbwrap{overflow-x:auto}
+.grp{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px;background:#fff}
+.grp h4{margin:0 0 6px;font-size:13.5px;color:var(--ink)}
+.dbtn{display:flex;gap:6px;flex-wrap:wrap}
+.dbtn button{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:8px 11px;font-weight:700;font-size:12.8px;cursor:pointer;font-family:inherit;color:var(--text)}
+.dbtn button.on[data-d=acc]{border-color:var(--ok);background:#dcfce7;color:#14532d}
+.dbtn button.on[data-d=cond]{border-color:var(--warn);background:#fef3c7;color:#78350f}
+.dbtn button.on[data-d=rech]{border-color:var(--bad);background:#fee2e2;color:#7f1d1d}
+.acts{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+@media (max-width:700px){.acts{grid-template-columns:1fr}}
+.act{display:flex;gap:8px;align-items:flex-start;border:1.5px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;font-size:12.8px;cursor:pointer}
+.act input{margin-top:2px}
+.act.on{border-color:var(--navy);background:#eef3ff}
+.act.req{border-color:var(--ok);background:#f0fdf4}
+.act.bad{border-color:var(--bad);background:#fef2f2}
+.chain{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
+@media (max-width:700px){.chain{grid-template-columns:1fr}}
+.chain div{background:#fff;border:1px solid var(--line);border-top:4px solid var(--navy);border-radius:10px;padding:7px 9px;font-size:12.3px}
+.chain div:nth-child(2){border-top-color:var(--orange)}
+.chain div:nth-child(3){border-top-color:var(--magenta)}
+.chain div:nth-child(4){border-top-color:var(--ok)}
+.chain b{display:block;font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.form{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px}
+@media (max-width:700px){.form{grid-template-columns:1fr}}
+.form label{font-size:12px;font-weight:700;color:var(--muted);display:flex;flex-direction:column;gap:3px}
+.form input{font:inherit;font-size:14px;padding:7px 9px;border-radius:8px;border:1.5px solid var(--line)}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+@media (max-width:800px){.kpis{grid-template-columns:1fr 1fr}}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 10px;text-align:center}
+.kpi small{display:block;font-size:11px;color:var(--muted);font-weight:600}
+.kpi b{font-size:17px;color:var(--navy)}
+.sumbox{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff;margin-top:10px}
+.miss{background:#fff7ed;border-left:4px solid var(--orange);padding:7px 10px;border-radius:8px;font-size:12.8px;margin:6px 0}
+details.teacher{margin:0 24px 22px;border:1px solid var(--line);border-radius:12px;padding:10px 14px;background:#fbfcfe;font-size:13.5px}
+details.teacher summary{cursor:pointer;font-weight:700;color:var(--navy)}
+details.teacher li{margin:3px 0}
+footer{padding:0 24px 18px;font-size:11.5px;color:var(--muted)}
+@media print{body{background:#fff;padding:0}.noprint,.tabs,header .back,details.teacher,footer,.pane[data-p=and]{display:none!important}.pane[data-p=bit]{display:block!important}.app{box-shadow:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar"></div>
+  <header>
+    <a class="back" href="index.html">⬅ Volver al Menú Principal</a>
+    <div class="title-row">
+      <div>
+        <h1>🚚 Andén de recepción virtual</h1>
+        <div class="subtitle">Recibe camiones como el técnico de la planta: revisa documentos y vehículo, mide la temperatura bien, evalúa el producto, emite un dictamen con su acción correctiva y regístralo en la bitácora.</div>
+      </div>
+      <div class="week-tag">Módulo III · Semana 1 · <b>Figura 2 · Tabla 1 · Práctica 1</b></div>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab on" data-t="and"><b>1 · El andén</b><small>Documentos → vehículo → temperatura → producto → dictamen → registro</small></button>
+    <button class="tab" data-t="bit"><b>2 · Bitácora y constancia</b><small>Lo que no se registra, no se puede demostrar</small></button>
+  </div>
+
+  <!-- ===================== 1 · ANDÉN ===================== -->
+  <div class="pane show" data-p="and">
+    <div class="presets"><span class="lbl">Turno</span>
+      <button class="chip on" data-m="p1">🧪 Práctica 1 · lotes A–D</button>
+      <button class="chip" data-m="libro">📘 Casos del CECyBOOK</button>
+      <button class="chip" data-m="rand">🎲 Turno completo (6 camiones al azar)</button>
+    </div>
+    <div class="dock" id="dock"></div>
+    <div class="lab">
+      <div class="col">
+        <div class="card"><h3 id="tk-title">🚛 Camión en el andén</h3><div class="info" id="tk"></div><div id="tk-b"></div></div>
+        <div class="card"><h3>🧭 Ruta de recepción (Figura 2)</h3><div class="route" id="route"></div></div>
+        <div class="card"><h3>📊 Este turno</h3><div class="info" id="turn"></div></div>
+      </div>
+      <div class="col"><div class="panel" id="panel"></div></div>
+    </div>
+  </div>
+
+  <!-- ===================== 2 · BITÁCORA ===================== -->
+  <div class="pane" data-p="bit">
+    <div class="kpis" id="bk"></div>
+    <div class="sumbox">
+      <h3 style="margin:0 0 6px;color:var(--navy);font-size:15px">📝 Bitácora de recepción · 08/02/2027</h3>
+      <div class="tbwrap"><table class="tb" id="log"><tr><th>Fecha y hora</th><th>Proveedor / lote</th><th>Temp. (°C)</th><th>Sensorial</th><th>Empaque / etiqueta</th><th>Dictamen</th><th>Acción correctiva</th><th>Responsable</th></tr></table></div>
+      <p style="font-size:12px;color:var(--muted);margin:8px 0 0">Formato de la Tabla 2 del CECyBOOK. Se llena con lo que tú registraste, incluso si te equivocaste: así funciona una bitácora real.</p>
+    </div>
+    <div class="sumbox" id="const"></div>
+    <div class="sumbox">
+      <h3 style="margin:0 0 6px;color:var(--navy);font-size:15px">🔁 Los 7 principios HACCP en tu recepción (Tabla 3)</h3>
+      <div class="tbwrap"><table class="tb">
+        <tr><th>Principio</th><th>Dónde lo aplicaste en el andén</th></tr>
+        <tr><td>1. Analizar peligros</td><td>Biológicos (temperatura alta), físicos (empaque roto) y químicos (químicos en el vehículo).</td></tr>
+        <tr><td>2. Punto de control</td><td>La recepción controla la temperatura y el origen del producto.</td></tr>
+        <tr><td>3. Límites críticos</td><td>Refrigerado ≤ 4 °C; congelado sin signos de descongelación; origen inspeccionado.</td></tr>
+        <tr><td>4. Monitorear</td><td>Tres lecturas por lote con un termómetro verificado.</td></tr>
+        <tr><td>5. Acciones correctivas</td><td>Rechazar, segregar, devolver y notificar.</td></tr>
+        <tr><td>6. Verificar</td><td>Verificación del termómetro en baño de hielo; revisión de la bitácora por el supervisor.</td></tr>
+        <tr><td>7. Registrar</td><td>La fila de la bitácora, con hora y firma.</td></tr>
+      </table></div>
+    </div>
+  </div>
+
+  <details class="teacher">
+    <summary>👩‍🏫 Notas para el docente</summary>
+    <ul>
+      <li><b>Qué es:</b> un simulador de la Práctica 1 y de la Unidad 1 completa. Cada camión recorre la ruta de la Figura 2 en 7 estaciones. Los criterios son los de la <b>Tabla 1</b>. La bitácora sigue el formato de la <b>Tabla 2</b> y la pestaña 2 relaciona lo hecho con los principios HACCP de la <b>Tabla 3</b>.</li>
+      <li><b>Turnos:</b>
+        <ul>
+          <li><b>Práctica 1:</b> los lotes A–D de la Tabla 4, para usar antes del taller.</li>
+          <li><b>Casos del CECyBOOK:</b> la pregunta detonadora, el caso integrador de las 7:40, el ejemplo resuelto «¿el promedio basta?» y la salida rápida (res a 6 °C).</li>
+          <li><b>Turno completo:</b> 6 camiones al azar entre 13 casos.</li>
+        </ul></li>
+      <li><b>Temperatura:</b>
+        <ul>
+          <li>El termómetro se verifica en baño de hielo (0 °C ± 1 °C). En algunos camiones el termómetro está descalibrado a propósito; si el alumno lo usa así, sus lecturas salen desviadas.</li>
+          <li>Medir sobre el empaque o en la orilla delgada da lecturas engañosas: en el camión de las 7:40, el empaque marca ≈ 3 °C aunque el centro esté a 5 °C.</li>
+          <li>Se evalúa la desinfección del punzón antes de cada inserción. Ver el promedio y la lectura más desfavorable se refuerza en la retroalimentación.</li>
+          <li>Criterio de recepción: refrigerada ≤ 4 °C (NOM-251-SSA1-2009); congelada ≤ −18 °C (NOM-194-SSA1-2004) y sin signos de descongelación.</li>
+        </ul></li>
+      <li><b>Congelado:</b> el CECyBOOK no detalla cómo medir producto congelado. Aquí se usa la práctica habitual de medir <b>entre empaques</b>, sin perforar la pieza. Si el punzón entra en una pieza «congelada», es porque está descongelada.</li>
+      <li><b>Dictamen:</b> aceptar, aceptar condicionado (segregar) o rechazar, siempre con acción correctiva. En el ejemplo resuelto y en el lote C, medir más piezas permite delimitar el problema; con esa evidencia la aceptación condicionada vale completa, y sin ella solo vale parcialmente.</li>
+      <li><b>Caso de las 7:40:</b> el CECyBOOK dice «el termógrafo del camión muestra que <b>la caja</b> estuvo a 9 °C durante 2 horas». Aquí se interpreta como la caja refrigerada del camión, es decir, toda la carga. Conviene precisarlo en el libro.</li>
+      <li><b>Puntaje:</b> documentos y vehículo, medición de temperatura (verificación, centro térmico, desinfección y juicio), producto (sensorial y empaque), dictamen y acción correctiva, y registro. La pestaña 2 genera una constancia imprimible con estos rubros (A.C.1).</li>
+    </ul>
+  </details>
+  <footer>Recurso didáctico complementario · CECyBOOK Módulo III · Semana 1 · Unidad 1: Recibe la carne para su aceptación o rechazo · NOM-251-SSA1-2009 · NOM-194-SSA1-2004 · NOM-009-ZOO-1994.</footer>
+</div>
+
+<script>
+const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)), lerp=(a,b,t)=>a+(b-a)*t;
+const f1=v=>(Math.round(v*10)/10).toFixed(1).replace('-','−');
+const shuffle=a=>{const b=a.slice();for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;};
+const HOY='08/02/2027';
+
+/* ===================== Datos ===================== */
+function tg(base,exc){const p=[];for(let i=0;i<=32;i++){const h=-8+i*0.25;let v=base+0.35*Math.sin(i*1.3)+0.2*Math.sin(i*0.37);if(exc){const[a,b,T]=exc;const k=Math.min(1,Math.max(0,Math.min((h-a)/0.5,(b-h)/0.5)));v=lerp(v,T+0.3*Math.sin(i),k);}p.push([h,v]);}return p;}
+const OKALL={d1:1,d2:1,d3:1,v1:1,v2:1,v3:1,t1:1,s1:1,s2:1,s3:1,s4:1,e1:1,e2:1,e3:1,e4:1};
+const X=(o)=>Object.assign({},OKALL,o);
+const CASES={
+ A:{tag:'Práctica 1 · Lote A',hora:'08:15',prov:'Avícola X',prod:'Pechuga de pollo refrigerada',esp:'pollo',pieza:'pechuga',est:'ref',cajas:10,lote:'A-0208',
+  rem:{lote:'A-0208',cert:'TIF 0315'},labels:[{lote:'A-0208',cad:'14/02/2027',n:10}],veh:{air:2.0,limpio:1,quim:0,plagas:0,tg:tg(2.2)},
+  temp:{core:[2.8,3.1,3.4]},sens:{color:'ok',olor:'Característico, fresco.',tex:'firme',exu:'poco'},emp:{roto:0,hum:0,inf:0,etiq:'ok'},
+  exp:X({}),why:{},groups:[{label:'Lote A-0208 (10 cajas)',ok:['acc'],why:'Cumple todos los criterios: es el lote de referencia de la práctica.'}]},
+ B:{tag:'Práctica 1 · Lote B',hora:'08:30',prov:'Avícola X',prod:'Pierna y muslo de pollo refrigerado',esp:'pollo',pieza:'pierna',est:'ref',cajas:10,lote:'B-0208',
+  rem:{lote:'B-0208',cert:'TIF 0315'},labels:[{lote:'B-0208',cad:'13/02/2027',n:10}],veh:{air:3.0,limpio:1,quim:0,plagas:0,tg:tg(2.6,[-5,-2,11])},
+  temp:{core:[8.9,9.2,9.0]},sens:{color:'ok',olor:'Ligeramente agrio.',tex:'firme',exu:'abundante'},emp:{roto:0,hum:1,inf:0,etiq:'ok'},
+  exp:X({v2:0,t1:0,s2:0,s4:0,e2:0}),
+  why:{v2:'El termógrafo registra 3 h por arriba de 10 °C durante el viaje.',t1:'Las tres lecturas están alrededor de 9 °C: más de 4 °C.',s2:'Olor agrio: inicio de deterioro.',s4:'Hay exceso de líquido en la charola.',e2:'Empaques húmedos por condensación: el producto se calentó.'},
+  extra:['rev'],groups:[{label:'Lote B-0208 (10 cajas)',ok:['rech'],why:'La temperatura compromete la inocuidad y ya hay cambios de olor y exudado. En la práctica, este lote no se consume y se desecha.'}]},
+ C:{tag:'Práctica 1 · Lote C',hora:'08:45',prov:'Avícola X',prod:'Pierna de pollo congelada',esp:'pollo',pieza:'pierna',est:'cong',cajas:8,lote:'C-0208',
+  rem:{lote:'C-0208',cert:'TIF 0315'},labels:[{lote:'C-0208',cad:'08/08/2027',n:8}],veh:{air:-20,limpio:1,quim:0,plagas:0,tg:tg(-20.5)},
+  temp:{core:[-19.5,-18.9,-9.5],more:[['Caja vecina, final de la carga',-19.1],['Otra caja del final',-19.3],['Caja del centro',-19.6]]},
+  sens:{color:'ok',olor:'Sin olor (congelado).',tex:'unaBlanda',exu:'congelado'},emp:{roto:0,hum:0,inf:0,etiq:'ok'},
+  exp:X({t1:0,s3:0,s4:0}),why:{t1:'Una caja está a −9.5 °C: no se mantuvo a −18 °C o menos.',s3:'Una pieza está blanda y deformada, mientras las demás están duras.',s4:'Hay exudado congelado (hielo rosado) dentro de una bolsa: signo de descongelación y recongelación.'},
+  moreOK:true,groups:[{label:'Lote C-0208 (8 cajas)',ok:['rech'],okMore:['cond'],part:['cond'],why:'La NOM-251 indica rechazar el producto congelado con signos de descongelación. Solo si mides más piezas y demuestras que el problema se limita a una caja, se puede aceptar condicionado: esa caja se segrega y se rechaza.'}]},
+ D:{tag:'Práctica 1 · Lote D',hora:'09:00',prov:'Avícola X',prod:'Muslo de pollo refrigerado',esp:'pollo',pieza:'pierna',est:'ref',cajas:10,lote:'D-0208',
+  rem:{lote:'D-0208',cert:'TIF 0315'},labels:[{lote:'D-0208',cad:'06/02/2027',n:10}],veh:{air:2.0,limpio:1,quim:0,plagas:0,tg:tg(2.0)},
+  temp:{core:[2.9,3.3,3.0]},sens:{color:'ok',olor:'Característico, fresco.',tex:'firme',exu:'poco'},emp:{roto:1,hum:0,inf:0,etiq:'ok'},
+  exp:X({e1:0,e4:0}),why:{e1:'Una bolsa está rota: el producto quedó expuesto.',e4:'La caducidad fue el 06/02/2027 y hoy es 08/02/2027.'},
+  groups:[{label:'Lote D-0208 (10 cajas)',ok:['rech'],why:'La temperatura es correcta, pero el empaque está dañado y el producto está caducado. La temperatura no compensa las demás fallas.'}]},
+ DET:{tag:'Pregunta detonadora',hora:'07:10',prov:'Distribuidora Express',prod:'Pollo en piezas refrigerado',esp:'pollo',pieza:'pierna',est:'ref',cajas:12,lote:'P-117',prisa:'«¡Tengo prisa! Recíbame todo y luego lo revisan.»',
+  rem:{lote:'P-117',cert:'TIF 0482'},labels:[{lote:'P-117',cad:'13/02/2027',n:11},{lote:null,n:1}],veh:{air:7.5,limpio:1,quim:0,plagas:0,tg:tg(4,[-3,0.1,8])},
+  temp:{core:[9.0,8.6,9.3]},sens:{color:'ok',olor:'Característico.',tex:'firme',exu:'abundante'},emp:{roto:0,hum:1,inf:0,etiq:'una sin'},
+  exp:X({d2:0,v2:0,t1:0,s4:0,e2:0,e3:0}),
+  why:{d2:'Una caja no tiene etiqueta: no se puede comprobar que pertenezca al lote P-117.',v2:'La unidad marca 7.5 °C y el termógrafo sube en las últimas 3 h: la refrigeración falló.',t1:'Las lecturas están alrededor de 9 °C.',s4:'Exceso de líquido en las bolsas.',e2:'Empaques húmedos.',e3:'Una caja no tiene etiqueta.'},
+  extra:['rev'],groups:[{label:'Lote P-117 (12 cajas)',ok:['rech'],why:'Temperatura fuera de criterio, empaques húmedos y una caja sin etiqueta. La prisa del proveedor no es un criterio.'}]},
+ T740:{tag:'Caso integrador · el camión de las 7:40',hora:'07:40',prov:'Avícola del Centro',prod:'Pierna y muslo de pollo refrigerado',esp:'pollo',pieza:'pierna',est:'ref',cajas:40,lote:'2201',
+  rem:{lote:'2201',cert:'TIF 0315'},labels:[{lote:'2201',cad:'12/02/2027',n:34},{lote:'2198',cad:'07/02/2027',n:6}],veh:{air:2.0,limpio:1,quim:0,plagas:0,tg:tg(2.0,[-5.7,-3.7,9])},
+  temp:{core:[4.6,5.0,4.8]},sens:{color:'ok',olor:'Característico, normal.',tex:'firme',exu:'poco'},emp:{roto:0,hum:0,inf:0,etiq:'ok'},
+  exp:X({d2:0,v2:0,t1:0,e4:0}),
+  why:{d2:'La remisión dice lote 2201, pero 6 cajas traen etiqueta del lote 2198.',v2:'El termógrafo registra 2 h a 9 °C en la madrugada.',t1:'Las tres lecturas (4.6, 5.0 y 4.8 °C) superan 4 °C. Ojo: sobre el empaque marca ≈ 3 °C y engaña.',e4:'Las 6 cajas del lote 2198 caducaron ayer (07/02/2027).'},
+  extra:['rev'],groups:[
+   {label:'6 cajas del lote 2198',ok:['rech'],why:'El lote no coincide con la remisión y la caducidad está vencida.'},
+   {label:'34 cajas del lote 2201',ok:['rech'],why:'Las tres lecturas superan 4 °C y el termógrafo confirma que se rompió la cadena de frío.'}]},
+ EJ:{tag:'Ejemplo resuelto · ¿el promedio basta?',hora:'10:05',prov:'Avícola del Bajío',prod:'Pechuga de pollo refrigerada',esp:'pollo',pieza:'pechuga',est:'ref',cajas:30,lote:'E-0208',
+  rem:{lote:'E-0208',cert:'TIF 0390'},labels:[{lote:'E-0208',cad:'15/02/2027',n:30}],veh:{air:2.5,limpio:1,quim:0,plagas:0,tg:tg(2.5)},
+  temp:{core:[3.2,3.8,5.1],more:[['Otra caja junto a la puerta',4.9],['Otra caja junto a la puerta',5.4],['Caja del centro-final',3.6]]},
+  sens:{color:'ok',olor:'Característico, fresco.',tex:'firme',exu:'poco'},emp:{roto:0,hum:0,inf:0,etiq:'ok'},
+  exp:X({t1:0}),why:{t1:'El promedio es 4.0 °C, pero una lectura (5.1 °C) está fuera de criterio. Se decide con la lectura más desfavorable.'},
+  extra:['mas'],moreOK:true,groups:[{label:'Lote E-0208 (30 cajas)',ok:['rech'],okMore:['cond'],part:['cond'],why:'Hay que separar el lote y medir más piezas para delimitar el problema. Con esa evidencia (solo las cajas junto a la puerta están calientes) se acepta condicionado: esas cajas se segregan y se rechazan. Rechazar todo también es válido.'}]},
+ RES:{tag:'Salida rápida · res a 6 °C',hora:'11:20',prov:'Cárnicos La Huasteca',prod:'Bola de res refrigerada',esp:'res',pieza:'res',est:'ref',cajas:6,lote:'R-5531',
+  rem:{lote:'R-5531',cert:'TIF 0127'},labels:[{lote:'R-5531',cad:'15/02/2027',n:6}],veh:{air:6.0,limpio:1,quim:0,plagas:0,tg:tg(6.0)},
+  temp:{core:[6.0,5.8,6.2]},sens:{color:'ok',olor:'Característico, fresco.',tex:'firme',exu:'poco'},emp:{roto:0,hum:0,inf:0,etiq:'ok'},
+  exp:X({v2:0,t1:0}),why:{v2:'La unidad mantiene el aire a 6 °C: no conserva la carne a 4 °C o menos.',t1:'Llega a ≈ 6 °C. El criterio de recepción es ≤ 4 °C (NOM-251). Los 7 °C de la NOM-194 son la definición de carne refrigerada, no un margen de aceptación.'},
+  extra:['rev'],groups:[{label:'Lote R-5531 (6 cajas)',ok:['rech'],why:'Buen color y olor no compensan una temperatura fuera de criterio: las bacterias no se ven ni se huelen al principio.'}]},
+ QUIM:{tag:'Turno · cerdo con químicos',hora:'12:00',prov:'Porcícola Los Altos',prod:'Pierna de cerdo refrigerada',esp:'cerdo',pieza:'res',est:'ref',cajas:8,lote:'C-8810',
+  rem:{lote:'C-8810',cert:'TIF 0218'},labels:[{lote:'C-8810',cad:'14/02/2027',n:8}],veh:{air:2.0,limpio:0,quim:1,plagas:0,tg:tg(2.0)},
+  temp:{core:[2.5,3.0,2.7]},sens:{color:'ok',olor:'Ligero olor a químico (desengrasante).',tex:'firme',exu:'poco'},emp:{roto:0,hum:0,inf:0,etiq:'ok'},
+  exp:X({v1:0,v3:0,s2:0}),why:{v1:'La caja del camión huele a químico y tiene derrames en el piso.',v3:'Transporta bidones de desengrasante junto a la carne: riesgo de contaminación química.',s2:'La carne ya tomó olor a químico.'},
+  groups:[{label:'Lote C-8810 (8 cajas)',ok:['rech'],why:'Peligro químico: la temperatura correcta no elimina la contaminación por transporte incompatible.'}]},
+ SINC:{tag:'Turno · sin documentos',hora:'12:30',prov:'Introductor Hnos. Pérez',prod:'Pierna de cerdo refrigerada',esp:'cerdo',pieza:'res',est:'ref',cajas:5,lote:'—',
+  rem:{lote:null,cert:null,nota:'Nota de venta sin lote ni datos de origen'},labels:[{lote:null,n:5}],veh:{air:3.0,limpio:1,quim:0,plagas:0,tg:tg(3.0)},
+  temp:{core:[3.0,3.5,3.2]},sens:{color:'ok',olor:'Característico.',tex:'firme',exu:'poco'},emp:{roto:0,hum:0,inf:0,etiq:'sin'},
+  exp:X({d1:0,d2:0,d3:0,e3:0}),why:{d1:'Solo trae una nota de venta: faltan remisión con lote y datos de origen.',d2:'No hay número de lote que comparar.',d3:'No trae sello ni certificado de inspección: no se puede demostrar que el origen esté inspeccionado.',e3:'Las piezas no traen etiqueta.'},
+  groups:[{label:'Producto del introductor (5 cajas)',ok:['rech'],why:'Sin origen inspeccionado ni trazabilidad no se recibe, aunque se vea bien (NOM-009-ZOO-1994 y NOM-251).'}]},
+ INF:{tag:'Turno · bolsas infladas',hora:'13:10',prov:'Alimentos del Valle',prod:'Pechuga de pollo marinada al vacío',esp:'pollo',pieza:'pechuga',est:'ref',cajas:12,lote:'M-2207',
+  rem:{lote:'M-2207',cert:'TIF 0390'},labels:[{lote:'M-2207',cad:'16/02/2027',n:12}],veh:{air:2.5,limpio:1,quim:0,plagas:0,tg:tg(2.5)},
+  temp:{core:[3.8,3.5,3.9]},sens:{color:'gris',olor:'Agrio al abrir una bolsa.',tex:'viscosa',exu:'poco'},emp:{roto:0,hum:0,inf:1,etiq:'ok'},
+  exp:X({s1:0,s2:0,s3:0,e1:0}),why:{s1:'Coloración grisácea, anormal para el pollo.',s2:'Olor agrio.',s3:'Superficie viscosa y pegajosa.',e1:'Bolsas infladas: gas producido por bacterias.'},
+  groups:[{label:'Lote M-2207 (12 cajas)',ok:['rech'],why:'La temperatura cumple, pero hay deterioro: bolsas infladas, olor agrio y viscosidad.'}]},
+ RESC:{tag:'Turno · res congelada',hora:'13:40',prov:'Cárnicos La Huasteca',prod:'Diezmillo de res congelado',esp:'res',pieza:'res',est:'cong',cajas:10,lote:'R-5610',
+  rem:{lote:'R-5610',cert:'TIF 0127'},labels:[{lote:'R-5610',cad:'10/11/2027',n:10}],veh:{air:-21,limpio:1,quim:0,plagas:0,tg:tg(-21)},
+  temp:{core:[-20.1,-19.4,-19.8]},sens:{color:'ok',olor:'Sin olor (congelado).',tex:'dura',exu:'none'},emp:{roto:0,hum:0,inf:0,etiq:'ok'},
+  exp:X({}),why:{},groups:[{label:'Lote R-5610 (10 cajas)',ok:['acc'],why:'Congelado, duro, sin signos de descongelación y documentado.'}]},
+ SJ:{tag:'Turno · pollo correcto',hora:'14:00',prov:'Avícola San Juan',prod:'Pechuga de pollo refrigerada',esp:'pollo',pieza:'pechuga',est:'ref',cajas:15,lote:'SJ-0208',
+  rem:{lote:'SJ-0208',cert:'TIF 0401'},labels:[{lote:'SJ-0208',cad:'14/02/2027',n:15}],veh:{air:1.8,limpio:1,quim:0,plagas:0,tg:tg(1.8)},
+  temp:{core:[1.9,2.4,2.2]},sens:{color:'ok',olor:'Característico, fresco.',tex:'firme',exu:'poco'},emp:{roto:0,hum:0,inf:0,etiq:'ok'},
+  exp:X({}),why:{},groups:[{label:'Lote SJ-0208 (15 cajas)',ok:['acc'],why:'Cumple todos los criterios.'}]}
+};
+const MODES={p1:['A','B','C','D'],libro:['DET','T740','EJ','RES'],rand:null};
+
+const CRIT={
+ doc:[['d1','Trae factura o remisión con proveedor, producto, lote y número de cajas'],['d2','El lote de la remisión coincide con las etiquetas de la carga'],['d3','Origen inspeccionado: sello o certificado de inspección']],
+ veh:[['v1','Caja del vehículo limpia, sin olores extraños ni plagas'],['v2','Refrigeración funcionando y termógrafo sin desviaciones'],['v3','Sin productos incompatibles (químicos u otros) junto a la carne']],
+ sen:[['s1','Color propio de la especie'],['s2','Olor característico, sin olores extraños'],['s3','Textura firme y elástica (dura si es congelado), no viscosa'],['s4','Poco exudado, sin signos de descongelación']],
+ emp:[['e1','Empaque íntegro: sin roturas ni bolsas infladas'],['e2','Empaque limpio y sin humedad externa'],['e3','Etiqueta presente, legible y completa'],['e4','Fecha de caducidad vigente']]
+};
+const tCrit=c=>c.est==='ref'?['t1','Todas las lecturas en el centro térmico son de 4 °C o menos (NOM-251)']:['t1','Todas las lecturas son de −18 °C o menos (NOM-194) y el producto está duro'];
+const STN=[['doc','📄','Documentos'],['veh','🚛','Vehículo'],['tmp','🌡️','Temperatura'],['sen','👃','Evaluación sensorial'],['emp','📦','Empaque y etiqueta'],['dic','⚖️','Dictamen'],['reg','📝','Bitácora']];
+const ACTS=[
+ ['alm','Almacenar de inmediato en refrigeración o congelación'],['seg','Segregar (separar e identificar) el producto no conforme'],
+ ['dev','Devolver al proveedor'],['not','Notificar al responsable de calidad y al proveedor'],
+ ['rev','Pedir y revisar los registros de transporte (termógrafo)'],['mas','Medir más piezas para delimitar el problema'],
+ ['reemp','Reempacar y volver a etiquetar para poder aceptarlo'],['cong','Congelarlo de inmediato para detener el deterioro'],
+ ['mezc','Mezclarlo con un lote bueno para que el promedio cumpla']];
+const FORBID=['reemp','cong','mezc'];
+const REQ={acc:['alm'],cond:['seg','dev','not','alm'],rech:['dev','not']};
+const DNAME={acc:'Aceptar',cond:'Aceptar condicionado',rech:'Rechazar'};
+
+/* ===================== Estado ===================== */
+let MODE='p1', Q=[], qi=0, S=null, LOG=[], TOT={doc:[0,0],tmp:[0,0],pro:[0,0],dic:[0,0],reg:[0,0]}, DONE=[];
+function newTurn(m){MODE=m;$$('[data-m]').forEach(b=>b.classList.toggle('on',b.dataset.m===m));
+  Q=m==='rand'?shuffle(Object.keys(CASES)).slice(0,6):MODES[m].slice();qi=0;loadTruck();}
+function loadTruck(){
+  const c=CASES[Q[qi]];
+  const bad=Math.random()<0.3, off=bad?(Math.random()<0.5?-1:1)*(1.5+Math.random()*0.7):(Math.random()-0.5)*1.0;
+  S={id:Q[qi],c,st:0,marks:{},conf:{},therm:{off,dec:null,used:off},reads:[],pos:0,clean:false,mas:false,more:[],dict:{},acts:new Set(),sc:{doc:[0,0],tmp:[0,0],pro:[0,0],dic:[0,0],reg:[0,0]},fb:{}};
+  drawDock(true);renderSide();renderPanel();
+}
+
+/* ===================== Andén (SVG) ===================== */
+function drawDock(anim){
+  const c=S.c, cold=c.est==='cong';
+  $('#dock').innerHTML=`<svg viewBox="0 0 1000 150">
+   <rect x="0" y="0" width="1000" height="150" fill="#eef4fb"/>
+   <rect x="0" y="112" width="1000" height="38" fill="#cbd5e1"/>
+   <rect x="0" y="20" width="250" height="92" fill="#dbe3ef"/><rect x="40" y="36" width="170" height="76" fill="#94a3b8"/><rect x="48" y="44" width="154" height="68" fill="#e2e8f0"/>
+   <text x="125" y="32" text-anchor="middle" font-size="12" font-weight="700" fill="#12306b">ANDÉN 1 · RECEPCIÓN</text>
+   <rect x="250" y="100" width="40" height="12" fill="#facc15"/><rect x="250" y="100" width="10" height="12" fill="#0f1b33"/><rect x="270" y="100" width="10" height="12" fill="#0f1b33"/>
+   <g class="${anim?'truck-in':''}">
+    <rect x="292" y="26" width="420" height="80" rx="6" fill="#ffffff" stroke="#94a3b8" stroke-width="2"/>
+    <rect x="292" y="26" width="420" height="16" rx="6" fill="${cold?'#7c3aed':'#b91c1c'}"/>
+    <text x="502" y="38" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">${cold?'❄ CONGELADO':'❄ REFRIGERADO'}</text>
+    <text x="502" y="74" text-anchor="middle" font-size="20" font-weight="800" fill="#12306b">${c.prov}</text>
+    <text x="502" y="94" text-anchor="middle" font-size="12" fill="#64748b">${c.prod}</text>
+    <rect x="712" y="44" width="110" height="62" rx="8" fill="#12306b"/><rect x="760" y="52" width="52" height="26" rx="4" fill="#bfdbfe"/>
+    <rect x="296" y="106" width="530" height="8" fill="#334155"/>
+    <circle cx="370" cy="116" r="15" fill="#1e293b"/><circle cx="370" cy="116" r="6" fill="#94a3b8"/>
+    <circle cx="420" cy="116" r="15" fill="#1e293b"/><circle cx="420" cy="116" r="6" fill="#94a3b8"/>
+    <circle cx="770" cy="116" r="15" fill="#1e293b"/><circle cx="770" cy="116" r="6" fill="#94a3b8"/>
+   </g>
+   <text x="985" y="24" text-anchor="end" font-size="12" font-weight="700" fill="#12306b">${HOY} · ${c.hora}</text>
+   <text x="985" y="42" text-anchor="end" font-size="12" fill="#64748b">Camión ${qi+1} de ${Q.length}</text>
+  </svg>`;
+}
+
+/* ===================== Lateral ===================== */
+function renderSide(){
+  const c=S.c;
+  $('#tk-title').textContent='🚛 '+c.tag;
+  $('#tk').innerHTML=[['Hora de llegada',c.hora],['Proveedor',c.prov],['Producto',c.prod],['Cajas',c.cajas],['Estado',c.est==='ref'?'Refrigerado':'Congelado']].map(r=>`<div><span>${r[0]}</span><b>${r[1]}</b></div>`).join('');
+  $('#tk-b').innerHTML=c.prisa?`<div class="bubble">🗣️ El chofer: ${c.prisa}</div>`:'';
+  $('#route').innerHTML=STN.map((s,i)=>{const k=s[0];const sc=S.fb[k]?`${S.fb[k][0]}/${S.fb[k][1]}`:'';return `<div class="stn ${i===S.st?'on':i<S.st?'done':''}"><i>${i<S.st?'✓':i+1}</i>${s[1]} ${s[2]}<span class="sc">${sc}</span></div>`;}).join('');
+  const tot=Object.values(TOT).reduce((a,v)=>[a[0]+v[0],a[1]+v[1]],[0,0]);
+  $('#turn').innerHTML=`<div><span>Camiones recibidos</span><b>${DONE.length} de ${Q.length}</b></div><div><span>Puntos acumulados</span><b>${tot[0]} / ${tot[1]}</b></div><div><span>Dictámenes correctos</span><b>${DONE.filter(d=>d.dictOK).length} de ${DONE.length}</b></div>`;
+}
+
+/* ===================== Panel por estación ===================== */
+function critRows(list,key){
+  const done=S.conf[key];
+  return `<div class="crit">${list.map(([id,t])=>{const m=S.marks[id];let ex='';
+    if(done){const ok=m===!!S.c.exp[id];const exp=S.c.exp[id];const w=S.c.why[id]||(exp?'La evidencia coincide con el criterio de la Tabla 1.':'');ex=`<div class="ex ${ok?'good':'bad'}">${ok?'✅':'❌'} ${exp?'Cumple':'No cumple'}. ${w}</div>`;}
+    return `<div class="cr"><span>${t}</span><span class="tg"><button class="y ${m===true?'on':''}" data-id="${id}" data-v="1" ${done?'disabled':''}>Cumple</button><button class="n ${m===false?'on':''}" data-id="${id}" data-v="0" ${done?'disabled':''}>No cumple</button></span>${ex}</div>`;}).join('')}</div>`;
+}
+function bindCrit(list,key,after){
+  $$('#panel .cr .tg button').forEach(b=>b.onclick=()=>{S.marks[b.dataset.id]=b.dataset.v==='1';renderPanel();});
+  const btn=$('#conf');if(btn){btn.disabled=!list.every(([id])=>S.marks[id]!==undefined);btn.onclick=()=>{S.conf[key]=true;after&&after();renderPanel();renderSide();};}
+}
+function scoreCrit(list,bucket){let c=0;list.forEach(([id])=>{if(S.marks[id]===!!S.c.exp[id])c++;});S.sc[bucket][0]+=c;S.sc[bucket][1]+=list.length;return [c,list.length];}
+function nextBtn(){return `<div class="row-btn"><button class="btn btn-primary" id="nx">Siguiente estación ➜</button></div>`;}
+function bindNext(){const b=$('#nx');if(b)b.onclick=()=>{S.st++;renderSide();renderPanel();window.scrollTo({top:$('#panel').getBoundingClientRect().top+window.scrollY-80,behavior:'smooth'});};}
+
+function renderPanel(){
+  const k=STN[S.st][0], P=$('#panel'), c=S.c;
+  if(k==='doc'){
+    P.innerHTML=`<h2>📄 1. Documentos</h2><p class="lead">Compara la remisión con las etiquetas de la carga. Sin trazabilidad no se recibe.</p>
+     <div class="two"><div>${docsHTML(c)}</div><div><div class="labels">${labelsHTML(c)}</div></div></div>
+     ${critRows(CRIT.doc,'doc')}${S.conf.doc?nextBtn():'<div class="row-btn"><button class="btn btn-accent" id="conf">Confirmar documentos</button></div>'}`;
+    bindCrit(CRIT.doc,'doc',()=>{S.fb.doc=scoreCrit(CRIT.doc,'doc');});bindNext();
+  }
+  else if(k==='veh'){
+    P.innerHTML=`<h2>🚛 2. Vehículo</h2><p class="lead">Abre la caja del camión: limpieza, olores, plagas, carga junto a la carne y registro de temperatura del viaje.</p>
+     <div class="vis">${truckSVG(c)}<div class="cap">Interior de la caja refrigerada. Pantalla de la unidad: temperatura del aire en este momento.</div></div>
+     <div class="vis">${tgSVG(c)}<div class="cap">Registrador de temperatura (termógrafo) del camión: aire durante las últimas 8 h del viaje. La línea punteada es el límite del producto.</div></div>
+     ${critRows(CRIT.veh,'veh')}${S.conf.veh?nextBtn():'<div class="row-btn"><button class="btn btn-accent" id="conf">Confirmar vehículo</button></div>'}`;
+    bindCrit(CRIT.veh,'veh',()=>{const r=scoreCrit(CRIT.veh,'doc');S.fb.veh=r;});bindNext();
+  }
+  else if(k==='tmp') renderTemp();
+  else if(k==='sen'){
+    P.innerHTML=`<h2>👃 4. Evaluación sensorial</h2><p class="lead">Observa color y exudado, presiona una pieza para revisar la textura y lee el olor que reporta el inspector.</p>
+     <div class="vis" id="tray">${traySVG(c)}<div class="cap" id="presscap">👆 Toca una pieza para presionarla con el dedo (con guante) y ver si recupera su forma. La lupa amplía la zona que tocas.</div></div>
+     <div class="paper" style="margin-bottom:6px"><h4>👃 OLOR (lo describe el inspector)</h4>${c.sens.olor}</div>
+     ${critRows(CRIT.sen,'sen')}${S.conf.sen?nextBtn():'<div class="row-btn"><button class="btn btn-accent" id="conf">Confirmar evaluación sensorial</button></div>'}`;
+    bindCrit(CRIT.sen,'sen',()=>{S.fb.sen=scoreCrit(CRIT.sen,'pro');});bindNext();bindPress();
+  }
+  else if(k==='emp'){
+    P.innerHTML=`<h2>📦 5. Empaque y etiqueta</h2><p class="lead">Revisa la integridad y limpieza de los empaques y lee la etiqueta. La fecha de hoy es <b>${HOY}</b>.</p>
+     <div class="vis">${packSVG(c)}<div class="cap">Muestra de empaques de la carga.</div></div>
+     ${critRows(CRIT.emp,'emp')}${S.conf.emp?nextBtn():'<div class="row-btn"><button class="btn btn-accent" id="conf">Confirmar empaque y etiqueta</button></div>'}`;
+    bindCrit(CRIT.emp,'emp',()=>{S.fb.emp=scoreCrit(CRIT.emp,'pro');});bindNext();
+  }
+  else if(k==='dic') renderDict();
+  else if(k==='reg') renderReg();
+}
+
+/* ---------- Documentos ---------- */
+function docsHTML(c){
+  const r=c.rem;
+  if(r.nota) return `<div class="paper"><h4>NOTA DE VENTA</h4><div><span>Vendedor</span><b>${c.prov}</b></div><div><span>Producto</span><b>${c.prod}</b></div><div><span>Cantidad</span><b>${c.cajas} cajas</b></div><div><span>Lote</span><b style="color:#b91c1c">—</b></div><div><span>Origen</span><b style="color:#b91c1c">—</b></div><div class="seal" style="border:0"><span style="color:#b91c1c;font-weight:700">Sin sello ni certificado de inspección</span></div></div>`;
+  return `<div class="paper"><h4>REMISIÓN No. ${1000+c.hora.replace(':','')*1}</h4><div><span>Fecha</span><b>${HOY}</b></div><div><span>Proveedor</span><b>${c.prov}</b></div><div><span>Producto</span><b>${c.prod}</b></div><div><span>Cajas</span><b>${c.cajas}</b></div><div><span>Lote</span><b>${r.lote}</b></div>
+   <div class="seal" style="border:0">${r.cert?`<svg width="56" height="56" viewBox="0 0 56 56"><circle cx="28" cy="28" r="25" fill="none" stroke="#1d4196" stroke-width="3"/><circle cx="28" cy="28" r="19" fill="none" stroke="#1d4196" stroke-width="1"/><text x="28" y="27" text-anchor="middle" font-size="11" font-weight="800" fill="#1d4196">TIF</text><text x="28" y="39" text-anchor="middle" font-size="8" fill="#1d4196">${r.cert.replace('TIF ','')}</text></svg><span>Certificado zoosanitario y sello de establecimiento <b>${r.cert}</b> (SENASICA)</span>`:'<span style="color:#b91c1c;font-weight:700">Sin sello ni certificado</span>'}</div></div>`;
+}
+function labelsHTML(c){
+  return `<div style="font-size:12px;font-weight:700;color:var(--muted)">ETIQUETAS EN LA CARGA (revisadas caja por caja)</div>`+c.labels.map(l=>l.lote?`<div class="lbl-card">🏷️ <b>Lote ${l.lote}</b> · ${c.prod} · Cad. ${l.cad} <span style="float:right;color:var(--muted)">× ${l.n} ${l.n===1?'caja':'cajas'}</span></div>`:`<div class="lbl-card missing">⚠️ <b>Sin etiqueta</b> <span style="float:right">× ${l.n} ${l.n===1?'caja':'cajas'}</span></div>`).join('');
+}
+
+/* ---------- Gráficos compartidos ---------- */
+let UID=0;
+const GDEFS=`
+ <filter id="fx-fib" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.008 0.24" numOctaves="2" seed="4"/><feColorMatrix values="0 0 0 0 0.6  0 0 0 0 0.25  0 0 0 0 0.22  2.6 0 0 0 -1.2"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-fib2" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.006 0.3" numOctaves="2" seed="9"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 0.92  0 0 0 0 0.88  2.4 0 0 0 -1.35"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-pore" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="turbulence" baseFrequency="0.7" numOctaves="1" seed="2"/><feColorMatrix values="0 0 0 0 0.66  0 0 0 0 0.5  0 0 0 0 0.4  -14 0 0 0 1.4"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-wrin" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.035 0.09" numOctaves="3" seed="7"/><feColorMatrix values="0 0 0 0 0.7  0 0 0 0 0.52  0 0 0 0 0.4  3 0 0 0 -1.55"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-marb" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.11 0.24" numOctaves="2" seed="12"/><feColorMatrix values="0 0 0 0 0.98  0 0 0 0 0.94  0 0 0 0 0.86  14 0 0 0 -9.2"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-grain" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.06 0.5" numOctaves="2" seed="5"/><feColorMatrix values="0 0 0 0 0.3  0 0 0 0 0.03  0 0 0 0 0.05  2 0 0 0 -0.9"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-frost" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="turbulence" baseFrequency="0.55" numOctaves="2" seed="21"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  6 0 0 0 -2.2"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-blot" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="3" seed="15"/><feColorMatrix values="0 0 0 0 0.52  0 0 0 0 0.56  0 0 0 0 0.46  5 0 0 0 -2.4"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-foam" x="0" y="0" width="100%" height="100%"><feTurbulence type="turbulence" baseFrequency="0.9" numOctaves="1" seed="1"/><feColorMatrix values="0 0 0 0 0.6  0 0 0 0 0.6  0 0 0 0 0.62  -5 0 0 0 1.1"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-kraft" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.9 0.06" numOctaves="2" seed="3"/><feColorMatrix values="0 0 0 0 0.42  0 0 0 0 0.28  0 0 0 0 0.12  1.6 0 0 0 -0.62"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-brush" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.004 0.9" numOctaves="2" seed="8"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  1.8 0 0 0 -0.75"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-grime" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="4" seed="31"/><feColorMatrix values="0 0 0 0 0.3  0 0 0 0 0.22  0 0 0 0 0.12  6 0 0 0 -2.6"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-blur1"><feGaussianBlur stdDeviation="1"/></filter>
+ <filter id="fx-blur2"><feGaussianBlur stdDeviation="2"/></filter>
+ <filter id="fx-blur4"><feGaussianBlur stdDeviation="4"/></filter>
+ <filter id="fx-blur8"><feGaussianBlur stdDeviation="8"/></filter>
+ <radialGradient id="g-dent"><stop offset="0" stop-color="#5b1a12" stop-opacity=".45"/><stop offset=".7" stop-color="#5b1a12" stop-opacity=".18"/><stop offset="1" stop-color="#5b1a12" stop-opacity="0"/></radialGradient>
+ <radialGradient id="g-pool" cx=".5" cy=".5" r=".6"><stop offset="0" stop-color="#c2414f" stop-opacity=".75"/><stop offset="1" stop-color="#e5808a" stop-opacity=".45"/></radialGradient>
+ <radialGradient id="g-drop" cx=".35" cy=".3" r=".75"><stop offset="0" stop-color="#ffffff" stop-opacity=".95"/><stop offset=".35" stop-color="#e7f1fb" stop-opacity=".35"/><stop offset=".85" stop-color="#7e94aa" stop-opacity=".45"/><stop offset="1" stop-color="#506579" stop-opacity=".6"/></radialGradient>
+ <linearGradient id="g-tray" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e8e9e4"/></linearGradient>
+ <linearGradient id="g-glove" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3f6fd8"/><stop offset=".5" stop-color="#7aa5f5"/><stop offset="1" stop-color="#3f6fd8"/></linearGradient>
+ <linearGradient id="g-steel" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8d969f"/><stop offset=".45" stop-color="#eef1f4"/><stop offset="1" stop-color="#7c858f"/></linearGradient>
+ <linearGradient id="g-table" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d9dde2"/><stop offset=".5" stop-color="#eef0f2"/><stop offset="1" stop-color="#c9ced4"/></linearGradient>
+ <linearGradient id="g-alu-l" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#c3c9d1"/><stop offset="1" stop-color="#e4e8ed"/></linearGradient>
+ <linearGradient id="g-alu-r" x1="1" y1="0" x2="0" y2="0"><stop offset="0" stop-color="#b9c0c9"/><stop offset="1" stop-color="#dfe4ea"/></linearGradient>
+ <linearGradient id="g-floor" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#9aa2ac"/><stop offset="1" stop-color="#c9cfd6"/></linearGradient>
+ <linearGradient id="g-ceil" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d3d8de"/><stop offset="1" stop-color="#eef1f4"/></linearGradient>
+ <linearGradient id="g-kraft" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d9b98a"/><stop offset="1" stop-color="#c39c66"/></linearGradient>
+ <linearGradient id="g-film" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".05"/><stop offset=".3" stop-color="#fff" stop-opacity=".45"/><stop offset=".38" stop-color="#fff" stop-opacity=".05"/><stop offset=".7" stop-color="#fff" stop-opacity=".2"/><stop offset=".76" stop-color="#fff" stop-opacity=".02"/><stop offset="1" stop-color="#fff" stop-opacity=".12"/></linearGradient>
+ <linearGradient id="g-drum" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1b4fa5"/><stop offset=".4" stop-color="#4f86e0"/><stop offset="1" stop-color="#173f86"/></linearGradient>
+ <linearGradient id="g-dev" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4b5563"/><stop offset="1" stop-color="#2b323b"/></linearGradient>
+ <linearGradient id="g-wood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c8a06a"/><stop offset="1" stop-color="#9a7444"/></linearGradient>
+ <pattern id="p-pad" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="16" height="16" fill="#fbfbf9"/><path d="M0 0H16M0 0V16" stroke="#e6e6e0" stroke-width="1.2"/></pattern>
+ <pattern id="p-pad-wet" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="16" height="16" fill="#fbe3e3"/><path d="M0 0H16M0 0V16" stroke="#efc4c4" stroke-width="1.2"/></pattern>`;
+document.body.insertAdjacentHTML('afterbegin',`<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>${GDEFS}</defs></svg>`);
+
+const SHAPES={
+ pech:{d:'M-66,6 C-70,-20 -44,-38 -8,-38 C28,-38 56,-26 70,-8 C78,2 74,12 62,17 C42,25 14,36 -18,36 C-46,36 -63,26 -66,6 Z',seam:'M-50,18 C-20,28 20,24 60,10',skin:0,core:[-26,0],edge:[62,8]},
+ drum:{d:'M-56,0 C-56,-30 -20,-38 10,-26 C26,-19 40,-11 56,-9 L70,-10 C80,-16 94,-9 92,1 C94,12 80,17 70,11 L56,10 C40,11 26,19 10,26 C-20,38 -56,30 -56,0 Z',skin:1,knuckle:[84,1],core:[-26,0],bone:[52,0]},
+ thigh:{d:'M-50,-30 C-22,-44 30,-42 52,-23 C65,-7 60,22 42,35 C16,49 -30,47 -52,31 C-66,15 -66,-18 -50,-30 Z',skin:1,core:[0,0],edge:[50,20]},
+ steak:{d:'M-74,-6 C-76,-38 -26,-50 16,-44 C60,-38 82,-15 78,10 C74,35 37,47 -6,45 C-47,43 -72,27 -74,-6 Z',fat:'M-64,-24 C-34,-42 20,-44 60,-26',marb:1,core:[-8,6],edge:[70,14]},
+ pork:{d:'M-70,-4 C-72,-34 -24,-46 18,-42 C58,-37 78,-14 74,10 C70,33 35,44 -6,42 C-45,40 -68,26 -70,-4 Z',fat:'M-66,-16 C-40,-38 22,-42 62,-20',marb:0,core:[-8,8],edge:[68,16]}
+};
+const LAYOUT={
+ pechuga:[['pech',125,108,-12,1],['pech',298,102,9,1],['pech',150,205,5,1],['pech',322,200,-7,1]],
+ pierna:[['drum',120,100,-18,1],['drum',300,96,14,1],['thigh',392,192,0,1],['thigh',138,205,10,1],['drum',268,205,-4,1]],
+ res:[['steak',146,150,-8,1.12],['steak',344,150,9,1.1]],
+ cerdo:[['pork',112,150,-10,0.86],['pork',250,146,7,0.86],['pork',388,152,-4,0.84]]
+};
+const kindOf=c=>c.esp==='res'?'steak':c.esp==='cerdo'?'pork':c.pieza==='pierna'?'drum':'pech';
+function palette(c,soft){
+  const g=c.sens.color==='gris';
+  if(c.esp==='res')return c.est==='cong'?{hi:'#93303a',mid:'#771d27',lo:'#4c0d14',fat:'#e9dfcc'}:{hi:'#c8414a',mid:'#a8202c',lo:'#6e1018',fat:'#f1e6cf'};
+  if(c.esp==='cerdo')return {hi:'#f2bdb5',mid:'#e2a097',lo:'#c47c74',fat:'#f8f0e4'};
+  if(g)return {hi:'#d9cdc4',mid:'#c3b3aa',lo:'#a1938a',skin:'#d8ccbc',skinLo:'#b8ab9a'};
+  if(soft)return {hi:'#efa898',mid:'#de8a7a',lo:'#b9665a',skin:'#e9c3a6',skinLo:'#cf9c84'};
+  return {hi:'#f7cdbf',mid:'#eeb1a1',lo:'#d6907f',skin:'#f6dcc0',skinLo:'#e3b998'};
+}
+function pieceG(k,x,y,r,sc,c,o={}){
+  const sh=SHAPES[k], u=++UID, cong=c.est==='cong', soft=!!o.soft, frost=o.frost!==undefined?o.frost:(cong&&!soft), wet=c.sens.tex==='viscosa';
+  const P=palette(c,soft), sx=soft?sc*1.12:sc, sy=soft?sc*0.86:sc;
+  const shadow=o.noShadow?'':`<g transform="translate(${x+4},${y+7}) rotate(${r}) scale(${sx},${sy})"><path d="${sh.d}" fill="#3b2a26" opacity=".28" filter="url(#fx-blur4)"/></g>`;
+  let s=`<g transform="translate(${x},${y}) rotate(${r}) scale(${sx},${sy})"><defs><radialGradient id="rg${u}" cx=".42" cy=".38" r=".75"><stop offset="0" stop-color="${sh.skin?P.skin:P.hi}"/><stop offset=".65" stop-color="${sh.skin?P.skin:P.mid}"/><stop offset="1" stop-color="${sh.skin?P.skinLo:P.lo}"/></radialGradient><clipPath id="cp${u}"><path d="${sh.d}"/></clipPath></defs>
+    <path d="${sh.d}" fill="url(#rg${u})"/>`;
+  if(!sh.skin&&c.esp==='pollo') s+=`<path d="${sh.d}" fill="#fff" filter="url(#fx-fib)" opacity=".45"/><path d="${sh.d}" fill="#fff" filter="url(#fx-fib2)" opacity=".3"/><g clip-path="url(#cp${u})"><path d="${sh.d}" fill="none" stroke="#fde7df" stroke-width="7" opacity=".45"/><path d="M-20,-30 C0,-20 20,-22 44,-18" stroke="#fff6f2" stroke-width="5" fill="none" opacity=".35" filter="url(#fx-blur2)"/></g><path d="${sh.seam}" stroke="${P.lo}" stroke-width="1.6" fill="none" opacity=".45"/>`;
+  if(sh.skin) s+=`<path d="${sh.d}" fill="#fff" filter="url(#fx-wrin)" opacity=".6"/><path d="${sh.d}" fill="#fff" filter="url(#fx-pore)" opacity=".55"/><g clip-path="url(#cp${u})"><path d="M-60,26 C-20,40 30,34 60,14" stroke="${P.mid}" stroke-width="7" fill="none" opacity=".55"/></g>`;
+  if(sh.knuckle) s+=`<ellipse cx="${sh.knuckle[0]}" cy="${sh.knuckle[1]}" rx="9" ry="11" fill="#eef1f3" stroke="#cfd6dc"/><ellipse cx="${sh.knuckle[0]-2}" cy="${sh.knuckle[1]-3}" rx="3" ry="4" fill="#fff" opacity=".8"/>`;
+  if(sh.fat){ s+=`<g clip-path="url(#cp${u})"><path d="${sh.fat}" stroke="${P.fat}" stroke-width="${c.esp==='cerdo'?16:11}" fill="none"/><path d="${sh.fat}" stroke="#fff" stroke-width="3" fill="none" opacity=".5" transform="translate(0,-3)"/></g><path d="${sh.d}" fill="#fff" filter="url(#fx-grain)" opacity=".6"/>`;
+    if(sh.marb) s+=`<path d="${sh.d}" fill="#fff" filter="url(#fx-marb)" opacity=".6"/><g clip-path="url(#cp${u})" opacity=".75"><path d="M-50,10 C-20,0 10,18 40,4 C52,-2 62,4 70,0" stroke="${P.fat}" stroke-width="2.2" fill="none"/><path d="M-30,30 C-6,22 20,32 46,22" stroke="${P.fat}" stroke-width="1.6" fill="none"/></g>`;}
+  if(c.sens.color==='gris') s+=`<path d="${sh.d}" fill="#a9a69c" opacity=".28"/><path d="${sh.d}" fill="#fff" filter="url(#fx-blot)" opacity=".4"/>`;
+  s+=`<path d="${sh.d}" fill="none" stroke="${c.esp==='res'?'#5e0d14':sh.skin?P.skinLo:P.lo}" stroke-width="1.4" opacity=".8"/>`;
+  const gl=o.gloss!==undefined?o.gloss:(wet?0.75:soft?0.6:frost?0:0.32);
+  if(gl) s+=`<ellipse cx="-14" cy="-16" rx="26" ry="8" fill="#fff" opacity="${gl}" filter="url(#fx-blur2)" transform="rotate(-8)"/><ellipse cx="22" cy="10" rx="12" ry="4" fill="#fff" opacity="${gl*0.7}" filter="url(#fx-blur2)"/>`;
+  if(wet) s+=`<g clip-path="url(#cp${u})" opacity=".7"><path d="M-50,-4 C-30,4 -10,-6 10,2 C30,10 45,0 60,6" stroke="#fff" stroke-width="2.2" fill="none" filter="url(#fx-blur2)"/><path d="M-40,18 C-20,24 5,16 30,24" stroke="#f8fafc" stroke-width="1.6" fill="none"/>${[[-30,6],[-6,-10],[18,14],[36,-4],[-44,-14]].map(b=>`<circle cx="${b[0]}" cy="${b[1]}" r="2.2" fill="#fff" opacity=".85"/>`).join('')}</g>`;
+  if(frost) s+=`<path d="${sh.d}" fill="#e8f1fb" opacity=".42"/><path d="${sh.d}" fill="#fff" filter="url(#fx-frost)" opacity=".95"/>${[[-30,-12],[8,-20],[30,8],[-10,16],[44,-8]].map(b=>`<path d="M${b[0]-4},${b[1]} h8 M${b[0]},${b[1]-4} v8 M${b[0]-3},${b[1]-3} l6,6 M${b[0]+3},${b[1]-3} l-6,6" stroke="#fff" stroke-width="1" opacity=".9"/>`).join('')}`;
+  return {shadow,body:s+`</g>`};
+}
+
+/* ---------- Vehículo ---------- */
+function truckSVG(c){
+  const v=c.veh, cold=c.est==='cong';
+  const O=[24,14,616,292], B=[205,86,435,196];
+  const L=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];
+  let s=`<svg viewBox="0 0 640 300"><rect width="640" height="300" fill="#2b3036"/><rect x="6" y="4" width="628" height="292" rx="8" fill="#3d434b"/>
+   <defs><clipPath id="cpFloor"><polygon points="${O[0]},${O[3]} ${B[0]},${B[3]} ${B[2]},${B[3]} ${O[2]},${O[3]}"/></clipPath><clipPath id="cpWalls"><polygon points="${O[0]},${O[1]} ${B[0]},${B[1]} ${B[0]},${B[3]} ${O[0]},${O[3]}"/><polygon points="${O[2]},${O[1]} ${B[2]},${B[1]} ${B[2]},${B[3]} ${O[2]},${O[3]}"/></clipPath></defs>
+   <polygon points="${O[0]},${O[1]} ${O[2]},${O[1]} ${B[2]},${B[1]} ${B[0]},${B[1]}" fill="url(#g-ceil)"/>
+   <polygon points="${O[0]},${O[1]} ${B[0]},${B[1]} ${B[0]},${B[3]} ${O[0]},${O[3]}" fill="url(#g-alu-l)"/>
+   <polygon points="${O[2]},${O[1]} ${B[2]},${B[1]} ${B[2]},${B[3]} ${O[2]},${O[3]}" fill="url(#g-alu-r)"/>
+   <polygon points="${O[0]},${O[3]} ${B[0]},${B[3]} ${B[2]},${B[3]} ${O[2]},${O[3]}" fill="url(#g-floor)"/>
+   <rect x="${B[0]}" y="${B[1]}" width="${B[2]-B[0]}" height="${B[3]-B[1]}" fill="#d7dce2"/>`;
+  // costillas de las paredes
+  for(let i=1;i<10;i++){const t=i/10;
+    const a=L([O[0],O[1]],[B[0],B[1]],t), b=L([O[0],O[3]],[B[0],B[3]],t);
+    const a2=L([O[2],O[1]],[B[2],B[1]],t), b2=L([O[2],O[3]],[B[2],B[3]],t), w=3.2-2.4*t;
+    s+=`<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="#a9b1bb" stroke-width="${w}"/><line x1="${a[0]+w}" y1="${a[1]}" x2="${b[0]+w}" y2="${b[1]}" stroke="#f4f6f8" stroke-width="${w*0.5}"/>
+        <line x1="${a2[0]}" y1="${a2[1]}" x2="${b2[0]}" y2="${b2[1]}" stroke="#a2aab4" stroke-width="${w}"/><line x1="${a2[0]-w}" y1="${a2[1]}" x2="${b2[0]-w}" y2="${b2[1]}" stroke="#eef1f4" stroke-width="${w*0.5}"/>`;}
+  // piso ranurado
+  for(let j=1;j<16;j++){const x1=O[0]+(O[2]-O[0])*j/16, x2=B[0]+(B[2]-B[0])*j/16;s+=`<line x1="${x1}" y1="${O[3]}" x2="${x2}" y2="${B[3]}" stroke="#7f8893" stroke-width="2.4"/><line x1="${x1+2}" y1="${O[3]}" x2="${x2+0.6}" y2="${B[3]}" stroke="#dde2e7" stroke-width="1"/>`;}
+  // ducto de aire y luces
+  s+=`<polygon points="290,14 350,14 330,86 310,86" fill="#a7c8e6" opacity=".95"/><polygon points="290,14 300,14 314,86 310,86" fill="#cfe2f3"/>${Array.from({length:7},(_,i)=>`<circle cx="320" cy="${22+i*9}" r="${2-i*0.18}" fill="#7da7cf"/>`).join('')}
+   <line x1="40" y1="20" x2="200" y2="88" stroke="#fff" stroke-width="5" opacity=".85" filter="url(#fx-blur2)"/><line x1="600" y1="20" x2="440" y2="88" stroke="#fff" stroke-width="5" opacity=".85" filter="url(#fx-blur2)"/>
+   <rect x="250" y="90" width="140" height="34" rx="4" fill="#c4cad2" stroke="#9aa3ad"/>${[285,355].map(x=>`<circle cx="${x}" cy="107" r="13" fill="#8a939d"/><circle cx="${x}" cy="107" r="11" fill="#5d6670"/>${[0,1,2,3].map(k=>`<line x1="${x}" y1="107" x2="${x+10*Math.cos(k*1.57+0.4)}" y2="${107+10*Math.sin(k*1.57+0.4)}" stroke="#aab2bb" stroke-width="3"/>`).join('')}`).join('')}`;
+  if(cold) s+=`<g clip-path="url(#cpWalls)"><rect x="0" y="0" width="640" height="300" fill="#fff" filter="url(#fx-frost)" opacity=".55"/></g>`;
+  // suciedad
+  if(!v.limpio){s+=`<g clip-path="url(#cpFloor)"><rect x="0" y="0" width="640" height="300" fill="#fff" filter="url(#fx-grime)" opacity=".7"/></g>
+    <ellipse cx="150" cy="262" rx="58" ry="12" fill="#5d4a2c" opacity=".45" filter="url(#fx-blur2)"/><ellipse cx="146" cy="258" rx="30" ry="4" fill="#fff" opacity=".25"/>
+    <path d="M60 60 C64 110 58 150 66 200" stroke="#6b5532" stroke-width="7" opacity=".35" filter="url(#fx-blur2)"/><path d="M110 80 C112 120 108 160 114 190" stroke="#6b5532" stroke-width="5" opacity=".3" filter="url(#fx-blur2)"/>`;}
+  if(v.plagas){s+=[[90,270,20],[118,280,-30]].map(b=>`<g transform="translate(${b[0]},${b[1]}) rotate(${b[2]})"><ellipse rx="7" ry="4" fill="#4a2a10"/><circle cx="7" cy="0" r="2.4" fill="#2f1a08"/>${[-4,0,4].map(x=>`<path d="M${x} -3 l-2 -5 M${x} 3 l-2 5" stroke="#2f1a08" stroke-width="1"/>`).join('')}<path d="M9 -1 q6 -6 12 -4 M9 1 q6 6 12 4" stroke="#2f1a08" stroke-width=".8" fill="none"/></g>`).join('');}
+  // tarima con cajas
+  const bx0=215, by0=124, bw=42, bh=24, cols=5, rows=3;
+  s+=`<rect x="${bx0-6}" y="${by0+rows*bh}" width="${cols*bw+12}" height="10" fill="url(#g-wood)"/>${[0,1,2,3].map(k=>`<rect x="${bx0-4+k*(cols*bw)/3}" y="${by0+rows*bh+10}" width="14" height="8" fill="#8a663a"/>`).join('')}
+   <ellipse cx="${bx0+cols*bw/2}" cy="${by0+rows*bh+20}" rx="${cols*bw/2+20}" ry="6" fill="#000" opacity=".22" filter="url(#fx-blur4)"/>
+   <defs><clipPath id="cpBox"><rect x="${bx0}" y="${by0}" width="${cols*bw}" height="${rows*bh}"/></clipPath></defs>`;
+  for(let r=0;r<rows;r++)for(let i=0;i<cols;i++){const x=bx0+i*bw,y=by0+r*bh;
+    s+=cold?`<rect x="${x}" y="${y}" width="${bw}" height="${bh}" fill="#f4f6f8" stroke="#b7c2cf"/><rect x="${x}" y="${y+bh-8}" width="${bw}" height="5" fill="#2563eb" opacity=".8"/>`
+           :`<rect x="${x}" y="${y}" width="${bw}" height="${bh}" fill="url(#g-kraft)" stroke="#9c7a48"/><path d="M${x+bw/2} ${y} v${bh}" stroke="#b08a55" stroke-width="1"/>`;
+    s+=`<rect x="${x+5}" y="${y+5}" width="14" height="9" fill="#fff" opacity=".95"/><path d="M${x+7} ${y+8} h10 M${x+7} ${y+11} h7" stroke="#64748b" stroke-width=".8"/>`;}
+  s+=`<g clip-path="url(#cpBox)">${cold?`<rect x="${bx0}" y="${by0}" width="${cols*bw}" height="${rows*bh}" fill="#fff" filter="url(#fx-frost)" opacity=".7"/>`:`<rect x="${bx0}" y="${by0}" width="${cols*bw}" height="${rows*bh}" fill="#fff" filter="url(#fx-kraft)" opacity=".8"/>`}
+     <rect x="${bx0}" y="${by0}" width="${cols*bw}" height="${rows*bh}" fill="url(#g-film)"/></g>
+     <path d="M${bx0} ${by0+10} C${bx0+60} ${by0+4} ${bx0+140} ${by0+16} ${bx0+cols*bw} ${by0+8}" stroke="#fff" stroke-width="1.2" opacity=".5" fill="none"/>`;
+  // químicos
+  if(v.quim){
+    s+=`<path d="M440 278 C470 268 540 270 590 282 L590 290 L440 290 Z" fill="#7dd3fc" opacity=".25"/><path d="M450 284 C480 278 520 280 560 286" stroke="#c084fc" stroke-width="2" opacity=".4" fill="none"/>`;
+    [[470,196],[530,200]].forEach(([x,y],k)=>{s+=`<g><rect x="${x-26}" y="${y}" width="52" height="74" fill="url(#g-drum)"/><ellipse cx="${x}" cy="${y}" rx="26" ry="7" fill="#3b73cf" stroke="#173f86"/><ellipse cx="${x}" cy="${y+74}" rx="26" ry="7" fill="#173f86"/>
+      <path d="M${x-26} ${y+24} q26 6 52 0 M${x-26} ${y+50} q26 6 52 0" stroke="#173f86" stroke-width="2" fill="none"/><circle cx="${x+12}" cy="${y}" r="4" fill="#0f2a5e"/>
+      <rect x="${x-15}" y="${y+28}" width="30" height="20" fill="#fff"/><polygon points="${x},${y+30} ${x+8},${y+38} ${x},${y+46} ${x-8},${y+38}" fill="#f97316" stroke="#7c2d12"/><text x="${x}" y="${y+42}" text-anchor="middle" font-size="8" font-weight="800" fill="#111">!</text></g>`;});
+    s+=`<path d="M560 252 h32 a6 6 0 0 1 6 6 v30 h-44 v-30 a6 6 0 0 1 6 -6 z" fill="#f8fafc" stroke="#94a3b8"/><rect x="584" y="244" width="10" height="9" fill="#dc2626"/><text x="576" y="276" text-anchor="middle" font-size="5.2" fill="#334155" font-weight="700">DESENGRASANTE</text>
+      <path d="M470 186 q6 -10 0 -18 q-6 -8 0 -16 M530 190 q6 -10 0 -18 q-6 -8 0 -16" stroke="#65a30d" stroke-width="1.6" fill="none" opacity=".55"/>`;}
+  // cortina de tiras
+  for(let x=O[0]+4;x<O[2];x+=22){ if(x>232&&x<392) continue; s+=`<rect x="${x}" y="${O[1]+2}" width="20" height="${O[3]-O[1]-6}" fill="#e8f2fb" opacity=".13"/><line x1="${x+1}" y1="${O[1]+2}" x2="${x+1}" y2="${O[3]-4}" stroke="#fff" stroke-width="1" opacity=".35"/>`;}
+  s+=`<path d="M232 16 C228 120 214 200 206 288" stroke="#fff" stroke-width="1" opacity=".3" fill="none"/><path d="M392 16 C396 120 410 200 418 288" stroke="#fff" stroke-width="1" opacity=".3" fill="none"/>`;
+  // controlador
+  s+=`<rect x="512" y="10" width="112" height="44" rx="6" fill="url(#g-dev)" stroke="#111827"/><rect x="520" y="16" width="96" height="24" rx="3" fill="#c3d3ad"/>
+   <text x="568" y="33" text-anchor="middle" font-size="12.5" font-weight="800" fill="#1d2b1a" font-family="monospace">AIRE ${f1(v.air)}°C</text>
+   <text x="568" y="50" text-anchor="middle" font-size="7.5" fill="#cbd5e1">UNIDAD DE REFRIGERACIÓN</text>`;
+  return s+`</svg>`;
+}
+function tgSVG(c){
+  const ref=c.est==='ref', lo=ref?-2:-26, hi=ref?14:0, lim=ref?4:-18;
+  const X=h=>58+(h+8)/8*440, Y=v=>150-(v-lo)/(hi-lo)*112;
+  const vals=c.veh.tg.map(p=>p[1]), mx=Math.max(...vals), mn=Math.min(...vals), alarm=ref?mx>lim+0.5:mx>lim+0.5;
+  let s=`<svg viewBox="0 0 640 190"><rect width="640" height="190" fill="#eef1f4"/><rect x="8" y="8" width="624" height="174" rx="20" fill="url(#g-dev)"/><rect x="10" y="10" width="620" height="10" rx="5" fill="#fff" opacity=".07"/>
+   <rect x="22" y="22" width="500" height="148" rx="8" fill="#c3d3ad" stroke="#8a9a78" stroke-width="2"/>`;
+  for(let v=lo;v<=hi;v+=ref?4:6){s+=`<line x1="58" y1="${Y(v)}" x2="500" y2="${Y(v)}" stroke="#a8b993" stroke-width="1"/><text x="52" y="${Y(v)+3.5}" text-anchor="end" font-size="9.5" fill="#2c3a29" font-family="monospace">${String(v).replace('-','−')}</text>`;}
+  for(let h=-8;h<=0;h+=2){s+=`<text x="${X(h)}" y="164" text-anchor="middle" font-size="9.5" fill="#2c3a29" font-family="monospace">${h===0?'AHORA':String(h).replace('-','−')+'h'}</text>`;}
+  s+=`<line x1="58" y1="${Y(lim)}" x2="500" y2="${Y(lim)}" stroke="#5b2b1a" stroke-width="1.4" stroke-dasharray="6 4"/><text x="498" y="${Y(lim)-4}" text-anchor="end" font-size="9.5" fill="#5b2b1a" font-family="monospace" font-weight="700">LÍM ${f1(lim)}</text>
+   <polyline fill="none" stroke="#1d2b1a" stroke-width="2.4" points="${c.veh.tg.map(p=>X(p[0])+','+Y(clamp(p[1],lo,hi))).join(' ')}"/>
+   <text x="62" y="34" font-size="10" fill="#2c3a29" font-family="monospace" font-weight="700">°C AIRE · ÚLTIMAS 8 h</text>
+   <text x="530" y="40" font-size="10" fill="#e5e7eb" font-weight="700">REGISTRADOR</text><text x="530" y="54" font-size="8.5" fill="#9ca3af">de temperatura</text>
+   <rect x="530" y="66" width="90" height="40" rx="4" fill="#c3d3ad"/><text x="536" y="80" font-size="10" fill="#1d2b1a" font-family="monospace">MÁX ${f1(mx)}</text><text x="536" y="98" font-size="10" fill="#1d2b1a" font-family="monospace">MÍN ${f1(mn)}</text>
+   <circle cx="540" cy="124" r="6" fill="${alarm?'#ef4444':'#22c55e'}"/><circle cx="540" cy="124" r="10" fill="${alarm?'#ef4444':'#22c55e'}" opacity=".25"/><text x="554" y="128" font-size="9.5" fill="#e5e7eb" font-weight="700">${alarm?'ALARMA':'OK'}</text>
+   ${[548,574,600].map((x,i)=>`<circle cx="${x}" cy="156" r="9" fill="#374151" stroke="#111827"/><text x="${x}" y="159.5" text-anchor="middle" font-size="9" fill="#d1d5db">${['▲','●','▼'][i]}</text>`).join('')}</svg>`;
+  return s;
+}
+
+/* ---------- Temperatura ---------- */
+function iceSVG(v){
+  const R=(i)=>((Math.sin(i*12.9898)*43758.5453)%1+1)%1;
+  let s=`<svg viewBox="0 0 320 220"><rect width="320" height="220" fill="#eef1f4"/><rect x="0" y="196" width="320" height="24" fill="url(#g-table)"/><rect x="0" y="196" width="320" height="24" fill="#fff" filter="url(#fx-brush)" opacity=".5"/>
+   <ellipse cx="160" cy="200" rx="78" ry="7" fill="#000" opacity=".18" filter="url(#fx-blur4)"/>
+   <path d="M86 70 L234 70 L222 196 L98 196 Z" fill="#e3eef7" opacity=".45" stroke="#9fb3c8" stroke-width="2.5"/>
+   <path d="M90 100 L230 100 L222 194 L98 194 Z" fill="#bcdcf2" opacity=".55"/><ellipse cx="160" cy="100" rx="70" ry="5" fill="#d9ecf9" opacity=".9"/>`;
+  for(let i=0;i<16;i++){const x=104+R(i)*104, y=96+R(i+50)*86, w=12+R(i+9)*12, a=R(i+3)*60;
+    s+=`<g transform="translate(${x},${y}) rotate(${a})"><path d="M0 0 L${w} -3 L${w+3} ${w*0.6} L${w*0.3} ${w*0.8} L-2 ${w*0.4} Z" fill="#fff" opacity=".78" stroke="#c4daee" stroke-width="1"/><path d="M2 2 L${w*0.6} 0" stroke="#fff" stroke-width="1.5" opacity=".9"/></g>`;}
+  for(let i=0;i<22;i++){const x=88+R(i+70)*144, y=104+R(i+90)*88, r=1.2+R(i+30)*2.4; if(x>96&&x<224) s+=`<circle cx="${x<160?x-8:x+8}" cy="${y}" r="${r}" fill="url(#g-drop)"/>`;}
+  s+=`<path d="M100 76 L110 186" stroke="#fff" stroke-width="5" opacity=".55" stroke-linecap="round"/>
+   <rect x="157" y="62" width="6" height="110" fill="url(#g-steel)"/><path d="M157 172 L160 180 L163 172 Z" fill="#9aa3ad"/>
+   <rect x="138" y="4" width="44" height="64" rx="12" fill="#f3f5f7" stroke="#c4ccd4" stroke-width="1.5"/><rect x="138" y="4" width="10" height="64" rx="5" fill="#fff" opacity=".7"/>
+   <rect x="143" y="13" width="34" height="22" rx="3" fill="#c3d3ad" stroke="#8a9a78"/><text x="160" y="29" text-anchor="middle" font-size="12" font-weight="800" fill="#1d2b1a" font-family="monospace">${f1(v)}</text>
+   <circle cx="160" cy="50" r="5" fill="#cbd5e1" stroke="#94a3b8"/><text x="186" y="27" font-size="9" fill="#475569">°C</text></svg>`;
+  return s;
+}
+function pieceSVG(c){
+  const cong=c.est==='cong', L=locs(c);
+  let s=`<svg viewBox="0 0 640 260"><rect width="640" height="260" fill="url(#g-table)"/><rect width="640" height="260" fill="#fff" filter="url(#fx-brush)" opacity=".5"/>`;
+  let pts;
+  if(cong){
+    const p1=pieceG(kindOf(c),220,138,-6,1.05,c,{}), p2=pieceG(kindOf(c),425,136,8,1.05,c,{});
+    s+=`<rect x="98" y="20" width="444" height="226" rx="4" fill="#000" opacity=".2" filter="url(#fx-blur4)"/>
+     <rect x="96" y="16" width="444" height="226" fill="url(#g-kraft)" stroke="#8d6a3b" stroke-width="2"/><rect x="96" y="16" width="444" height="226" fill="#fff" filter="url(#fx-kraft)" opacity=".85"/>
+     <rect x="110" y="30" width="416" height="198" fill="#7a5a30" opacity=".35"/>
+     ${[[116,36],[324,36]].map(([x,y])=>`<rect x="${x}" y="${y}" width="200" height="186" rx="14" fill="#eef4fb" opacity=".9" stroke="#c3d3e6"/>`).join('')}
+     ${p1.shadow}${p1.body}${p2.shadow}${p2.body}
+     ${[[116,36],[324,36]].map(([x,y])=>`<rect x="${x}" y="${y}" width="200" height="186" rx="14" fill="#fff" opacity=".28"/><rect x="${x}" y="${y}" width="200" height="186" rx="14" fill="#fff" filter="url(#fx-frost)" opacity=".75"/><rect x="${x}" y="${y}" width="200" height="14" rx="6" fill="#dbe7f3" opacity=".9"/>`).join('')}
+     <text x="320" y="254" text-anchor="middle" font-size="11" fill="#475569">Caja abierta: dos bolsas de producto congelado, una junto a otra</text>`;
+    pts={caja:[118,24],entre:[320,130],pieza:[440,136]};
+  }else{
+    const k=kindOf(c), sh=SHAPES[k], sc=k==='pech'?1.75:k==='drum'?1.6:1.45, cx=300, cy=128;
+    const p=pieceG(k,cx,cy,0,sc,c,{});
+    const T=q=>[cx+q[0]*sc,cy+q[1]*sc];
+    s+=`<rect x="96" y="20" width="420" height="222" rx="30" fill="#000" opacity=".2" filter="url(#fx-blur4)"/>
+     <rect x="92" y="14" width="420" height="222" rx="30" fill="url(#g-tray)" stroke="#d4d6cf" stroke-width="2"/><rect x="92" y="14" width="420" height="222" rx="30" fill="#fff" filter="url(#fx-foam)" opacity=".5"/>
+     <rect x="110" y="32" width="384" height="186" rx="20" fill="#f1f2ed" stroke="#e0e2da"/>
+     ${p.shadow}${p.body}
+     <rect x="92" y="14" width="420" height="222" rx="30" fill="url(#g-film)"/>
+     <path d="M100 40 C160 32 220 44 300 36 M110 222 C200 214 320 228 500 214 M500 40 C506 90 498 160 504 220" stroke="#fff" stroke-width="1.4" opacity=".55" fill="none"/>
+     <text x="520" y="248" text-anchor="end" font-size="11" fill="#475569">Charola con película, como llega en la caja</text>`;
+    pts={emp:[128,48],core:T(sh.core),bone:sh.bone?T(sh.bone):T(sh.edge||sh.core),edge:T(sh.edge||sh.core)};
+  }
+  L.forEach(([k,lab],j)=>{const[x,y]=pts[k];const ly=y>200?y-24:y+32;s+=`<g class="tgt" data-l="${k}" data-x="${x}" data-y="${y}"><circle cx="${x}" cy="${y}" r="14" fill="#fff" fill-opacity=".92" stroke="#12306b" stroke-width="2.5"/><text x="${x}" y="${y+5}" text-anchor="middle" font-size="13" font-weight="800" fill="#12306b">${'ABC'[j]}</text><text x="${x}" y="${ly}" text-anchor="middle" font-size="11.5" font-weight="800" fill="#12306b" stroke="#fff" stroke-width="3.5" paint-order="stroke">${lab}</text></g>`;});
+  return s+`</svg>`;
+}
+function penThermo(cx,cy){
+  const ang=(cy<110?145:35)*(cx>440?-1:1);
+  return `<g transform="translate(${cx},${cy}) rotate(${ang})"><rect x="-2.2" y="-74" width="4.4" height="74" fill="url(#g-steel)"/><path d="M-2.2 0 L0 6 L2.2 0 Z" fill="#9aa3ad"/>
+    <rect x="-15" y="-156" width="30" height="84" rx="10" fill="#f3f5f7" stroke="#b6c0ca" stroke-width="1.4"/><rect x="-15" y="-156" width="7" height="84" rx="4" fill="#fff" opacity=".7"/>
+    <g transform="translate(0,-130) rotate(${-ang})"><rect x="-22" y="-11" width="44" height="22" rx="3" fill="#c3d3ad" stroke="#8a9a78"/><text id="dsp" x="0" y="5" text-anchor="middle" font-size="12" font-weight="800" fill="#1d2b1a" font-family="monospace">--.-</text></g>
+    <circle cx="0" cy="-92" r="4" fill="#cbd5e1" stroke="#94a3b8"/></g>`;
+}
+
+/* ---------- Sensorial (charola realista) ---------- */
+function traySVG(c){
+  const cong=c.est==='cong', key=c.esp==='res'?'res':c.esp==='cerdo'?'cerdo':c.pieza, L=LAYOUT[key];
+  const exu=c.sens.exu==='abundante';
+  let s=`<g id="scene"><rect width="640" height="300" fill="#e9edf3"/>
+   <rect x="16" y="24" width="466" height="262" rx="34" fill="#000" opacity=".18" filter="url(#fx-blur8)"/>
+   <rect x="14" y="18" width="466" height="262" rx="34" fill="url(#g-tray)" stroke="#d4d6cf" stroke-width="2"/>
+   <rect x="14" y="18" width="466" height="262" rx="34" fill="#fff" filter="url(#fx-foam)" opacity=".5"/>
+   <rect x="34" y="38" width="426" height="222" rx="22" fill="#f1f2ed" stroke="#e0e2da"/>
+   <rect x="60" y="58" width="374" height="182" rx="10" fill="url(#${exu?'p-pad-wet':'p-pad'})" opacity=".95"/>`;
+  if(exu)s+=`<path d="M48 214 C90 188 150 236 214 210 C268 190 330 238 392 212 C420 202 446 214 452 230 C455 248 430 256 400 254 L90 254 C60 254 42 238 48 214 Z" fill="url(#g-pool)"/>
+    <path d="M90 236 C140 226 200 246 250 236" stroke="#fff" stroke-width="2.5" fill="none" opacity=".45" stroke-linecap="round"/>
+    <path d="M300 240 C340 232 380 246 420 236" stroke="#fff" stroke-width="2" fill="none" opacity=".35" stroke-linecap="round"/>`;
+  L.forEach((p,i)=>{
+    const [k,x,y,r,sc]=p, soft=c.sens.tex==='unaBlanda'&&i===2, g=pieceG(k,x,y,r,sc,c,{soft});
+    s+=g.shadow;
+    if(soft)s+=`<ellipse cx="${x+10}" cy="${y+30}" rx="70" ry="13" fill="url(#g-pool)" filter="url(#fx-blur2)"/>`;
+    s+=`<g class="pc" data-i="${i}" data-soft="${soft?1:0}" style="cursor:pointer">${g.body}<g class="fx"></g></g>`;
+  });
+  if(c.sens.exu==='congelado') s+=`<g style="pointer-events:none"><path d="M396 66 L466 70 L462 112 L392 108 Z" fill="rgba(219,234,254,.35)" stroke="#bcd3ea" stroke-width="1.5"/>
+    <path d="M402 96 C418 88 440 94 456 90 L458 104 L404 104 Z" fill="#f2a1b3" opacity=".9"/><path d="M402 96 C418 88 440 94 456 90 L458 104 L404 104 Z" fill="#fff" filter="url(#fx-frost)" opacity=".8"/>
+    <text x="430" y="62" text-anchor="middle" font-size="10.5" fill="#be123c" font-weight="700">hielo rosado en la bolsa</text></g>`;
+  s+=`</g>`;
+  const z=L[Math.min(1,L.length-1)];
+  const lupa=`<g style="pointer-events:none"><circle cx="560" cy="150" r="76" fill="#0f1b33" opacity=".15" filter="url(#fx-blur4)"/><g clip-path="url(#cp-zoom)"><rect x="480" y="70" width="160" height="160" fill="#f1f2ed"/>
+    <use id="zuse" href="#scene" transform="translate(560,150) scale(3) translate(${-z[1]},${-z[2]})"/></g>
+    <circle cx="560" cy="150" r="72" fill="none" stroke="#12306b" stroke-width="5"/><circle cx="560" cy="150" r="66" fill="none" stroke="#fff" stroke-width="1.5" opacity=".6"/>
+    <path d="M612 202 L632 226" stroke="#12306b" stroke-width="10" stroke-linecap="round"/>
+    <text x="560" y="250" text-anchor="middle" font-size="12" font-weight="800" fill="#12306b">🔍 Lupa ×3</text></g>`;
+  return `<svg viewBox="0 0 640 300"><defs><clipPath id="cp-zoom"><circle cx="560" cy="150" r="72"/></clipPath></defs>${s}${lupa}</svg>`;
+}
+
+/* ---------- Temperatura ---------- */
+const POS=['Inicio de la carga','Centro de la carga','Final de la carga (puerta)'];
+function locs(c){
+  if(c.est==='cong') return [['caja','Sobre la caja'],['entre','Entre dos empaques'],['pieza','Insertar en la pieza']];
+  return c.pieza==='pierna'?[['emp','Sobre el empaque'],['core','Centro térmico'],['bone','Junto al hueso']]:[['emp','Sobre el empaque'],['core','Centro térmico'],['edge','Orilla delgada']];
+}
+function readVal(c,i,loc){
+  const core=c.temp.core[i], air=c.veh.air, off=S.therm.used;
+  if(c.est==='cong'){
+    if(loc==='entre') return {v:core+off*0.5};
+    if(loc==='caja') return {v:lerp(core,air,0.6)+off};
+    if(core>-5) return {v:core+off,msg:'¡El punzón entró! Una pieza «congelada» que se deja perforar está descongelada.'};
+    return {v:null,msg:'El punzón no entra: la pieza está dura. En congelado se mide entre empaques, sin perforar.'};
+  }
+  if(loc==='core') return {v:core+off};
+  if(loc==='emp') return {v:lerp(core,air,0.65)+off};
+  if(loc==='edge') return {v:lerp(core,air,0.35)+off};
+  return {v:core+0.4+off};
+}
+const goodLoc=c=>c.est==='cong'?'entre':'core';
+function renderTemp(){
+  const c=S.c, P=$('#panel'), T=S.therm, done=S.conf.tmp;
+  const verified=T.dec!==null;
+  const check=f1(T.dec==='change'?T.used:T.off);
+  let html=`<h2>🌡️ 3. Temperatura</h2><p class="lead">Verifica el termómetro, desinfecta el punzón y mide en tres puntos de la carga. Decide con la lectura más desfavorable.</p>
+   <div class="stepbox"><h4>a) Verificación en baño de hielo (0 °C ± 1 °C)</h4>
+    <div class="two"><div class="vis" style="margin:0">${iceSVG(T.dec==='change'?T.used:T.off)}</div>
+    <div style="font-size:13.2px">Hielo picado con un poco de agua, un minuto con agitación. El termómetro marca <b>${check} °C</b>.
+     ${verified?`<div class="fb ${S.therm.ok?'good':'bad'}">${S.therm.msg}</div>`:`<div class="row-btn"><button class="btn btn-primary btn-sm" id="useT">✔ Está en tolerancia: usarlo</button><button class="btn btn-ghost btn-sm" id="chgT">↻ Fuera de tolerancia: ajustar o cambiar</button></div>`}</div></div></div>
+   <div class="stepbox ${verified?'':'lock'}"><h4>b) Medición en tres puntos de la carga</h4>
+    <div class="pos">${POS.map((p,i)=>`<button data-p="${i}" class="${S.pos===i?'on':''} ${S.reads.some(r=>r.i===i)?'ok':''}">${S.reads.some(r=>r.i===i)?'✓ ':''}${p}</button>`).join('')}</div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px"><span class="pill ${S.clean?'clean':'dirty'}">Punzón: ${S.clean?'desinfectado':'sin desinfectar'}</span><button class="btn btn-ghost btn-sm" id="dis" ${done?'disabled':''}>🧴 Desinfectar punzón</button><span style="font-size:12px;color:var(--muted)">Toca dónde insertar el termómetro:</span></div>
+    <div class="vis" id="pc">${pieceSVG(c,null)}</div><div id="pmsg" style="font-size:12.5px;min-height:18px;color:#7f1d1d"></div>
+    <div class="tbwrap"><table class="tb"><tr><th>Punto</th><th>Dónde</th><th>Lectura</th><th>Punzón</th></tr>${S.reads.map(r=>`<tr><td>${POS[r.i]}</td><td>${r.ln}</td><td><b>${r.v===null?'—':f1(r.v)+' °C'}</b></td><td>${r.ins?(r.clean?'✓ desinfectado':'✗ sin desinfectar'):'no se insertó'}</td></tr>`).join('')}${S.more.map(r=>`<tr style="background:#f8fafc"><td>Extra</td><td>${r[0]} · centro térmico</td><td><b>${f1(r[1]+S.therm.used)} °C</b></td><td>✓ desinfectado</td></tr>`).join('')}</table></div>
+    <div class="row-btn"><button class="btn btn-ghost btn-sm" id="mas" ${S.reads.length<3||S.mas||done?'disabled':''}>📏 Medir más piezas</button><span style="font-size:12px;color:var(--muted)">${S.mas&&!S.c.temp.more?'Las lecturas extra son similares a las anteriores.':''}</span></div>
+   </div>`;
+  if(S.reads.length>=3){
+    html+=critRows([tCrit(c)],'tmp');
+    if(done){const r=S.fb.tmp;html+=`<div class="fb ${r[0]===r[1]?'good':r[0]>=2?'mid':'bad'}">${S.tfb}</div>`+nextBtn();}
+    else html+=`<div class="row-btn"><button class="btn btn-accent" id="conf">Confirmar temperatura</button></div>`;
+  }
+  P.innerHTML=html;
+  if($('#useT'))$('#useT').onclick=()=>{T.dec='use';T.used=T.off;T.ok=Math.abs(T.off)<=1;T.msg=T.ok?'✅ Bien: está dentro de ± 1 °C.':`❌ Marca ${f1(T.off)} °C: está fuera de ± 1 °C. Tus lecturas saldrán desviadas ${f1(T.off)} °C.`;renderTemp();};
+  if($('#chgT'))$('#chgT').onclick=()=>{T.dec='change';T.ok=Math.abs(T.off)>1;T.used=0.2;T.msg=T.ok?'✅ Bien: estaba fuera de tolerancia. Lo cambiaste por uno que marca 0.2 °C.':'🟡 Estaba dentro de tolerancia; no hacía falta cambiarlo, pero no afecta la medición. El nuevo marca 0.2 °C.';if(!T.ok)T.ok=true;renderTemp();};
+  $$('#panel .pos button').forEach(b=>b.onclick=()=>{S.pos=+b.dataset.p;renderTemp();});
+  if($('#dis'))$('#dis').onclick=()=>{S.clean=true;renderTemp();};
+  if(!done)$$('#pc .tgt').forEach(g=>g.onclick=()=>measure(g.dataset.l));
+  if($('#mas'))$('#mas').onclick=()=>{S.mas=true;S.more=c.temp.more||c.temp.core.map((v,i)=>[POS[i]+', otra caja',v+(i-1)*0.1]);renderTemp();};
+  if(S.reads.length>=3)bindCrit([tCrit(c)],'tmp',scoreTemp);
+  bindNext();
+}
+function measure(loc){
+  const c=S.c, i=S.pos, L=locs(c).find(x=>x[0]===loc), r=readVal(c,i,loc);
+  const ins=c.est==='cong'?loc==='pieza':loc!=='emp';
+  const rec={i,loc,ln:L[1],v:r.v,ins,clean:ins?S.clean:true};
+  if(ins)S.clean=false;
+  // animación del display
+  const svg=$('#pc svg'), pt=svg.querySelector(`[data-l="${loc}"]`), cx=+pt.dataset.x, cy=+pt.dataset.y;
+  const g=document.createElementNS('http://www.w3.org/2000/svg','g');
+  g.innerHTML=penThermo(cx,cy);
+  svg.appendChild(g);$$('#pc .tgt').forEach(x=>x.style.pointerEvents='none');
+  const t0=performance.now(), start=c.veh.air+8;
+  const iv=setInterval(()=>{const f=Math.min(1,(performance.now()-t0)/1100);const d=svg.querySelector('#dsp');
+    if(r.v===null){d.textContent='ERR';}else d.textContent=f1(lerp(start,r.v,1-Math.pow(1-f,3)));
+    if(f>=1){clearInterval(iv);S.reads=S.reads.filter(x=>x.i!==i);S.reads.push(rec);S.reads.sort((a,b)=>a.i-b.i);
+      if(S.reads.length<3)S.pos=[0,1,2].find(k=>!S.reads.some(x=>x.i===k));
+      renderTemp();if(r.msg)$('#pmsg').textContent=r.msg;else if(loc!==goodLoc(c))$('#pmsg').textContent=c.est==='cong'?'Sobre la caja mides el aire, no el producto.':loc==='emp'?'Sobre el empaque mides la superficie: se enfría o calienta más rápido que el interior.':loc==='bone'?'El hueso conduce el calor de forma distinta: no se debe tocar al medir.':'La orilla delgada cambia de temperatura antes que el centro.';}
+  },40);
+}
+function scoreTemp(){
+  const c=S.c, T=S.therm, gl=goodLoc(c);
+  const p1=T.ok?1:0;
+  const p2=S.reads.every(r=>r.loc===gl)?1:0;
+  const ins=S.reads.filter(r=>r.ins);
+  const p3=ins.every(r=>r.clean)?1:0;
+  const p4=S.marks.t1===!!c.exp.t1?1:0;
+  S.sc.tmp[0]+=p1+p2+p3+p4;S.sc.tmp[1]+=4;S.fb.tmp=[p1+p2+p3+p4,4];
+  const vals=S.reads.map(r=>r.v).filter(v=>v!==null), avg=vals.reduce((a,b)=>a+b,0)/(vals.length||1), worst=c.est==='ref'?Math.max(...vals):Math.max(...vals);
+  const li=[];
+  li.push(p1?'✅ Verificación del termómetro correcta.':`❌ Usaste un termómetro fuera de tolerancia (${f1(T.off)} °C en el hielo).`);
+  li.push(p2?`✅ Mediste ${c.est==='cong'?'entre empaques':'en el centro térmico'} en los tres puntos de la carga.`:`❌ No todas las lecturas fueron ${c.est==='cong'?'entre empaques':'en el centro térmico'}: el dato no representa al producto.`);
+  li.push(!ins.length?'➖ No insertaste el punzón en ninguna pieza.':p3?'✅ Desinfectaste el punzón antes de cada inserción.':'❌ Insertaste el punzón sin desinfectar: puedes pasar bacterias de una pieza a otra.');
+  li.push(`Tus lecturas: promedio ${f1(avg)} °C; lectura más desfavorable ${f1(worst)} °C. Real en el centro: ${c.temp.core.map(f1).join(' · ')} °C.`);
+  S.tfb=li.join('<br>');
+}
+function bindPress(){
+  const svg=$('#tray svg');
+  $$('#tray .pc').forEach(g=>g.onclick=ev=>{
+    const c=S.c, soft=g.dataset.soft==='1', visc=c.sens.tex==='viscosa', hard=c.sens.tex==='dura'||(c.est==='cong'&&!soft);
+    const pt=svg.createSVGPoint();pt.x=ev.clientX;pt.y=ev.clientY;const p=pt.matrixTransform(svg.getScreenCTM().inverse());
+    const x=p.x,y=p.y, fx=g.querySelector('.fx');
+    $('#zuse').setAttribute('transform',`translate(560,150) scale(3) translate(${-x},${-y})`);
+    fx.innerHTML=`<ellipse class="dent" cx="${x}" cy="${y+2}" rx="0" ry="0" fill="url(#g-dent)"/>
+      <g class="fing" transform="translate(${x},${y-60})" opacity="0"><path d="M-13,-70 L-13,-6 C-13,8 13,8 13,-6 L13,-70 Z" fill="url(#g-glove)" stroke="#2f5bc0" stroke-width="1"/><ellipse cx="0" cy="-8" rx="8" ry="4" fill="#fff" opacity=".35"/></g>`;
+    const dent=fx.querySelector('.dent'), fing=fx.querySelector('.fing');
+    let msg;
+    if(hard)msg='Está dura como piedra: el dedo no la hunde. Es normal en producto congelado.';
+    else if(soft)msg='Se hunde y la marca no se recupera; suelta líquido. La pieza está blanda: se descongeló.';
+    else if(visc)msg='Recupera su forma, pero al retirar el dedo se estiran hilos: superficie viscosa y pegajosa.';
+    else msg='Se hunde un poco y la marca desaparece en un segundo: firme y elástica.';
+    $('#presscap').textContent='👆 '+msg;
+    const depth=hard?2:soft?12:7, t0=performance.now();
+    (function an(){const t=(performance.now()-t0)/1000;
+      let dy, rd;
+      if(t<0.35){dy=-60+60*(t/0.35);rd=0;}
+      else if(t<0.8){dy=depth*Math.min(1,(t-0.35)/0.15);rd=Math.min(1,(t-0.35)/0.15);}
+      else if(t<1.2){dy=depth-((t-0.8)/0.4)*(depth+60);rd=1;}
+      else{dy=-60;rd=1;}
+      fing.setAttribute('transform',`translate(${x},${y+dy})`);fing.setAttribute('opacity',t<1.25?1:Math.max(0,1-(t-1.25)*4));
+      let R=hard?4:soft?20:16;
+      if(t>=0.8&&!soft&&!hard){const k=Math.max(0,1-(t-0.8)/0.9);dent.setAttribute('rx',R*k);dent.setAttribute('ry',R*0.7*k);}
+      else{dent.setAttribute('rx',R*rd);dent.setAttribute('ry',R*0.7*rd);}
+      if(visc&&t>0.8&&t<1.5){const h=Math.min(40,(t-0.8)*90);fx.querySelectorAll('.str').forEach(e=>e.remove());
+        if(t<1.35)fx.insertAdjacentHTML('beforeend',[-6,0,6].map(o=>`<path class="str" d="M${x+o},${y} C${x+o*1.5},${y-h*0.5} ${x+o*0.6},${y-h*0.7} ${x+o*0.3},${y-h}" stroke="#fff" stroke-width="1.4" fill="none" opacity=".85"/>`).join(''));}
+      if(t>=1.5)fx.querySelectorAll('.str').forEach(e=>e.remove());
+      if(t<2)requestAnimationFrame(an);})();
+  });
+}
+
+/* ---------- Empaque ---------- */
+function shiftDate(d,n){const[a,b,y]=d.split('/').map(Number);const t=new Date(y,b-1,a+n);return String(t.getDate()).padStart(2,'0')+'/'+String(t.getMonth()+1).padStart(2,'0')+'/'+t.getFullYear();}
+function barcode(x,y,w,h,seed){let s='',px=x,i=0;while(px<x+w-2){const r=((Math.sin((seed+i)*91.7)*1e4)%1+1)%1;const bw=r<0.5?1:r<0.8?2:3;if(i%2===0)s+=`<rect x="${px}" y="${y}" width="${bw}" height="${h}" fill="#111"/>`;px+=bw;i++;}return s;}
+function labelG(c,l,x,y,rot){
+  const cong=c.est==='cong', prodDate=cong?shiftDate(l.cad,-180):shiftDate(l.cad,-6), seed=[...String(l.lote)].reduce((a,ch)=>a+ch.charCodeAt(0),0);
+  const prod=c.prod.length>27?c.prod.slice(0,26)+'…':c.prod;
+  return `<g transform="translate(${x},${y}) rotate(${rot}) scale(.88)"><rect x="3" y="4" width="150" height="112" rx="3" fill="#000" opacity=".18" filter="url(#fx-blur2)"/>
+   <rect width="150" height="112" rx="3" fill="#fdfdfb" stroke="#d6d3cc"/><rect width="150" height="17" rx="3" fill="#12306b"/><text x="6" y="12" font-size="9" font-weight="800" fill="#fff">${c.prov.toUpperCase()}</text>
+   <text x="6" y="29" font-size="8.6" font-weight="700" fill="#111">${prod}</text>
+   <text x="6" y="42" font-size="8.6" fill="#111">LOTE: <tspan font-weight="800">${l.lote}</tspan></text>
+   <text x="6" y="53" font-size="8" fill="#333">PRODUCCIÓN: ${prodDate}</text>
+   <text x="6" y="65" font-size="8.6" fill="#111">CADUCIDAD: <tspan font-weight="800">${l.cad}</tspan></text>
+   <text x="6" y="76" font-size="7.6" fill="#333">PESO NETO: ${cong?'2.00':'1.20'} kg · ${c.rem.cert||''}</text>
+   <text x="6" y="86" font-size="7" fill="#333">${cong?'Consérvese a −18 °C o menos':'Consérvese en refrigeración de 0 a 4 °C'}</text>
+   ${barcode(6,90,100,16,seed)}<text x="128" y="104" text-anchor="middle" font-size="7" fill="#555">${String(7501000+seed*37).slice(0,7)}</text></g>`;
+}
+function packSVG(c){
+  const e=c.emp, cong=c.est==='cong', labs=c.labels.length>1?c.labels:[c.labels[0],c.labels[0]];
+  const vac=!cong&&(c.esp!=='pollo'||/vacío/.test(c.prod)), k=kindOf(c);
+  let s=`<svg viewBox="0 0 640 300"><rect width="640" height="300" fill="url(#g-table)"/><rect width="640" height="300" fill="#fff" filter="url(#fx-brush)" opacity=".55"/>`;
+  labs.slice(0,2).forEach((l,j)=>{
+    const x0=14+j*272, y0=28, w=262, h=232, cx=x0+w/2-14, cy=y0+h/2;
+    if(cong){
+      const p1=pieceG(k,x0+80,y0+72,-12,0.85,c,{}), p2=pieceG(k,x0+172,y0+82,14,0.8,c,{});
+      s+=`<rect x="${x0+6}" y="${y0+8}" width="${w-12}" height="${h-12}" rx="18" fill="#000" opacity=".2" filter="url(#fx-blur4)"/>
+        <rect x="${x0}" y="${y0}" width="${w-12}" height="${h-12}" rx="18" fill="#eef4fb" stroke="#c3d3e6" stroke-width="1.5"/>${p1.shadow}${p1.body}${p2.shadow}${p2.body}
+        <rect x="${x0}" y="${y0}" width="${w-12}" height="${h-12}" rx="18" fill="#fff" opacity=".25"/><rect x="${x0}" y="${y0}" width="${w-12}" height="${h-12}" rx="18" fill="#fff" filter="url(#fx-frost)" opacity=".7"/>
+        <rect x="${x0}" y="${y0}" width="${w-12}" height="16" rx="8" fill="#dbe7f3"/><path d="M${x0+10} ${y0+8} h${w-32}" stroke="#a9bdd3" stroke-dasharray="3 3"/>`;
+    }else if(vac){
+      const inf=e.inf;
+      const p=pieceG(k,x0+104,y0+(inf?100:94),inf?-4:0,inf?0.85:(k==='pech'?1.1:0.95),c,{gloss:inf?0.2:0.55});
+      if(inf){s+=`<rect x="${x0+4}" y="${y0+12}" width="${w-16}" height="${h-20}" rx="80" fill="#000" opacity=".16" filter="url(#fx-blur8)"/>
+        <rect x="${x0}" y="${y0+4}" width="${w-16}" height="${h-20}" rx="80" fill="#f4f8fb" opacity=".55" stroke="#9fb0c0" stroke-width="2"/>${p.shadow}${p.body}
+        <rect x="${x0}" y="${y0+4}" width="${w-16}" height="${h-20}" rx="80" fill="url(#g-film)"/><path d="M${x0+30} ${y0+40} C${x0+70} ${y0+14} ${x0+150} ${y0+14} ${x0+200} ${y0+36}" stroke="#fff" stroke-width="6" opacity=".7" fill="none" filter="url(#fx-blur2)"/>
+        <path d="M${x0+40} ${y0+h-40} C${x0+90} ${y0+h-22} ${x0+160} ${y0+h-22} ${x0+210} ${y0+h-46}" stroke="#fff" stroke-width="3" opacity=".5" fill="none"/>`;}
+      else{s+=`<rect x="${x0+20}" y="${y0+36}" width="${w-56}" height="${h-72}" rx="26" fill="#000" opacity=".18" filter="url(#fx-blur4)"/><rect x="${x0+16}" y="${y0+30}" width="${w-56}" height="${h-72}" rx="26" fill="#f1f5f9" opacity=".35" stroke="#a9b6c3" stroke-width="1.2"/>${p.shadow}${p.body}
+        <rect x="${x0+16}" y="${y0+30}" width="${w-56}" height="${h-72}" rx="26" fill="url(#g-film)" opacity=".8"/>
+        ${[[0.15,0.2],[0.8,0.25],[0.2,0.82],[0.85,0.8],[0.5,0.1],[0.5,0.92]].map(([a,b])=>`<path d="M${x0+16+a*(w-56)} ${y0+30+b*(h-72)} l${(0.5-a)*30} ${(0.5-b)*24}" stroke="#fff" stroke-width="1.2" opacity=".6"/>`).join('')}`;}
+      s+=`<rect x="${x0+16}" y="${y0+18}" width="${w-56}" height="12" fill="#e2e8f0" opacity=".85"/>${Array.from({length:Math.floor((w-56)/6)},(_,q)=>`<path d="M${x0+16+q*6} ${y0+30} l3 4 l3 -4" fill="none" stroke="#94a3b8" stroke-width="1"/>`).join('')}`;
+    }else{
+      const k2=k, p1=pieceG(k2,x0+82,y0+70,-10,0.8,c,{}), p2=pieceG(k2,x0+176,y0+78,14,0.76,c,{});
+      s+=`<rect x="${x0+6}" y="${y0+8}" width="${w-12}" height="${h-12}" rx="22" fill="#000" opacity=".2" filter="url(#fx-blur4)"/>
+        <rect x="${x0}" y="${y0}" width="${w-12}" height="${h-12}" rx="22" fill="url(#g-tray)" stroke="#d4d6cf" stroke-width="2"/><rect x="${x0}" y="${y0}" width="${w-12}" height="${h-12}" rx="22" fill="#fff" filter="url(#fx-foam)" opacity=".5"/>
+        <rect x="${x0+14}" y="${y0+14}" width="${w-40}" height="${h-40}" rx="14" fill="#f1f2ed" stroke="#e0e2da"/>${p1.shadow}${p1.body}${p2.shadow}${p2.body}
+        <rect x="${x0}" y="${y0}" width="${w-12}" height="${h-12}" rx="22" fill="url(#g-film)"/>
+        <path d="M${x0+8} ${y0+20} C${x0+60} ${y0+12} ${x0+130} ${y0+24} ${x0+w-30} ${y0+14} M${x0+10} ${y0+h-26} C${x0+80} ${y0+h-34} ${x0+160} ${y0+h-20} ${x0+w-24} ${y0+h-30}" stroke="#fff" stroke-width="1.3" opacity=".6" fill="none"/>`;
+    }
+    if(e.hum){
+      s+=`<ellipse cx="${x0+w/2-10}" cy="${y0+h-34}" rx="${w/2-40}" ry="9" fill="#9fc3df" opacity=".35" filter="url(#fx-blur2)"/>`;
+      for(let q=0;q<46;q++){const rx=((Math.sin((q+j*50)*12.9898)*43758.5453)%1+1)%1, ry=((Math.sin((q+j*50)*78.233)*12345.678)%1+1)%1, rr=1.4+((q*7)%5)*0.7;
+        s+=`<circle cx="${x0+18+rx*(w-50)}" cy="${y0+18+ry*(h-50)}" r="${rr}" fill="url(#g-drop)"/>`;}
+    }
+    if(e.roto&&j===0){const hx=x0+60,hy=y0+70;
+      s+=`<path d="M${hx} ${hy} l18 -10 l10 12 l16 -8 l6 16 l18 4 l-8 14 l10 14 l-20 2 l-6 14 l-16 -10 l-14 8 l-4 -16 l-16 -4 l8 -14 Z" fill="#5b1a12" opacity=".22" stroke="#fff" stroke-width="2.8"/>
+        <path d="M${hx+44} ${hy-8} q14 -14 30 -6 q-10 4 -14 14 Z" fill="#fff" opacity=".7" stroke="#cbd5e1"/><path d="M${hx-4} ${hy+40} q-16 8 -18 22 q10 -6 22 -8 Z" fill="#fff" opacity=".65" stroke="#cbd5e1"/>`;}
+    const sin=!l.lote||e.etiq==='sin';
+    if(!sin) s+=labelG(c,l,x0+w-160,y0+h-114,j?2:-2);
+    if(c.labels.length>1) s+=`<text x="${x0+12}" y="${y0+h+14}" font-size="12" font-weight="700" fill="#334155">× ${l.n} ${l.n===1?'caja':'cajas'}${sin?' · sin etiqueta':''}</text>`;
+  });
+  // calendario
+  s+=`<g transform="translate(566,8)"><rect x="3" y="4" width="64" height="76" rx="6" fill="#000" opacity=".2" filter="url(#fx-blur2)"/><rect width="64" height="76" rx="6" fill="#fff" stroke="#d6d3cc"/><rect width="64" height="20" rx="6" fill="#dc2626"/><rect y="14" width="64" height="6" fill="#dc2626"/>
+   <text x="32" y="14" text-anchor="middle" font-size="10" font-weight="800" fill="#fff">FEB 2027</text><text x="32" y="54" text-anchor="middle" font-size="30" font-weight="800" fill="#111">08</text><text x="32" y="69" text-anchor="middle" font-size="9" fill="#555">lunes · HOY</text></g>`;
+  return s+`</svg>`;
+}
+
+/* ---------- Dictamen ---------- */
+function failList(){const c=S.c;return Object.keys(c.exp).filter(k=>!c.exp[k]).map(k=>c.why[k]).filter(Boolean);}
+function renderDict(){
+  const c=S.c, P=$('#panel'), done=S.conf.dic;
+  const mine=['d1','d2','d3','v1','v2','v3','t1','s1','s2','s3','s4','e1','e2','e3','e4'].filter(k=>S.marks[k]===false);
+  const allTxt=Object.assign({},...Object.values(CRIT).flat().map(([k,t])=>({[k]:t})),{t1:tCrit(c)[1]});
+  let html=`<h2>⚖️ 6. Dictamen y acción correctiva</h2><p class="lead">Con tu evidencia, decide para cada grupo de producto y elige las acciones correctivas (Figura 8).</p>
+   <div class="paper" style="margin-bottom:10px"><h4>LO QUE MARCASTE COMO «NO CUMPLE»</h4>${mine.length?mine.map(k=>`<p style="margin:3px 0">✗ ${allTxt[k]}</p>`).join(''):'<p style="margin:3px 0">✓ Marcaste que todo cumple.</p>'}</div>`;
+  c.groups.forEach((g,gi)=>{
+    const d=S.dict[gi];let ex='';
+    if(done){const r=S.gres[gi];ex=`<div class="fb ${r.p===2?'good':r.p===1?'mid':'bad'}">${r.p===2?'✅':r.p===1?'🟡':'❌'} ${r.msg}</div>`;}
+    html+=`<div class="grp"><h4>${g.label}</h4><div class="dbtn">${['acc','cond','rech'].map(k=>`<button data-g="${gi}" data-d="${k}" class="${d===k?'on':''}" ${done?'disabled':''}>${k==='acc'?'✅ Aceptar':k==='cond'?'🟡 Aceptar condicionado (segregar)':'⛔ Rechazar'}</button>`).join('')}</div>${ex}</div>`;
+  });
+  const req=done?S.reqSet:null;
+  html+=`<h4 style="margin:12px 0 6px;color:var(--navy);font-size:13.5px">Acciones correctivas</h4><div class="acts">${ACTS.map(([k,t])=>{let cl=S.acts.has(k)?'on':'';if(done){if(req.has(k))cl='req';else if(S.acts.has(k)&&(FORBID.includes(k)||S.badActs.has(k)))cl='bad';}
+    return `<label class="act ${cl}"><input type="checkbox" data-a="${k}" ${S.acts.has(k)?'checked':''} ${done?'disabled':''}><span>${t}${done&&req.has(k)?' <b style="color:#16a34a">· necesaria</b>':''}</span></label>`;}).join('')}
+    <label class="act on" style="cursor:default"><input type="checkbox" checked disabled><span>Registrar en la bitácora <b>(siguiente estación)</b></span></label></div>`;
+  if(done){
+    html+=`<div class="fb ${S.fb.dic[0]===S.fb.dic[1]?'good':S.fb.dic[0]>0?'mid':'bad'}">${S.actMsg}</div>
+     <div class="chain"><div><b>Dato observado</b>${failList().length?failList().join(' '):'Todo dentro de criterio.'}</div><div><b>Criterio</b>Tabla 1 · NOM-251-SSA1-2009${c.est==='cong'?' · NOM-194-SSA1-2004':''}</div><div><b>Decisión</b>${c.groups.map((g,i)=>(c.groups.length>1?g.label+': ':'')+DNAME[g.ok[0]]+(g.okMore&&S.mas?' o '+DNAME[g.okMore[0]].toLowerCase():'')).join('<br>')}</div><div><b>Acción correctiva</b>${[...S.reqSet].map(k=>ACTS.find(a=>a[0]===k)[1]).join('; ')}; registrar en la bitácora.</div></div>`+nextBtn();
+  }else html+=`<div class="row-btn"><button class="btn btn-accent" id="cdic" ${c.groups.every((_,i)=>S.dict[i])&&S.acts.size?'':'disabled'}>Emitir dictamen</button></div>`;
+  P.innerHTML=html;
+  $$('#panel .dbtn button').forEach(b=>b.onclick=()=>{S.dict[+b.dataset.g]=b.dataset.d;renderDict();});
+  $$('#panel .act input[data-a]').forEach(i=>i.onchange=()=>{i.checked?S.acts.add(i.dataset.a):S.acts.delete(i.dataset.a);renderDict();});
+  if($('#cdic'))$('#cdic').onclick=scoreDict;
+  bindNext();
+}
+function scoreDict(){
+  const c=S.c;let pts=0,max=0;S.gres=[];
+  c.groups.forEach((g,gi)=>{const d=S.dict[gi];let p=0,msg='';
+    if(g.ok.includes(d)){p=2;msg=`${DNAME[d]}: correcto. ${g.why}`;}
+    else if(g.okMore&&g.okMore.includes(d)&&S.mas){p=2;msg=`${DNAME[d]}: correcto, porque mediste más piezas y delimitaste el problema. ${g.why}`;}
+    else if(g.part&&g.part.includes(d)){p=1;msg=`${DNAME[d]}: solo parcialmente. Te faltó medir más piezas para demostrar que el problema se limita a una parte. ${g.why}`;}
+    else{msg=`${DNAME[d]}: incorrecto. Lo correcto es ${DNAME[g.ok[0]].toLowerCase()}. ${g.why}`;}
+    pts+=p;max+=2;S.gres.push({p,msg});});
+  // acciones requeridas
+  const req=new Set();c.groups.forEach((g,gi)=>{(REQ[S.dict[gi]]||[]).forEach(k=>req.add(k));});
+  if(c.groups.some((g,gi)=>S.dict[gi]!=='acc')){(c.extra||[]).forEach(k=>req.add(k));}
+  if(c.groups.every((g,gi)=>S.dict[gi]==='rech'))req.delete('alm');
+  S.reqSet=req;
+  const bad=new Set();if(c.groups.every((g,gi)=>S.dict[gi]==='rech')&&S.acts.has('alm'))bad.add('alm');
+  if(c.groups.every((g,gi)=>S.dict[gi]==='acc')&&S.acts.has('dev'))bad.add('dev');
+  S.badActs=bad;
+  const forb=[...S.acts].filter(k=>FORBID.includes(k)||bad.has(k)), miss=[...req].filter(k=>!S.acts.has(k));
+  let ap=forb.length?0:miss.length?1:2;
+  S.actMsg=ap===2?'✅ Acciones correctas y completas.':forb.length?`❌ Elegiste acciones que no proceden: ${forb.map(k=>ACTS.find(a=>a[0]===k)[1].toLowerCase()).join('; ')}. ${forb.some(k=>FORBID.includes(k))?'Reempacar, congelar o mezclar no corrige un producto no conforme: lo oculta.':''}`:`🟡 Te faltaron acciones: ${miss.map(k=>ACTS.find(a=>a[0]===k)[1].toLowerCase()).join('; ')}.`;
+  pts+=ap;max+=2;S.sc.dic=[pts,max];S.fb.dic=[pts,max];S.conf.dic=true;
+  S.dictOK=S.gres.every(r=>r.p===2);
+  renderDict();renderSide();
+}
+
+/* ---------- Bitácora ---------- */
+function rowData(){
+  const c=S.c, sm=k=>CRIT[k].filter(([id])=>S.marks[id]===false).map(([id,t])=>t.split(':')[0].split(',')[0]);
+  const sen=sm('sen'), emp=sm('emp');
+  return {fh:`08/02 ${S.hora||''}`,pl:`${c.prov} / ${c.lote}`,t:S.reads.map(r=>r.v===null?'—':f1(r.v)).join(' · '),
+   sen:sen.length?'No cumple: '+sen.join('; '):'Cumple',emp:emp.length?'No cumple: '+emp.join('; '):'Cumple',
+   dic:c.groups.map((g,i)=>(c.groups.length>1?g.label+': ':'')+DNAME[S.dict[i]]).join(' · '),
+   acc:[...S.acts].map(k=>ACTS.find(a=>a[0]===k)[1].split(' ')[0]).join(', '),resp:S.resp||''};
+}
+function renderReg(){
+  const P=$('#panel'), done=S.conf.reg, r=rowData();
+  P.innerHTML=`<h2>📝 7. Bitácora</h2><p class="lead">Lo que no se registra, no se puede demostrar. Completa la hora y firma con tus iniciales.</p>
+   <div class="form"><label>Fecha<input value="08/02/2027" disabled></label><label>Hora de recepción<input id="rh" placeholder="hh:mm" value="${S.hora||''}" ${done?'disabled':''}></label><label>Responsable (iniciales)<input id="rr" placeholder="Ej. J. P." value="${S.resp||''}" ${done?'disabled':''}></label></div>
+   <div class="tbwrap"><table class="tb"><tr><th>Fecha y hora</th><th>Proveedor / lote</th><th>Temp. (°C)</th><th>Sensorial</th><th>Empaque / etiqueta</th><th>Dictamen</th><th>Acción</th><th>Resp.</th></tr>
+   <tr><td id="c-fh">${r.fh}</td><td>${r.pl}</td><td>${r.t}</td><td>${r.sen}</td><td>${r.emp}</td><td>${r.dic}</td><td>${r.acc}</td><td id="c-rs">${r.resp}</td></tr></table></div>
+   ${done?truckSummary():`<div class="row-btn"><button class="btn btn-accent" id="sign">✍️ Firmar y registrar</button></div>`}`;
+  if(!done){
+    $('#rh').oninput=e=>{S.hora=e.target.value;$('#c-fh').textContent='08/02 '+S.hora;};$('#rr').oninput=e=>{S.resp=e.target.value;$('#c-rs').textContent=S.resp;};
+    $('#sign').onclick=()=>{
+      S.hora=$('#rh').value.trim();S.resp=$('#rr').value.trim();
+      if(!S.hora||!S.resp){alertBox('Falta la hora o la firma: un registro sin hora ni responsable no sirve como evidencia.');return;}
+      const ok=S.hora.replace(/\s/g,'')===S.c.hora;
+      S.sc.reg=[ok?1:0,1];S.fb.reg=S.sc.reg;S.regMsg=ok?'✅ Registro completo con la hora real de recepción.':`🟡 Registraste ${S.hora}, pero el camión llegó a las ${S.c.hora}. La hora debe ser la real: es parte de la trazabilidad.`;
+      S.conf.reg=true;finishTruck();renderReg();renderSide();
+    };
+  }
+  const n=$('#nt');if(n)n.onclick=()=>{if(qi<Q.length-1){qi++;loadTruck();window.scrollTo({top:0,behavior:'smooth'});}else{show('bit');}};
+}
+function alertBox(m){let d=$('#panel .fb.bad.tmp');if(!d){d=document.createElement('div');d.className='fb bad tmp';$('#panel').appendChild(d);}d.textContent='⚠️ '+m;}
+function finishTruck(){
+  const s=S.sc;TOT.doc[0]+=s.doc[0];TOT.doc[1]+=s.doc[1];TOT.tmp[0]+=s.tmp[0];TOT.tmp[1]+=s.tmp[1];TOT.pro[0]+=s.pro[0];TOT.pro[1]+=s.pro[1];TOT.dic[0]+=s.dic[0];TOT.dic[1]+=s.dic[1];TOT.reg[0]+=s.reg[0];TOT.reg[1]+=s.reg[1];
+  const miss=[];
+  ['d1','d2','d3','v1','v2','v3','s1','s2','s3','s4','e1','e2','e3','e4','t1'].forEach(k=>{if(S.marks[k]!==!!S.c.exp[k]){const t=(Object.values(CRIT).flat().find(x=>x[0]===k)||tCrit(S.c))[1];miss.push(`«${t}»: marcaste ${S.marks[k]?'cumple':'no cumple'}.`);}});
+  if(!S.therm.ok)miss.push('Usaste un termómetro fuera de tolerancia.');
+  if(!S.reads.every(r=>r.loc===goodLoc(S.c)))miss.push('No mediste siempre en el punto correcto.');
+  if(!S.reads.filter(r=>r.ins).every(r=>r.clean))miss.push('No desinfectaste el punzón antes de cada inserción.');
+  if(!S.dictOK)miss.push('Dictamen: '+S.gres.filter(r=>r.p<2).map(r=>r.msg.split('.')[0]).join('; ')+'.');
+  DONE.push({id:S.id,tag:S.c.tag,dictOK:S.dictOK,miss,sc:JSON.parse(JSON.stringify(S.sc))});
+  LOG.push(rowData());renderLog();
+}
+function truckSummary(){
+  const s=S.sc, tot=Object.values(s).reduce((a,v)=>[a[0]+v[0],a[1]+v[1]],[0,0]);
+  return `<div class="fb ${S.fb.reg[0]?'good':'mid'}">${S.regMsg}</div>
+   <div class="sumbox"><h3 style="margin:0 0 6px;color:var(--navy);font-size:15px">Resultado del camión: ${tot[0]} de ${tot[1]} puntos</h3>
+   <div class="kpis">${[['Documentos y vehículo',s.doc],['Temperatura',s.tmp],['Producto',s.pro],['Dictamen y acciones',s.dic],['Registro',s.reg]].map(k=>`<div class="kpi"><small>${k[0]}</small><b>${k[1][0]}/${k[1][1]}</b></div>`).join('')}</div>
+   ${DONE[DONE.length-1].miss.length?DONE[DONE.length-1].miss.map(m=>`<div class="miss">${m}</div>`).join(''):'<p>✅ Recepción sin errores.</p>'}
+   <div class="row-btn"><button class="btn btn-primary" id="nt">${qi<Q.length-1?'🚛 Siguiente camión ➜':'📝 Ver bitácora y constancia ➜'}</button></div></div>`;
+}
+
+/* ===================== Pestaña 2 ===================== */
+function renderLog(){
+  const t=$('#log');t.querySelectorAll('tr:not(:first-child)').forEach(r=>r.remove());
+  LOG.forEach(r=>{const tr=document.createElement('tr');tr.innerHTML=`<td>${r.fh}</td><td>${r.pl}</td><td>${r.t}</td><td>${r.sen}</td><td>${r.emp}</td><td>${r.dic}</td><td>${r.acc}</td><td>${r.resp}</td>`;t.appendChild(tr);});
+  const tot=Object.values(TOT).reduce((a,v)=>[a[0]+v[0],a[1]+v[1]],[0,0]), pct=tot[1]?Math.round(tot[0]/tot[1]*100):0;
+  $('#bk').innerHTML=[['Documentos y vehículo',TOT.doc],['Medición de temperatura',TOT.tmp],['Sensorial y empaque',TOT.pro],['Dictamen y acciones',TOT.dic],['Registro',TOT.reg]].map(k=>`<div class="kpi"><small>${k[0]}</small><b>${k[1][1]?Math.round(k[1][0]/k[1][1]*100)+' %':'—'}</b></div>`).join('');
+  $('#const').innerHTML=DONE.length?`<div style="font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.5px">CONSTANCIA DE PRÁCTICA VIRTUAL · A.C.1 RECIBE LA CARNE PARA SU ACEPTACIÓN O RECHAZO</div>
+    <h3 style="margin:4px 0;color:var(--navy)">${DONE.length} ${DONE.length===1?'camión recibido':'camiones recibidos'} · ${tot[0]} de ${tot[1]} puntos (${pct} %)</h3>
+    <div class="form noprint" style="grid-template-columns:2fr 1fr"><label>Nombre del alumno<input id="who" placeholder="Escribe tu nombre"></label><label>&nbsp;<button class="btn btn-ghost" id="prt">🖨️ Imprimir / guardar PDF</button></label></div>
+    <div id="whoOut" style="font-weight:700;color:var(--navy)"></div>
+    <p>${pct>=85?'🏆 Excelente: recibes con criterio, mides bien y dejas evidencia.':pct>=60?'👍 Buen trabajo. Repasa lo marcado abajo.':'📘 Repasa la Tabla 1 y la Figura 7 del CECyBOOK y repite el turno.'}</p>
+    ${DONE.map(d=>`<div style="margin-top:6px"><b>${d.tag}</b> · dictamen ${d.dictOK?'✅ correcto':'❌ por revisar'}${d.miss.length?d.miss.map(m=>`<div class="miss">${m}</div>`).join(''):''}</div>`).join('')}
+    <div class="row-btn noprint"><button class="btn btn-accent" id="again">↺ Nuevo turno</button></div>`:'<p style="color:var(--muted)">Todavía no has recibido ningún camión. Ve a la pestaña «El andén».</p>';
+  if($('#who'))$('#who').oninput=e=>$('#whoOut').textContent=e.target.value?'Alumno(a): '+e.target.value:'';
+  if($('#prt'))$('#prt').onclick=()=>window.print();
+  if($('#again'))$('#again').onclick=()=>{LOG=[];DONE=[];TOT={doc:[0,0],tmp:[0,0],pro:[0,0],dic:[0,0],reg:[0,0]};renderLog();show('and');newTurn(MODE);};
+}
+
+/* ===================== Pestañas ===================== */
+function show(t){$$('.tab').forEach(x=>x.classList.toggle('on',x.dataset.t===t));$$('.pane').forEach(p=>p.classList.toggle('show',p.dataset.p===t));window.scrollTo({top:0,behavior:'smooth'});}
+$$('.tab').forEach(b=>b.onclick=()=>show(b.dataset.t));
+$$('[data-m]').forEach(b=>b.onclick=()=>newTurn(b.dataset.m));
+newTurn('p1');renderLog();
+</script>
+</body>
+</html>

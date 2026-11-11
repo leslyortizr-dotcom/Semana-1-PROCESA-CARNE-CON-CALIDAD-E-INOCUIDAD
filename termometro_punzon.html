@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Termómetro de punzón · Semana 1</title>
+<style>
+
+:root{
+  --navy:#12306b; --navy-2:#1d4196; --ink:#0f1b33; --text:#22304a; --muted:#64748b;
+  --bg:#eef2f8; --card:#ffffff; --line:#dbe3ef; --soft:#f6f8fc;
+  --orange:#f05a28; --magenta:#d61f5c; --meat:#b91c1c; --ok:#16a34a; --warn:#d97706; --bad:#dc2626;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;background:var(--bg);color:var(--text);padding:18px;line-height:1.45}
+.app{max-width:1200px;margin:0 auto;background:var(--card);border-radius:18px;box-shadow:0 12px 34px rgba(15,27,51,.10);overflow:hidden}
+.topbar{height:6px;background:linear-gradient(90deg,var(--meat),var(--orange),var(--magenta))}
+header{padding:16px 24px 6px}
+.back{display:inline-flex;align-items:center;gap:6px;background:#334155;color:#f8fafc;text-decoration:none;padding:8px 14px;border-radius:8px;font-weight:600;font-size:13px;border:1px solid #475569;margin-bottom:12px}
+.back:hover{background:#1e293b}
+.title-row{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+h1{margin:0;color:var(--navy);font-size:26px;letter-spacing:-.3px}
+.subtitle{color:var(--muted);font-size:14px;margin-top:2px;max-width:820px}
+.week-tag{background:var(--navy);color:#fff;font-weight:700;font-size:12px;padding:6px 12px;border-radius:999px;white-space:nowrap}
+.week-tag b{color:#ffb38f}
+.tabs{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:12px 24px 0}
+@media (max-width:480px){.tabs{grid-template-columns:1fr}}
+.tab{border:2px solid var(--line);background:#fff;border-radius:12px;padding:10px 14px;text-align:left;cursor:pointer;font:inherit;color:var(--muted)}
+.tab b{display:block;font-size:15px;color:inherit}
+.tab small{font-size:12.5px}
+.tab.on{border-color:var(--navy);background:#eef3ff;color:var(--navy)}
+.pane{display:none;padding:12px 24px 18px}
+.pane.show{display:block}
+.presets{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
+.presets .lbl{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-right:4px}
+.chip{border:1.5px solid var(--line);background:#fff;color:var(--text);padding:6px 11px;border-radius:999px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit}
+.chip:hover{border-color:var(--navy-2)}
+.chip.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.dock{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#f8fafc;margin-bottom:12px}
+.dock svg{display:block;width:100%;height:auto}
+@keyframes arrive{from{transform:translateX(560px)}to{transform:translateX(0)}}
+.truck-in{animation:arrive 1.1s cubic-bezier(.2,.8,.2,1)}
+.lab{display:grid;grid-template-columns:290px 1fr;gap:16px}
+@media (max-width:960px){.lab{grid-template-columns:1fr}}
+.col{display:flex;flex-direction:column;gap:12px;min-width:0}
+.card{background:var(--soft);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.card h3{margin:0 0 8px;font-size:14.5px;color:var(--navy)}
+.info{font-size:12.8px}
+.info div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px dashed var(--line);padding:3px 0}
+.info div:last-child{border:0}
+.info span{color:var(--muted)}
+.info b{text-align:right}
+.bubble{margin-top:8px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:12px;padding:7px 10px;font-size:12.5px;font-weight:600}
+.route{display:flex;flex-direction:column;gap:5px}
+.stn{display:flex;gap:8px;align-items:center;border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:6px 9px;font-size:12.8px;font-weight:600;color:var(--muted)}
+.stn i{font-style:normal;width:22px;height:22px;border-radius:50%;background:#e2e8f0;color:#475569;display:inline-flex;align-items:center;justify-content:center;font-size:11px;flex:0 0 auto}
+.stn .sc{margin-left:auto;font-size:11.5px;color:var(--muted)}
+.stn.on{border-color:var(--orange);background:#fff7ed;color:var(--ink)}
+.stn.on i{background:var(--orange);color:#fff}
+.stn.done{color:var(--ink)}
+.stn.done i{background:var(--ok);color:#fff}
+.panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.panel>h2{margin:0 0 4px;font-size:18px;color:var(--navy)}
+.panel>.lead{margin:0 0 10px;font-size:13.5px;color:var(--muted)}
+.vis{border:1px solid var(--line);border-radius:12px;background:#fbfcfe;overflow:hidden;margin-bottom:10px}
+.vis svg{display:block;width:100%;height:auto}
+.vis .cap{font-size:11.5px;color:var(--muted);padding:5px 10px;border-top:1px solid var(--line);background:#fff}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:700px){.two{grid-template-columns:1fr}}
+.crit{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.cr{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:7px 10px;background:#fff;font-size:13.2px}
+.cr .tg{display:flex;gap:4px}
+.cr .tg button{border:1.5px solid var(--line);background:#fff;border-radius:8px;padding:5px 9px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;color:var(--muted)}
+.cr .tg button.y.on{background:#dcfce7;border-color:var(--ok);color:#14532d}
+.cr .tg button.n.on{background:#fee2e2;border-color:var(--bad);color:#7f1d1d}
+.cr .tg button:disabled{cursor:default}
+.cr .ex{grid-column:1/-1;font-size:12.3px;padding:5px 8px;border-radius:8px}
+.cr .ex.good{background:#f0fdf4;color:#14532d}
+.cr .ex.bad{background:#fef2f2;color:#7f1d1d}
+.btn{border:0;border-radius:10px;padding:10px 14px;font-weight:700;font-size:13.5px;cursor:pointer;font-family:inherit}
+.btn:disabled{opacity:.45;cursor:default}
+.btn-accent{background:linear-gradient(90deg,var(--orange),var(--magenta));color:#fff}
+.btn-ghost{background:#fff;border:1.5px solid var(--line);color:var(--text)}
+.btn-primary{background:var(--navy);color:#fff}
+.btn-sm{padding:6px 10px;font-size:12.5px}
+.row-btn{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center}
+.fb{margin-top:10px;padding:10px 12px;border-radius:10px;font-size:13.2px}
+.fb.good{background:#f0fdf4;border:1px solid #bbf7d0;color:#14532d}
+.fb.bad{background:#fef2f2;border:1px solid #fecaca;color:#7f1d1d}
+.fb.mid{background:#fffbeb;border:1px solid #fde68a;color:#78350f}
+.paper{background:#fffdf7;border:1px solid #e7dcc3;border-radius:10px;padding:12px 14px;font-size:12.8px;box-shadow:0 2px 6px rgba(0,0,0,.05)}
+.paper h4{margin:0 0 6px;font-size:13px;letter-spacing:.5px;color:#7c5a1d}
+.paper div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px dotted #e7dcc3;padding:3px 0}
+.paper span{color:#8a7a5a}
+.seal{display:flex;align-items:center;gap:10px;margin-top:8px}
+.labels{display:flex;flex-direction:column;gap:6px}
+.lbl-card{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:#fff;font-size:12.6px}
+.lbl-card b{color:var(--navy)}
+.lbl-card.missing{border-style:dashed;color:var(--bad)}
+.stepbox{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:10px;background:#fbfcfe}
+.stepbox h4{margin:0 0 6px;font-size:13.5px;color:var(--navy)}
+.stepbox.lock{opacity:.45;pointer-events:none}
+.pos{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.pos button{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:7px 10px;font-weight:700;font-size:12.5px;cursor:pointer;font-family:inherit;color:var(--text)}
+.pos button.on{border-color:var(--navy);background:#eef3ff;color:var(--navy)}
+.pos button.ok{border-color:var(--ok)}
+.pill{display:inline-block;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px}
+.pill.clean{background:#dcfce7;color:#14532d}
+.pill.dirty{background:#fee2e2;color:#7f1d1d}
+.tgt{cursor:pointer}
+.tgt circle{transition:r .15s}
+.tgt:hover circle{r:17}
+table.tb{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff}
+table.tb th{background:var(--navy);color:#fff;text-align:left;padding:6px 8px;font-size:12px}
+table.tb td{border-bottom:1px solid var(--line);padding:6px 8px;vertical-align:top}
+.tbwrap{overflow-x:auto}
+.grp{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px;background:#fff}
+.grp h4{margin:0 0 6px;font-size:13.5px;color:var(--ink)}
+.dbtn{display:flex;gap:6px;flex-wrap:wrap}
+.dbtn button{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:8px 11px;font-weight:700;font-size:12.8px;cursor:pointer;font-family:inherit;color:var(--text)}
+.dbtn button.on[data-d=acc]{border-color:var(--ok);background:#dcfce7;color:#14532d}
+.dbtn button.on[data-d=cond]{border-color:var(--warn);background:#fef3c7;color:#78350f}
+.dbtn button.on[data-d=rech]{border-color:var(--bad);background:#fee2e2;color:#7f1d1d}
+.acts{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+@media (max-width:700px){.acts{grid-template-columns:1fr}}
+.act{display:flex;gap:8px;align-items:flex-start;border:1.5px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;font-size:12.8px;cursor:pointer}
+.act input{margin-top:2px}
+.act.on{border-color:var(--navy);background:#eef3ff}
+.act.req{border-color:var(--ok);background:#f0fdf4}
+.act.bad{border-color:var(--bad);background:#fef2f2}
+.chain{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
+@media (max-width:700px){.chain{grid-template-columns:1fr}}
+.chain div{background:#fff;border:1px solid var(--line);border-top:4px solid var(--navy);border-radius:10px;padding:7px 9px;font-size:12.3px}
+.chain div:nth-child(2){border-top-color:var(--orange)}
+.chain div:nth-child(3){border-top-color:var(--magenta)}
+.chain div:nth-child(4){border-top-color:var(--ok)}
+.chain b{display:block;font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.form{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px}
+@media (max-width:700px){.form{grid-template-columns:1fr}}
+.form label{font-size:12px;font-weight:700;color:var(--muted);display:flex;flex-direction:column;gap:3px}
+.form input{font:inherit;font-size:14px;padding:7px 9px;border-radius:8px;border:1.5px solid var(--line)}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+@media (max-width:800px){.kpis{grid-template-columns:1fr 1fr}}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 10px;text-align:center}
+.kpi small{display:block;font-size:11px;color:var(--muted);font-weight:600}
+.kpi b{font-size:17px;color:var(--navy)}
+.sumbox{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff;margin-top:10px}
+.miss{background:#fff7ed;border-left:4px solid var(--orange);padding:7px 10px;border-radius:8px;font-size:12.8px;margin:6px 0}
+details.teacher{margin:0 24px 22px;border:1px solid var(--line);border-radius:12px;padding:10px 14px;background:#fbfcfe;font-size:13.5px}
+details.teacher summary{cursor:pointer;font-weight:700;color:var(--navy)}
+details.teacher li{margin:3px 0}
+footer{padding:0 24px 18px;font-size:11.5px;color:var(--muted)}
+@media print{body{background:#fff;padding:0}.noprint,.tabs,header .back,details.teacher,footer,.pane[data-p=and]{display:none!important}.pane[data-p=bit]{display:block!important}.app{box-shadow:none}}
+
+.ctl{margin-bottom:11px}
+.ctl label{display:flex;justify-content:space-between;align-items:baseline;font-weight:600;font-size:13px;margin-bottom:3px;gap:8px}
+.ctl label .val{font-weight:800;font-size:16px;color:var(--navy);white-space:nowrap}
+.ctl input[type=range]{width:100%;cursor:pointer;accent-color:var(--navy)}
+.scale{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted)}
+.seg{display:flex;background:#e6ecf5;border-radius:10px;padding:3px;gap:3px}
+.seg button{flex:1;border:0;background:transparent;padding:7px 4px;border-radius:8px;font-weight:600;font-size:12px;color:#475569;cursor:pointer;font-family:inherit;line-height:1.2}
+.seg button.on{background:#fff;color:var(--navy);box-shadow:0 1px 3px rgba(0,0,0,.14)}
+.lg2{display:flex;gap:10px;flex-wrap:wrap;font-size:11.5px;color:var(--muted);margin-top:6px}.lg2 span{display:inline-flex;align-items:center;gap:4px}.lg2 i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.tabs.four{grid-template-columns:repeat(4,1fr)}
+@media (max-width:900px){.tabs.four{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:480px){.tabs.four{grid-template-columns:1fr}}
+.steps{display:flex;flex-direction:column;gap:6px}
+.chk{display:flex;gap:8px;align-items:center;font-size:13px}
+.legend{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);flex-wrap:wrap}
+.legend i{display:inline-block;width:150px;height:10px;border-radius:5px;background:linear-gradient(90deg,#1d4ed8,#06b6d4 13%,#22c55e 27%,#eab308 47%,#f97316 67%,#dc2626)}
+.tlist{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+@media (max-width:700px){.tlist{grid-template-columns:1fr 1fr}}
+.tm{border:1.5px solid var(--line);border-radius:12px;background:#fff;padding:8px;text-align:center;cursor:pointer;font-family:inherit;font-size:12.5px;font-weight:700;color:var(--text)}
+.tm.on{border-color:var(--navy);background:#eef3ff}
+.tm.ok{border-color:var(--ok);background:#f0fdf4}
+.tm.no{border-color:var(--bad);background:#fef2f2}
+.tm small{display:block;font-weight:600;color:var(--muted)}
+.prob{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff;margin-bottom:10px}
+.prob h4{margin:0 0 8px;color:var(--navy);font-size:14px}
+.inrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:5px 0;font-size:13.2px}
+.inrow input{width:90px;font:inherit;font-size:14px;padding:6px 8px;border-radius:8px;border:1.5px solid var(--line)}
+.inrow input.good{border-color:var(--ok);background:#f0fdf4}
+.inrow input.bad{border-color:var(--bad);background:#fef2f2}
+.vig{display:grid;grid-template-columns:110px 1fr;gap:12px;align-items:start;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:#fff;margin-bottom:10px}
+@media (max-width:600px){.vig{grid-template-columns:1fr}}
+.vig svg{width:110px;height:auto;display:block}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar"></div>
+  <header>
+    <a class="back" href="index.html">⬅ Volver al Menú Principal</a>
+    <div class="title-row">
+      <div>
+        <h1>🌡️ El termómetro de punzón</h1>
+        <div class="subtitle">Un dato mal medido lleva a una decisión equivocada. Verifica el termómetro, encuentra el centro térmico de la pieza y decide con la lectura más desfavorable de la carga.</div>
+      </div>
+      <div class="week-tag">Módulo III · Semana 1 · <b>Figura 7 · ejemplo resuelto</b></div>
+    </div>
+  </header>
+
+  <div class="tabs four">
+    <button class="tab on" data-t="ver"><b>1 · Verifica</b><small>Baño de hielo: 0 °C ± 1 °C</small></button>
+    <button class="tab" data-t="donde"><b>2 · ¿Dónde medir?</b><small>Centro térmico, sin tocar hueso</small></button>
+    <button class="tab" data-t="carga"><b>3 · Tres puntos de la carga</b><small>¿El promedio basta?</small></button>
+    <button class="tab" data-t="prac"><b>4 · Práctica</b><small>Cálculos y errores frecuentes</small></button>
+  </div>
+
+  <!-- ===================== 1 · VERIFICA ===================== -->
+  <div class="pane show" data-p="ver">
+    <div class="lab">
+      <div class="col">
+        <div class="card"><h3>🧰 Termómetros del área de recepción</h3><div class="tlist" id="tl"></div><p style="font-size:12px;color:var(--muted);margin:8px 0 0">Verifica cada termómetro antes de usarlo y decide si se usa o se ajusta o cambia.</p></div>
+        <div class="card"><h3>📋 Procedimiento (Figura 7)</h3><div class="steps" id="vsteps"></div></div>
+      </div>
+      <div class="col"><div class="panel" id="vpanel"></div></div>
+    </div>
+  </div>
+
+  <!-- ===================== 2 · DÓNDE ===================== -->
+  <div class="pane" data-p="donde">
+    <div class="presets"><span class="lbl">Pieza</span>
+      <button class="chip on" data-k="pech">🍗 Pechuga de pollo</button>
+      <button class="chip" data-k="drum">🍗 Pierna de pollo</button>
+      <button class="chip" data-k="pork">🐖 Pierna de cerdo</button>
+      <button class="chip" data-k="steak">🐄 Bola de res</button>
+    </div>
+    <div class="lab">
+      <div class="col">
+        <div class="card"><h3>🕒 Historia térmica de la pieza</h3>
+          <div class="seg" id="hist" style="margin-bottom:10px"><button data-v="A" class="on">Salió fría y espera en el andén</button><button data-v="B">Se calentó en el viaje y la volvieron a enfriar</button></div>
+          <div class="ctl" id="minCtl"><label>Minutos en el andén a 20 °C <span class="val" id="v-min"></span></label><input type="range" id="min" min="0" max="60" step="5" value="20"><div class="scale"><span>0</span><span>30 min</span><span>60</span></div></div>
+          <div class="info" id="hinfo" style="font-size:12.5px"></div>
+        </div>
+        <div class="card"><h3>🎯 Reto</h3><div id="dreto" style="font-size:13px"></div></div>
+      </div>
+      <div class="col">
+        <div class="panel">
+          <h2>1) Toca dónde insertar el punzón</h2><p class="lead">Vista desde arriba. Busca la parte más gruesa de la pieza.</p>
+          <div class="vis" id="topv"></div>
+          <h2 style="margin-top:6px">2) Ajusta la profundidad de la punta</h2><p class="lead">Corte de la pieza en el punto elegido. La punta debe quedar a la mitad del espesor.</p>
+          <div class="two"><div class="vis" id="cutv" style="margin:0"></div>
+            <div><div class="ctl"><label>Profundidad de la punta <span class="val" id="v-dep"></span></label><input type="range" id="dep" min="0" max="100" step="2" value="20"><div class="scale"><span>superficie</span><span>mitad</span><span>atraviesa</span></div></div>
+              <div class="row-btn"><button class="btn btn-accent" id="read">📏 Tomar lectura</button><button class="btn btn-ghost" id="emp">Medir sobre el empaque</button></div>
+              <label class="chk" style="margin-top:10px"><input type="checkbox" id="heat"> 👁️ Mostrar vista térmica (después de medir)</label>
+              <div class="legend" style="margin-top:6px"><span>0 °C</span><i></i><span>15 °C</span></div></div></div>
+          <div id="dfb"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== 3 · CARGA ===================== -->
+  <div class="pane" data-p="carga">
+    <div class="presets"><span class="lbl">Carga</span>
+      <button class="chip on" data-s="ej">📘 Ejemplo resuelto (pollo refrigerado)</button>
+      <button class="chip" data-s="rand">🎲 Carga al azar</button>
+    </div>
+    <div class="lab">
+      <div class="col">
+        <div class="card"><h3>👤 Responsable</h3><div class="form" style="grid-template-columns:1fr;margin:0"><label>Tus iniciales<input id="resp" placeholder="Ej. J. P."></label></div></div>
+        <div class="card"><h3>📝 Registro de lecturas</h3><div class="tbwrap"><table class="tb" id="lect"><tr><th>Hora</th><th>Caja</th><th>°C</th><th>Punzón</th></tr></table></div></div>
+      </div>
+      <div class="col">
+        <div class="panel">
+          <h2>Caja refrigerada del camión (vista desde arriba)</h2><p class="lead">Toca las cajas que quieras medir: al menos tres puntos que representen el inicio, el centro y el final de la carga.</p>
+          <div class="vis" id="truckv"></div>
+          <div id="mbox"></div>
+          <div id="cfb"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== 4 · PRÁCTICA ===================== -->
+  <div class="pane" data-p="prac">
+    <div class="two" style="align-items:start">
+      <div><h3 style="color:var(--navy);margin:0 0 8px">🔢 Respuesta numérica</h3><div id="calc"></div><div class="row-btn"><button class="btn btn-ghost" id="newc">🎲 Nuevos ejercicios</button></div></div>
+      <div><h3 style="color:var(--navy);margin:0 0 8px">🕵️ ¿Qué hizo mal?</h3><div id="vigs"></div></div>
+    </div>
+  </div>
+
+  <details class="teacher">
+    <summary>👩‍🏫 Notas para el docente</summary>
+    <ul>
+      <li><b>Qué cubre:</b> la sección «El termómetro: tu primer instrumento de control», la <b>Figura 7</b>, el ejemplo resuelto «¿el promedio basta?» y el ejercicio de respuesta numérica de la Semana 1. También atiende lo que pide la secuencia didáctica: verificación en baño de hielo, diferencia entre medición superficial e interna, toma en tres puntos, desinfección del punzón y ubicación de los puntos de medición en pollo y cerdo.</li>
+      <li><b>Verificación:</b> hielo picado con un poco de agua, un minuto con agitación; debe marcar 0 °C ± 1 °C. El simulador muestra por qué:
+        <ul>
+          <li>Leer antes del minuto da un valor que todavía está bajando.</li>
+          <li>Con hielo solo, sin agua, hay mal contacto.</li>
+          <li>Con agua de la llave, el agua no está a 0 °C.</li>
+          <li>Si el punzón toca el vaso, la lectura se altera.</li>
+        </ul>
+        Algunos termómetros están descalibrados a propósito.</li>
+      <li><b>¿Dónde medir?:</b> el modelo térmico es didáctico y simplificado.
+        <ul>
+          <li>Pieza fría en el andén a 20 °C: la superficie se calienta rápido y el centro tarda más, según el grosor de la pieza.</li>
+          <li>Pieza que se calentó y se volvió a enfriar (como en el caso de las 7:40): el centro sigue tibio y la superficie ya está fría.</li>
+          <li>En ambos casos, medir sobre el empaque o en la orilla da una lectura engañosa.</li>
+        </ul>
+        Los espesores máximos usados son aproximados: pechuga 2.5 cm, pierna de pollo 4 cm, pierna de cerdo 6 cm y bola de res 7 cm.</li>
+      <li><b>Tres puntos de la carga:</b> el ejemplo resuelto tiene la zona de la puerta caliente, y en la carga al azar el problema puede estar en otra zona o en ninguna. La zona más caliente puede ser la puerta, por las aperturas, o el centro de la tarima, donde el aire frío no circula bien. Al final se revela el mapa térmico real, para discutir si el muestreo fue representativo. El dictamen correcto sigue el CECyBOOK: con una lectura fuera de criterio se separa el lote, se miden más piezas y se dictamina (rechazo o aceptación condicionada con segregación).</li>
+      <li><b>Errores frecuentes</b> (retroalimentación de la secuencia): medir sobre el empaque, no desinfectar el punzón y no registrar la hora.</li>
+    </ul>
+  </details>
+  <footer>Recurso didáctico complementario · CECyBOOK Módulo III · Semana 1 · Figura 7 · NOM-251-SSA1-2009 · FAO (2007).</footer>
+</div>
+
+<script>
+const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)), lerp=(a,b,t)=>a+(b-a)*t;
+const f1=v=>(Math.round(v*10)/10).toFixed(1).replace('-','−');
+const shuffle=a=>{const b=a.slice();for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;};
+/* ---------- Gráficos compartidos ---------- */
+let UID=0;
+const GDEFS=`
+ <filter id="fx-fib" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.008 0.24" numOctaves="2" seed="4"/><feColorMatrix values="0 0 0 0 0.6  0 0 0 0 0.25  0 0 0 0 0.22  2.6 0 0 0 -1.2"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-fib2" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.006 0.3" numOctaves="2" seed="9"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 0.92  0 0 0 0 0.88  2.4 0 0 0 -1.35"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-pore" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="turbulence" baseFrequency="0.7" numOctaves="1" seed="2"/><feColorMatrix values="0 0 0 0 0.66  0 0 0 0 0.5  0 0 0 0 0.4  -14 0 0 0 1.4"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-wrin" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.035 0.09" numOctaves="3" seed="7"/><feColorMatrix values="0 0 0 0 0.7  0 0 0 0 0.52  0 0 0 0 0.4  3 0 0 0 -1.55"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-marb" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.11 0.24" numOctaves="2" seed="12"/><feColorMatrix values="0 0 0 0 0.98  0 0 0 0 0.94  0 0 0 0 0.86  14 0 0 0 -9.2"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-grain" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.06 0.5" numOctaves="2" seed="5"/><feColorMatrix values="0 0 0 0 0.3  0 0 0 0 0.03  0 0 0 0 0.05  2 0 0 0 -0.9"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-frost" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="turbulence" baseFrequency="0.55" numOctaves="2" seed="21"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  6 0 0 0 -2.2"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-blot" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="3" seed="15"/><feColorMatrix values="0 0 0 0 0.52  0 0 0 0 0.56  0 0 0 0 0.46  5 0 0 0 -2.4"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-foam" x="0" y="0" width="100%" height="100%"><feTurbulence type="turbulence" baseFrequency="0.9" numOctaves="1" seed="1"/><feColorMatrix values="0 0 0 0 0.6  0 0 0 0 0.6  0 0 0 0 0.62  -5 0 0 0 1.1"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-kraft" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.9 0.06" numOctaves="2" seed="3"/><feColorMatrix values="0 0 0 0 0.42  0 0 0 0 0.28  0 0 0 0 0.12  1.6 0 0 0 -0.62"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-brush" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.004 0.9" numOctaves="2" seed="8"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  1.8 0 0 0 -0.75"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-grime" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="4" seed="31"/><feColorMatrix values="0 0 0 0 0.3  0 0 0 0 0.22  0 0 0 0 0.12  6 0 0 0 -2.6"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-blur1"><feGaussianBlur stdDeviation="1"/></filter>
+ <filter id="fx-blur2"><feGaussianBlur stdDeviation="2"/></filter>
+ <filter id="fx-blur4"><feGaussianBlur stdDeviation="4"/></filter>
+ <filter id="fx-blur8"><feGaussianBlur stdDeviation="8"/></filter>
+ <radialGradient id="g-dent"><stop offset="0" stop-color="#5b1a12" stop-opacity=".45"/><stop offset=".7" stop-color="#5b1a12" stop-opacity=".18"/><stop offset="1" stop-color="#5b1a12" stop-opacity="0"/></radialGradient>
+ <radialGradient id="g-pool" cx=".5" cy=".5" r=".6"><stop offset="0" stop-color="#c2414f" stop-opacity=".75"/><stop offset="1" stop-color="#e5808a" stop-opacity=".45"/></radialGradient>
+ <radialGradient id="g-drop" cx=".35" cy=".3" r=".75"><stop offset="0" stop-color="#ffffff" stop-opacity=".95"/><stop offset=".35" stop-color="#e7f1fb" stop-opacity=".35"/><stop offset=".85" stop-color="#7e94aa" stop-opacity=".45"/><stop offset="1" stop-color="#506579" stop-opacity=".6"/></radialGradient>
+ <linearGradient id="g-tray" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e8e9e4"/></linearGradient>
+ <linearGradient id="g-glove" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3f6fd8"/><stop offset=".5" stop-color="#7aa5f5"/><stop offset="1" stop-color="#3f6fd8"/></linearGradient>
+ <linearGradient id="g-steel" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8d969f"/><stop offset=".45" stop-color="#eef1f4"/><stop offset="1" stop-color="#7c858f"/></linearGradient>
+ <linearGradient id="g-table" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d9dde2"/><stop offset=".5" stop-color="#eef0f2"/><stop offset="1" stop-color="#c9ced4"/></linearGradient>
+ <linearGradient id="g-alu-l" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#c3c9d1"/><stop offset="1" stop-color="#e4e8ed"/></linearGradient>
+ <linearGradient id="g-alu-r" x1="1" y1="0" x2="0" y2="0"><stop offset="0" stop-color="#b9c0c9"/><stop offset="1" stop-color="#dfe4ea"/></linearGradient>
+ <linearGradient id="g-floor" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#9aa2ac"/><stop offset="1" stop-color="#c9cfd6"/></linearGradient>
+ <linearGradient id="g-ceil" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d3d8de"/><stop offset="1" stop-color="#eef1f4"/></linearGradient>
+ <linearGradient id="g-kraft" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d9b98a"/><stop offset="1" stop-color="#c39c66"/></linearGradient>
+ <linearGradient id="g-film" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".05"/><stop offset=".3" stop-color="#fff" stop-opacity=".45"/><stop offset=".38" stop-color="#fff" stop-opacity=".05"/><stop offset=".7" stop-color="#fff" stop-opacity=".2"/><stop offset=".76" stop-color="#fff" stop-opacity=".02"/><stop offset="1" stop-color="#fff" stop-opacity=".12"/></linearGradient>
+ <linearGradient id="g-drum" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1b4fa5"/><stop offset=".4" stop-color="#4f86e0"/><stop offset="1" stop-color="#173f86"/></linearGradient>
+ <linearGradient id="g-dev" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4b5563"/><stop offset="1" stop-color="#2b323b"/></linearGradient>
+ <linearGradient id="g-wood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c8a06a"/><stop offset="1" stop-color="#9a7444"/></linearGradient>
+ <pattern id="p-pad" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="16" height="16" fill="#fbfbf9"/><path d="M0 0H16M0 0V16" stroke="#e6e6e0" stroke-width="1.2"/></pattern>
+ <pattern id="p-pad-wet" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="16" height="16" fill="#fbe3e3"/><path d="M0 0H16M0 0V16" stroke="#efc4c4" stroke-width="1.2"/></pattern>`;
+document.body.insertAdjacentHTML('afterbegin',`<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>${GDEFS}</defs></svg>`);
+
+const SHAPES={
+ pech:{d:'M-66,6 C-70,-20 -44,-38 -8,-38 C28,-38 56,-26 70,-8 C78,2 74,12 62,17 C42,25 14,36 -18,36 C-46,36 -63,26 -66,6 Z',seam:'M-50,18 C-20,28 20,24 60,10',skin:0,core:[-26,0],edge:[62,8]},
+ drum:{d:'M-56,0 C-56,-30 -20,-38 10,-26 C26,-19 40,-11 56,-9 L70,-10 C80,-16 94,-9 92,1 C94,12 80,17 70,11 L56,10 C40,11 26,19 10,26 C-20,38 -56,30 -56,0 Z',skin:1,knuckle:[84,1],core:[-26,0],bone:[52,0]},
+ thigh:{d:'M-50,-30 C-22,-44 30,-42 52,-23 C65,-7 60,22 42,35 C16,49 -30,47 -52,31 C-66,15 -66,-18 -50,-30 Z',skin:1,core:[0,0],edge:[50,20]},
+ steak:{d:'M-74,-6 C-76,-38 -26,-50 16,-44 C60,-38 82,-15 78,10 C74,35 37,47 -6,45 C-47,43 -72,27 -74,-6 Z',fat:'M-64,-24 C-34,-42 20,-44 60,-26',marb:1,core:[-8,6],edge:[70,14]},
+ pork:{d:'M-70,-4 C-72,-34 -24,-46 18,-42 C58,-37 78,-14 74,10 C70,33 35,44 -6,42 C-45,40 -68,26 -70,-4 Z',fat:'M-66,-16 C-40,-38 22,-42 62,-20',marb:0,core:[-8,8],edge:[68,16]}
+};
+const LAYOUT={
+ pechuga:[['pech',125,108,-12,1],['pech',298,102,9,1],['pech',150,205,5,1],['pech',322,200,-7,1]],
+ pierna:[['drum',120,100,-18,1],['drum',300,96,14,1],['thigh',392,192,0,1],['thigh',138,205,10,1],['drum',268,205,-4,1]],
+ res:[['steak',146,150,-8,1.12],['steak',344,150,9,1.1]],
+ cerdo:[['pork',112,150,-10,0.86],['pork',250,146,7,0.86],['pork',388,152,-4,0.84]]
+};
+const kindOf=c=>c.esp==='res'?'steak':c.esp==='cerdo'?'pork':c.pieza==='pierna'?'drum':'pech';
+function palette(c,soft){
+  const g=c.sens.color==='gris';
+  if(c.esp==='res')return c.est==='cong'?{hi:'#93303a',mid:'#771d27',lo:'#4c0d14',fat:'#e9dfcc'}:{hi:'#c8414a',mid:'#a8202c',lo:'#6e1018',fat:'#f1e6cf'};
+  if(c.esp==='cerdo')return {hi:'#f2bdb5',mid:'#e2a097',lo:'#c47c74',fat:'#f8f0e4'};
+  if(g)return {hi:'#d9cdc4',mid:'#c3b3aa',lo:'#a1938a',skin:'#d8ccbc',skinLo:'#b8ab9a'};
+  if(soft)return {hi:'#efa898',mid:'#de8a7a',lo:'#b9665a',skin:'#e9c3a6',skinLo:'#cf9c84'};
+  return {hi:'#f7cdbf',mid:'#eeb1a1',lo:'#d6907f',skin:'#f6dcc0',skinLo:'#e3b998'};
+}
+function pieceG(k,x,y,r,sc,c,o={}){
+  const sh=SHAPES[k], u=++UID, cong=c.est==='cong', soft=!!o.soft, frost=o.frost!==undefined?o.frost:(cong&&!soft), wet=c.sens.tex==='viscosa';
+  const P=palette(c,soft), sx=soft?sc*1.12:sc, sy=soft?sc*0.86:sc;
+  const shadow=o.noShadow?'':`<g transform="translate(${x+4},${y+7}) rotate(${r}) scale(${sx},${sy})"><path d="${sh.d}" fill="#3b2a26" opacity=".28" filter="url(#fx-blur4)"/></g>`;
+  let s=`<g transform="translate(${x},${y}) rotate(${r}) scale(${sx},${sy})"><defs><radialGradient id="rg${u}" cx=".42" cy=".38" r=".75"><stop offset="0" stop-color="${sh.skin?P.skin:P.hi}"/><stop offset=".65" stop-color="${sh.skin?P.skin:P.mid}"/><stop offset="1" stop-color="${sh.skin?P.skinLo:P.lo}"/></radialGradient><clipPath id="cp${u}"><path d="${sh.d}"/></clipPath></defs>
+    <path d="${sh.d}" fill="url(#rg${u})"/>`;
+  if(!sh.skin&&c.esp==='pollo') s+=`<path d="${sh.d}" fill="#fff" filter="url(#fx-fib)" opacity=".45"/><path d="${sh.d}" fill="#fff" filter="url(#fx-fib2)" opacity=".3"/><g clip-path="url(#cp${u})"><path d="${sh.d}" fill="none" stroke="#fde7df" stroke-width="7" opacity=".45"/><path d="M-20,-30 C0,-20 20,-22 44,-18" stroke="#fff6f2" stroke-width="5" fill="none" opacity=".35" filter="url(#fx-blur2)"/></g><path d="${sh.seam}" stroke="${P.lo}" stroke-width="1.6" fill="none" opacity=".45"/>`;
+  if(sh.skin) s+=`<path d="${sh.d}" fill="#fff" filter="url(#fx-wrin)" opacity=".6"/><path d="${sh.d}" fill="#fff" filter="url(#fx-pore)" opacity=".55"/><g clip-path="url(#cp${u})"><path d="M-60,26 C-20,40 30,34 60,14" stroke="${P.mid}" stroke-width="7" fill="none" opacity=".55"/></g>`;
+  if(sh.knuckle) s+=`<ellipse cx="${sh.knuckle[0]}" cy="${sh.knuckle[1]}" rx="9" ry="11" fill="#eef1f3" stroke="#cfd6dc"/><ellipse cx="${sh.knuckle[0]-2}" cy="${sh.knuckle[1]-3}" rx="3" ry="4" fill="#fff" opacity=".8"/>`;
+  if(sh.fat){ s+=`<g clip-path="url(#cp${u})"><path d="${sh.fat}" stroke="${P.fat}" stroke-width="${c.esp==='cerdo'?16:11}" fill="none"/><path d="${sh.fat}" stroke="#fff" stroke-width="3" fill="none" opacity=".5" transform="translate(0,-3)"/></g><path d="${sh.d}" fill="#fff" filter="url(#fx-grain)" opacity=".6"/>`;
+    if(sh.marb) s+=`<path d="${sh.d}" fill="#fff" filter="url(#fx-marb)" opacity=".6"/><g clip-path="url(#cp${u})" opacity=".75"><path d="M-50,10 C-20,0 10,18 40,4 C52,-2 62,4 70,0" stroke="${P.fat}" stroke-width="2.2" fill="none"/><path d="M-30,30 C-6,22 20,32 46,22" stroke="${P.fat}" stroke-width="1.6" fill="none"/></g>`;}
+  if(c.sens.color==='gris') s+=`<path d="${sh.d}" fill="#a9a69c" opacity=".28"/><path d="${sh.d}" fill="#fff" filter="url(#fx-blot)" opacity=".4"/>`;
+  s+=`<path d="${sh.d}" fill="none" stroke="${c.esp==='res'?'#5e0d14':sh.skin?P.skinLo:P.lo}" stroke-width="1.4" opacity=".8"/>`;
+  const gl=o.gloss!==undefined?o.gloss:(wet?0.75:soft?0.6:frost?0:0.32);
+  if(gl) s+=`<ellipse cx="-14" cy="-16" rx="26" ry="8" fill="#fff" opacity="${gl}" filter="url(#fx-blur2)" transform="rotate(-8)"/><ellipse cx="22" cy="10" rx="12" ry="4" fill="#fff" opacity="${gl*0.7}" filter="url(#fx-blur2)"/>`;
+  if(wet) s+=`<g clip-path="url(#cp${u})" opacity=".7"><path d="M-50,-4 C-30,4 -10,-6 10,2 C30,10 45,0 60,6" stroke="#fff" stroke-width="2.2" fill="none" filter="url(#fx-blur2)"/><path d="M-40,18 C-20,24 5,16 30,24" stroke="#f8fafc" stroke-width="1.6" fill="none"/>${[[-30,6],[-6,-10],[18,14],[36,-4],[-44,-14]].map(b=>`<circle cx="${b[0]}" cy="${b[1]}" r="2.2" fill="#fff" opacity=".85"/>`).join('')}</g>`;
+  if(frost) s+=`<path d="${sh.d}" fill="#e8f1fb" opacity=".42"/><path d="${sh.d}" fill="#fff" filter="url(#fx-frost)" opacity=".95"/>${[[-30,-12],[8,-20],[30,8],[-10,16],[44,-8]].map(b=>`<path d="M${b[0]-4},${b[1]} h8 M${b[0]},${b[1]-4} v8 M${b[0]-3},${b[1]-3} l6,6 M${b[0]+3},${b[1]-3} l-6,6" stroke="#fff" stroke-width="1" opacity=".9"/>`).join('')}`;
+  return {shadow,body:s+`</g>`};
+}
+
+function penThermo(cx,cy){
+  const ang=(cy<110?145:35)*(cx>440?-1:1);
+  return `<g transform="translate(${cx},${cy}) rotate(${ang})"><rect x="-2.2" y="-74" width="4.4" height="74" fill="url(#g-steel)"/><path d="M-2.2 0 L0 6 L2.2 0 Z" fill="#9aa3ad"/>
+    <rect x="-15" y="-156" width="30" height="84" rx="10" fill="#f3f5f7" stroke="#b6c0ca" stroke-width="1.4"/><rect x="-15" y="-156" width="7" height="84" rx="4" fill="#fff" opacity=".7"/>
+    <g transform="translate(0,-130) rotate(${-ang})"><rect x="-22" y="-11" width="44" height="22" rx="3" fill="#c3d3ad" stroke="#8a9a78"/><text id="dsp" x="0" y="5" text-anchor="middle" font-size="12" font-weight="800" fill="#1d2b1a" font-family="monospace">--.-</text></g>
+    <circle cx="0" cy="-92" r="4" fill="#cbd5e1" stroke="#94a3b8"/></g>`;
+}
+
+
+
+function tcol(T){const st=[[0,[29,78,216]],[2,[6,182,212]],[4,[34,197,94]],[7,[234,179,8]],[10,[249,115,22]],[15,[220,38,38]]];
+  if(T<=st[0][0])return`rgb(${st[0][1]})`;for(let i=1;i<st.length;i++){if(T<=st[i][0]){const[a,ca]=st[i-1],[b,cb]=st[i],t=(T-a)/(b-a);return`rgb(${ca.map((v,k)=>Math.round(v+(cb[k]-v)*t)).join(',')})`;}}return`rgb(${st[st.length-1][1]})`;}
+function animRead(el,from,to,ms,done){const t0=performance.now();(function f(){const k=Math.min(1,(performance.now()-t0)/ms);el.textContent=f1(lerp(from,to,1-Math.pow(1-k,3)));if(k<1)requestAnimationFrame(f);else done&&done();})();}
+
+/* ===================== 1 · VERIFICA ===================== */
+const TERMS=[{n:'T-01',off:0.3},{n:'T-02',off:1.6},{n:'T-03',off:-0.6},{n:'T-04',off:-1.8}].map(t=>Object.assign(t,{res:null}));
+TERMS.forEach(t=>{if(t.n!=='T-02')t.off=t.off+(Math.random()-0.5)*0.4;});
+let VT=0, V={medio:null,pos:null,t:0,run:false,read:null};
+const MEDIOS=[['slurry','Hielo picado con un poco de agua'],['ice','Solo hielo, sin agua'],['tap','Agua de la llave'],['warm','Agua con dos cubos de hielo']];
+function vReset(){V={medio:null,pos:null,t:0,run:false,read:null};renderVer();}
+function bathT(m){return m==='slurry'?0:m==='ice'?-2.5:m==='tap'?19:m==='warm'?9:0;}
+function renderVer(){
+  $('#tl').innerHTML=TERMS.map((t,i)=>`<button class="tm ${i===VT?'on':''} ${t.res==='ok'?'ok':t.res==='no'?'no':''}" data-i="${i}">🌡️ ${t.n}<small>${t.res==='ok'?'✓ verificado':t.res==='no'?'✗ con error':'sin verificar'}</small></button>`).join('');
+  $$('#tl .tm').forEach(b=>b.onclick=()=>{VT=+b.dataset.i;vReset();});
+  const st=[['Preparar el baño',V.medio!==null],['Introducir el punzón al centro, sin tocar el vaso',V.pos!==null],['Agitar y esperar 1 minuto',V.t>=60],['Leer y decidir',TERMS[VT].res!==null&&V.read!==null]];
+  $('#vsteps').innerHTML=st.map((s,i)=>`<div class="stn ${s[1]?'done':''}"><i>${s[1]?'✓':i+1}</i>${s[0]}</div>`).join('');
+  const T=TERMS[VT];
+  let h=`<h2>Verificación del termómetro ${T.n}</h2><p class="lead">Debe marcar 0 °C con una tolerancia de ± 1 °C.</p>
+   <div class="two"><div class="vis" style="margin:0" id="bath"></div><div>`;
+  if(V.medio===null){h+=`<h4 style="margin:0 0 6px;color:var(--navy)">a) ¿Con qué preparas el baño?</h4><div class="steps">${MEDIOS.map(m=>`<button class="tm" style="text-align:left" data-m="${m[0]}">${m[1]}</button>`).join('')}</div>`;}
+  else if(V.pos===null){h+=`<div class="fb ${V.medio==='slurry'?'good':'bad'}">${V.medio==='slurry'?'✅ Correcto: la mezcla de hielo picado y agua se mantiene a 0 °C.':V.medio==='ice'?'❌ Con hielo solo quedan bolsas de aire y el hielo puede estar por debajo de 0 °C: mal contacto.':V.medio==='tap'?'❌ El agua de la llave está a temperatura ambiente, no a 0 °C.':'❌ Con poco hielo el agua no llega a 0 °C.'}</div>
+     ${V.medio==='slurry'?`<h4 style="margin:10px 0 6px;color:var(--navy)">b) ¿Dónde colocas la punta?</h4><div class="steps"><button class="tm" style="text-align:left" data-p="center">En el centro del baño, sin tocar el vaso</button><button class="tm" style="text-align:left" data-p="wall">Apoyada en la pared del vaso</button><button class="tm" style="text-align:left" data-p="top">Apenas metida en la superficie</button></div>`:`<div class="row-btn"><button class="btn btn-ghost" id="vre">↺ Preparar de nuevo</button></div>`}`;}
+  else{
+    h+=`<div class="fb ${V.pos==='center'?'good':'bad'}">${V.pos==='center'?'✅ Bien: la punta queda rodeada de la mezcla.':V.pos==='wall'?'❌ El vidrio está más tibio que la mezcla: altera la lectura.':'❌ La superficie no está bien mezclada: la lectura no es estable.'}</div>`;
+    if(V.pos!=='center') h+=`<div class="row-btn"><button class="btn btn-ghost" id="vpos">↺ Colocar de nuevo</button></div>`;
+    else{
+      h+=`<h4 style="margin:10px 0 6px;color:var(--navy)">c) Agita y espera</h4><div style="font-size:13px">Tiempo: <b id="vt">${V.t} s</b> de 60 s</div><div class="bar" style="height:8px;background:#e2e8f0;border-radius:6px;overflow:hidden;margin:4px 0"><i style="display:block;height:100%;width:${Math.min(100,V.t/60*100)}%;background:var(--navy)"></i></div>
+        <div class="row-btn"><button class="btn btn-accent" id="vgo" ${V.run||V.t>=60?'disabled':''}>🥄 Agitar 1 minuto</button><button class="btn btn-ghost" id="vrd" ${V.read!==null?'disabled':''}>👁️ Leer ahora</button></div>`;
+      if(V.read!==null){
+        const early=V.read.t<60, dev=V.read.v;
+        h+=`<div class="fb ${early?'bad':'mid'}">${early?`❌ Leíste a los ${V.read.t} s: la lectura todavía estaba bajando (${f1(dev)} °C). Espera el minuto completo.`:`Lectura estable: <b>${f1(dev)} °C</b>. ¿Cuánto se desvía de 0 °C?`}</div>`;
+        if(early) h+=`<div class="row-btn"><button class="btn btn-ghost" id="vagain">↺ Seguir agitando</button></div>`;
+        else if(T.res===null) h+=`<div class="inrow">Desviación: <input id="vdev" type="number" step="0.1"> °C</div><div class="row-btn"><button class="btn btn-primary" id="vok">✔ Dentro de ± 1 °C: usarlo</button><button class="btn btn-ghost" id="vno">↻ Fuera de tolerancia: ajustar o cambiar</button></div>`;
+        else h+=`<div class="fb ${V.verdict?'good':'bad'}">${V.msg}</div><div class="row-btn">${TERMS.some(t=>t.res===null)?`<button class="btn btn-primary" id="vnext">Siguiente termómetro ➜</button>`:'<span style="font-weight:700;color:var(--ok)">✅ Verificaste los cuatro termómetros.</span>'}</div>`;
+      }
+    }
+  }
+  h+=`</div></div>`;
+  $('#vpanel').innerHTML=h;
+  drawBath();
+  $$('#vpanel [data-m]').forEach(b=>b.onclick=()=>{V.medio=b.dataset.m;renderVer();});
+  $$('#vpanel [data-p]').forEach(b=>b.onclick=()=>{V.pos=b.dataset.p;renderVer();});
+  if($('#vre'))$('#vre').onclick=()=>{V.medio=null;renderVer();};
+  if($('#vpos'))$('#vpos').onclick=()=>{V.pos=null;renderVer();};
+  if($('#vgo'))$('#vgo').onclick=()=>{V.run=true;const t0=performance.now(),s0=V.t;const iv=setInterval(()=>{V.t=Math.min(60,s0+Math.round((performance.now()-t0)/1000*12));if($('#vt'))$('#vt').textContent=V.t+' s';drawBath();if(V.t>=60){clearInterval(iv);V.run=false;renderVer();}},80);renderVer();};
+  if($('#vrd'))$('#vrd').onclick=()=>{V.read={t:V.t,v:readBath()};renderVer();};
+  if($('#vagain'))$('#vagain').onclick=()=>{V.read=null;renderVer();};
+  const decide=(use)=>{const dv=parseFloat(($('#vdev')||{}).value);const ok=Math.abs(T.off)<=1;const right=use===ok;T.res=ok?'ok':'no';V.verdict=right;
+    const devTxt=isNaN(dv)?'':(Math.abs(Math.abs(dv)-Math.abs(T.off))<=0.15?` Tu cálculo de la desviación (${f1(Math.abs(dv))} °C) es correcto.`:` Revisa la desviación: es ${f1(Math.abs(T.off))} °C (${f1(T.off)} − 0).`);
+    V.msg=(right?'✅ ':'❌ ')+(ok?`Marca ${f1(T.off)} °C: está dentro de ± 1 °C, se puede usar.`:`Marca ${f1(T.off)} °C: se desvía ${f1(Math.abs(T.off))} °C, fuera de ± 1 °C. Se ajusta (si el modelo lo permite) o se cambia, y se registra.`)+devTxt;renderVer();};
+  if($('#vok'))$('#vok').onclick=()=>decide(true);
+  if($('#vno'))$('#vno').onclick=()=>decide(false);
+  if($('#vnext'))$('#vnext').onclick=()=>{VT=TERMS.findIndex(t=>t.res===null);vReset();};
+}
+function readBath(){const T=TERMS[VT];const target=bathT(V.medio)+T.off+(V.pos==='wall'?2.2:V.pos==='top'?1.4:0);const start=18;const k=1-Math.exp(-V.t/14);return lerp(start,target,k);}
+function drawBath(){
+  const el=$('#bath');if(!el)return;
+  const m=V.medio, v=V.pos?readBath():null;
+  const R=i=>((Math.sin(i*12.9898)*43758.5453)%1+1)%1;
+  let s=`<svg viewBox="0 0 320 220"><rect width="320" height="220" fill="#eef1f4"/><rect x="0" y="196" width="320" height="24" fill="url(#g-table)"/><rect x="0" y="196" width="320" height="24" fill="#fff" filter="url(#fx-brush)" opacity=".5"/>
+   <ellipse cx="160" cy="200" rx="78" ry="7" fill="#000" opacity=".18" filter="url(#fx-blur4)"/><path d="M86 70 L234 70 L222 196 L98 196 Z" fill="#e3eef7" opacity=".45" stroke="#9fb3c8" stroke-width="2.5"/>`;
+  if(m&&m!=='ice') s+=`<path d="M90 100 L230 100 L222 194 L98 194 Z" fill="${m==='slurry'?'#bcdcf2':'#d7e9f4'}" opacity=".6"/><ellipse cx="160" cy="100" rx="70" ry="5" fill="#d9ecf9" opacity=".9"/>`;
+  const nIce=!m?0:m==='slurry'?16:m==='ice'?22:m==='warm'?2:0;
+  for(let i=0;i<nIce;i++){const x=104+R(i)*104, y=(m==='ice'?92:96)+R(i+50)*86, w=(m==='ice'?16:12)+R(i+9)*12, a=R(i+3)*60;
+    s+=`<g transform="translate(${x},${y}) rotate(${a})"><path d="M0 0 L${w} -3 L${w+3} ${w*0.6} L${w*0.3} ${w*0.8} L-2 ${w*0.4} Z" fill="#fff" opacity=".85" stroke="#c4daee" stroke-width="1"/></g>`;}
+  if(m==='slurry'||m==='ice') for(let i=0;i<22;i++){const x=88+R(i+70)*144, y=104+R(i+90)*88, r=1.2+R(i+30)*2.4; if(x>96&&x<224) s+=`<circle cx="${x<160?x-8:x+8}" cy="${y}" r="${r}" fill="url(#g-drop)"/>`;}
+  s+=`<path d="M100 76 L110 186" stroke="#fff" stroke-width="5" opacity=".55" stroke-linecap="round"/>`;
+  if(V.run) s+=`<path d="M112 ${140+8*Math.sin(Date.now()/90)} q48 ${14*Math.sin(Date.now()/70)} 96 0" stroke="#fff" stroke-width="2.5" fill="none" opacity=".9"/><text x="244" y="130" font-size="11" fill="#475569">🥄 agitando</text>`;
+  const px=V.pos==='wall'?212:160, py=V.pos==='top'?-30:0;
+  s+=`<g transform="translate(${px-160},${py})"><rect x="157" y="62" width="6" height="110" fill="url(#g-steel)"/><path d="M157 172 L160 180 L163 172 Z" fill="#9aa3ad"/>
+   <rect x="138" y="4" width="44" height="64" rx="12" fill="#f3f5f7" stroke="#c4ccd4" stroke-width="1.5"/><rect x="138" y="4" width="10" height="64" rx="5" fill="#fff" opacity=".7"/>
+   <rect x="143" y="13" width="34" height="22" rx="3" fill="#c3d3ad" stroke="#8a9a78"/><text x="160" y="29" text-anchor="middle" font-size="12" font-weight="800" fill="#1d2b1a" font-family="monospace">${v===null?'--.-':f1(v)}</text>
+   <circle cx="160" cy="50" r="5" fill="#cbd5e1" stroke="#94a3b8"/></g>`;
+  if(!V.pos) s=s.replace('<g transform="translate(0,0)">','<g transform="translate(118,-58)">');
+  el.innerHTML=s+'</svg>';
+}
+/* ===================== 2 · DÓNDE ===================== */
+const PK={pech:{n:'pechuga de pollo',hmax:2.5,tau:110,sc:1.85,cB:6.4,el:[[-26,0,48,32,1]]},
+ drum:{n:'pierna de pollo',hmax:4,tau:150,sc:1.7,cB:6.6,el:[[-26,0,34,30,1],[36,0,30,10,0.35]],bone:[[20,0],[86,0]]},
+ pork:{n:'pierna de cerdo',hmax:6,tau:260,sc:1.55,cB:7,el:[[-8,6,62,36,1]]},
+ steak:{n:'bola de res',hmax:7,tau:320,sc:1.5,cB:7.2,el:[[-8,6,64,38,1]]}};
+const CXY=[300,132];
+let D={k:'pech',h:'A',min:20,pt:null,dep:20,res:null,found:{}};
+const CD=k=>({esp:k==='pork'?'cerdo':k==='steak'?'res':'pollo',pieza:k==='drum'?'pierna':k==='pech'?'pechuga':'res',est:'ref',sens:{color:'ok',tex:'firme'}});
+function temps(){const p=PK[D.k];if(D.h==='B')return{Ts:2.4,Tc:p.cB,Ta:2.0};const T0=2,Ta=20,m=D.min;return{Ts:Ta-(Ta-T0)*Math.exp(-m/50),Tc:Ta-(Ta-T0)*Math.exp(-m/p.tau),Ta};}
+function thickAt(lx,ly){const p=PK[D.k];let t=0;p.el.forEach(([cx,cy,a,b,w])=>{const q=1-((lx-cx)/a)**2-((ly-cy)/b)**2;t=Math.max(t,clamp(q,0,1)*w);});return t;}
+const CTX=document.createElement('canvas').getContext('2d');
+function inside(lx,ly){return CTX.isPointInPath(new Path2D(SHAPES[D.k].d),lx,ly);}
+function boneHit(lx,ly,z){const p=PK[D.k];if(!p.bone)return false;const[[x1,y1],[x2,y2]]=p.bone;const t=clamp((lx-x1)/(x2-x1),0,1);const d=Math.hypot(lx-lerp(x1,x2,t),ly-lerp(y1,y2,t));return d<7&&z>0.3&&z<0.7;}
+function tempAt(tau,z){const{Ts,Tc}=temps();const g=tau*(1-(2*z-1)**2);return Ts+(Tc-Ts)*g;}
+function renderTop(){
+  const p=PK[D.k], c=CD(D.k), g=pieceG(D.k,CXY[0],CXY[1],0,p.sc,c,{});
+  let s=`<svg viewBox="0 0 640 260"><rect width="640" height="260" fill="url(#g-table)"/><rect width="640" height="260" fill="#fff" filter="url(#fx-brush)" opacity=".5"/>
+   <rect x="96" y="20" width="420" height="222" rx="30" fill="#000" opacity=".2" filter="url(#fx-blur4)"/><rect x="92" y="14" width="420" height="222" rx="30" fill="url(#g-tray)" stroke="#d4d6cf" stroke-width="2"/><rect x="110" y="32" width="384" height="186" rx="20" fill="#f1f2ed" stroke="#e0e2da"/>
+   ${g.shadow}${g.body}<path class="hit" d="${SHAPES[D.k].d}" transform="translate(${CXY[0]},${CXY[1]}) scale(${p.sc})" fill="transparent" style="cursor:crosshair"/>`;
+  if($('#heat')&&$('#heat').checked&&D.res){ // mapa térmico a media profundidad
+    let cells='';for(let x=-80;x<=95;x+=3)for(let y=-50;y<=50;y+=3){if(!inside(x,y))continue;const T=tempAt(thickAt(x,y),0.5);cells+=`<rect x="${CXY[0]+(x-1.6)*p.sc}" y="${CXY[1]+(y-1.6)*p.sc}" width="${3.3*p.sc}" height="${3.3*p.sc}" fill="${tcol(T)}"/>`;}
+    s+=`<defs><clipPath id="cpTop"><path d="${SHAPES[D.k].d}" transform="translate(${CXY[0]},${CXY[1]}) scale(${p.sc})"/></clipPath></defs><g style="pointer-events:none" clip-path="url(#cpTop)" opacity=".6"><g filter="url(#fx-blur2)">${cells}</g></g>`;}
+  if(D.pt){const[x,y]=D.pt;s+=`<g style="pointer-events:none"><circle cx="${CXY[0]+x*p.sc}" cy="${CXY[1]+y*p.sc}" r="7" fill="none" stroke="#12306b" stroke-width="2.5"/><path d="M${CXY[0]+x*p.sc-12} ${CXY[1]+y*p.sc}h24M${CXY[0]+x*p.sc} ${CXY[1]+y*p.sc-12}v24" stroke="#12306b" stroke-width="1.5"/></g>`;}
+  s+=`<rect x="92" y="14" width="420" height="222" rx="30" fill="url(#g-film)" style="pointer-events:none"/><text x="520" y="250" text-anchor="end" font-size="11" fill="#475569">Pieza en su charola con película</text></svg>`;
+  $('#topv').innerHTML=s;
+  const svg=$('#topv svg');
+  svg.querySelector('path.hit').onclick=ev=>{const pt=svg.createSVGPoint();pt.x=ev.clientX;pt.y=ev.clientY;const q=pt.matrixTransform(svg.getScreenCTM().inverse());D.pt=[(q.x-CXY[0])/p.sc,(q.y-CXY[1])/p.sc];D.res=null;renderTop();renderCut();$('#dfb').innerHTML='';};
+}
+function renderCut(){
+  const p=PK[D.k], tau=D.pt?thickAt(...D.pt):0, H=D.pt?24+110*Math.sqrt(tau):0, cm=p.hmax*Math.sqrt(tau);
+  const showHeat=$('#heat').checked&&D.res, z=D.dep/100, y0=110-H/2;
+  let s=`<svg viewBox="0 0 320 230"><rect width="320" height="230" fill="#f8fafc"/><rect x="20" y="${110+H/2}" width="280" height="10" fill="#e5e7eb"/>`;
+  if(!D.pt){s+=`<text x="160" y="115" text-anchor="middle" font-size="13" fill="#64748b">Primero toca un punto de la pieza</text></svg>`;$('#cutv').innerHTML=s;return;}
+  const col=D.k==='steak'?'#a8202c':D.k==='pork'?'#e2a097':'#eeb1a1';
+  s+=`<defs><clipPath id="cpcut"><rect x="62" y="${y0}" width="220" height="${H}" rx="${Math.min(30,H/2)}"/></clipPath></defs><rect x="62" y="${y0}" width="220" height="${H}" rx="${Math.min(30,H/2)}" fill="${col}" stroke="#7f1d1d" stroke-opacity=".4"/>`;
+  if(showHeat){for(let i=0;i<24;i++){const zz=(i+0.5)/24;s+=`<rect x="62" y="${y0+i*H/24}" width="220" height="${H/24+0.6}" fill="${tcol(tempAt(tau,zz))}" opacity=".8" clip-path="url(#cpcut)"/>`;}}
+  else s+=`<g clip-path="url(#cpcut)"><rect x="62" y="${y0}" width="220" height="${H}" fill="#fff" filter="url(#fx-fib)" opacity=".4"/></g>`;
+  if(PK[D.k].bone&&boneHit(D.pt[0],D.pt[1],0.5)) s+=`<ellipse cx="172" cy="110" rx="60" ry="${Math.min(14,H*0.18)}" fill="#f5ecd7" stroke="#e2d3b1"/>`;
+  s+=`<line x1="62" y1="${110}" x2="282" y2="110" stroke="#fff" stroke-dasharray="4 4" opacity=".7"/><text x="286" y="113" font-size="9.5" fill="#64748b">mitad</text>
+   <path d="M52 ${y0} v${H}" stroke="#334155"/><path d="M48 ${y0} h8 M48 ${y0+H} h8" stroke="#334155"/><text x="45" y="${110+3}" text-anchor="end" font-size="10" fill="#334155">${cm.toFixed(1)} cm</text>`;
+  const tip=y0+z*H;
+  s+=`<rect x="170" y="${Math.min(14,tip-60)}" width="4" height="${tip-Math.min(14,tip-60)}" fill="url(#g-steel)"/><path d="M170 ${tip} L172 ${tip+6} L174 ${tip} Z" fill="#9aa3ad"/>
+   <rect x="158" y="${Math.min(14,tip-60)-26}" width="28" height="30" rx="7" fill="#f3f5f7" stroke="#b6c0ca"/>`;
+  s+=`<text x="172" y="224" text-anchor="middle" font-size="10.5" fill="#475569">Corte en el punto elegido · espesor ≈ ${cm.toFixed(1)} cm</text></svg>`;
+  $('#cutv').innerHTML=s;
+}
+function renderD(){
+  $$('[data-k]').forEach(b=>b.classList.toggle('on',b.dataset.k===D.k));
+  $$('#hist button').forEach(b=>b.classList.toggle('on',b.dataset.v===D.h));
+  $('#minCtl').style.display=D.h==='A'?'':'none';$('#v-min').textContent=D.min+' min';$('#v-dep').textContent=D.dep+' %';
+  const t=temps();
+  $('#hinfo').innerHTML=D.h==='A'?`<div><span>Aire del andén</span><b>20 °C</b></div><div><span>La superficie se calienta</span><b>rápido</b></div><div><span>El centro se calienta</span><b>lento (${PK[D.k].hmax} cm de espesor)</b></div>`:`<div><span>Aire del camión</span><b>2 °C</b></div><div><span>La superficie ya se enfrió</span><b>sí</b></div><div><span>El centro sigue tibio</span><b>sí</b></div>`;
+  const nf=Object.keys(D.found).length;
+  $('#dreto').innerHTML=`Encuentra el centro térmico (error ≤ 0.3 °C) en las cuatro piezas.<div class="tlist" style="margin-top:8px">${Object.keys(PK).map(k=>`<div class="tm ${D.found[k]?'ok':''}" style="cursor:default">${D.found[k]?'✓':'·'} ${PK[k].n}</div>`).join('')}</div>${nf===4?'<div class="fb good">🏆 ¡Reto completado!</div>':''}`;
+  renderTop();renderCut();
+}
+function doRead(onEmp){
+  const p=PK[D.k], t=temps();
+  if(!onEmp&&!D.pt){$('#dfb').innerHTML='<div class="fb bad">Primero toca un punto de la pieza.</div>';return;}
+  let v,msg=[],cls='good';
+  if(onEmp){v=lerp(t.Ts,t.Ta,0.5);msg.push('Mediste sobre el empaque: lees el aire y la película, no el producto.');cls='bad';}
+  else{const tau=thickAt(...D.pt), z=D.dep/100;v=tempAt(tau,z);
+    if(boneHit(D.pt[0],D.pt[1],z)){v+=0.8;msg.push('🦴 Tocaste el hueso: conduce el calor de forma distinta y la lectura no representa al músculo. Mide en la parte gruesa, lejos del hueso.');cls='bad';}
+    if(z>0.9){msg.push('La punta atravesó la pieza: estás midiendo la cara de abajo, pegada a la charola.');cls='bad';}
+    else if(z<0.25){msg.push('La punta quedó muy superficial: mides la superficie, no el centro.');cls='bad';}
+    else if(Math.abs(z-0.5)>0.12){msg.push('La punta no quedó a la mitad del espesor.');cls=cls==='bad'?'bad':'mid';}
+    if(tau<0.75){msg.push('No elegiste la parte más gruesa de la pieza: ahí la temperatura cambia más rápido.');cls=cls==='bad'?'bad':'mid';}
+  }
+  const err=Math.abs(v-t.Tc);
+  if(!onEmp&&err<=0.3&&cls!=='bad'){cls='good';msg=['✅ ¡Centro térmico! Parte más gruesa, punta a la mitad del espesor y sin tocar hueso.'];D.found[D.k]=1;}
+  D.res={v,err};
+  const disp=$('#topv svg');
+  $('#dfb').innerHTML=`<div class="fb ${cls}"><b>Lectura: <span id="drd">--.-</span> °C</b> · Centro térmico real: ${f1(t.Tc)} °C · Superficie: ${f1(t.Ts)} °C<br>${msg.join('<br>')}${err>0.3?`<br>Tu lectura se aleja ${f1(err)} °C del centro térmico. ${t.Tc>4&&v<=4?'<b>Con esta lectura aceptarías producto que en realidad está fuera de criterio.</b>':t.Tc<=4&&v>4?'Con esta lectura rechazarías producto que en realidad cumple.':''}`:''}</div>`;
+  animRead($('#drd'),t.Ta,v,900);
+  $('#heat').disabled=false;renderD();
+}
+$$('[data-k]').forEach(b=>b.onclick=()=>{D.k=b.dataset.k;D.pt=null;D.res=null;$('#dfb').innerHTML='';renderD();});
+$$('#hist button').forEach(b=>b.onclick=()=>{D.h=b.dataset.v;D.res=null;$('#dfb').innerHTML='';renderD();});
+$('#min').oninput=e=>{D.min=+e.target.value;D.res=null;renderD();};
+$('#dep').oninput=e=>{D.dep=+e.target.value;$('#v-dep').textContent=D.dep+' %';renderCut();};
+$('#read').onclick=()=>doRead(false);$('#emp').onclick=()=>doRead(true);
+$('#heat').onchange=()=>{renderTop();renderCut();};
+
+/* ===================== 3 · CARGA ===================== */
+const ZN=['Frente (junto a la unidad)','Centro','Puerta'];
+let L={sc:'ej',boxes:[],reads:[],sel:null,clean:false,clock:7*60+40,done:false};
+function buildLoad(sc){
+  const kind=sc==='ej'?'puerta':['ok','puerta','centro','todo'][Math.floor(Math.random()*4)];
+  const bx=[];
+  for(let z=0;z<3;z++)for(let r=0;r<2;r++)for(let c=0;c<4;c++){
+    let base=2.6+Math.random()*1.0;
+    if(kind==='puerta'&&z===2&&c>=2)base=4.7+Math.random()*0.9;
+    if(kind==='puerta'&&z===2&&c<2)base=3.9+Math.random()*0.5;
+    if(kind==='centro'&&z===1&&(r===0||r===1)&&(c===1||c===2))base=4.5+Math.random()*0.8;
+    if(kind==='todo')base=6.2+Math.random()*2.4;
+    bx.push({z,r,c,T:base,id:`${'FCP'[z]}${r*4+c+1}`});
+  }
+  if(sc==='ej'){const set=(id,T)=>{bx.find(b=>b.id===id).T=T;};set('F3',3.2);set('C3',3.8);set('P8',5.1);}
+  L={sc,kind,boxes:bx,reads:[],sel:null,clean:false,clock:7*60+40,done:false};
+}
+function loadCol(T){return T<=3?'#7dd3fc':T<=4?'#86efac':T<=5?'#fcd34d':'#fca5a5';}
+function hhmm(m){return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');}
+function renderTruck(){
+  const W=640,H=250, x0=70, zw=170, bw=38, bh=46;
+  let s=`<svg viewBox="0 0 ${W} ${H}"><rect width="${W}" height="${H}" fill="#eef1f4"/><rect x="40" y="18" width="560" height="214" rx="8" fill="#d7dce2" stroke="#8b939d" stroke-width="3"/>
+   <rect x="20" y="70" width="22" height="110" rx="4" fill="url(#g-dev)"/><text x="31" y="128" text-anchor="middle" font-size="9" fill="#fff" transform="rotate(-90 31 128)">UNIDAD</text>
+   <path d="M600 30 v190" stroke="#64748b" stroke-width="6" stroke-dasharray="20 6"/><text x="618" y="128" text-anchor="middle" font-size="10" fill="#475569" transform="rotate(90 618 128)">PUERTA</text>
+   ${[0,1,2].map(z=>`<text x="${x0+z*zw+bw*2}" y="34" text-anchor="middle" font-size="11" font-weight="700" fill="#334155">${ZN[z]}</text>`).join('')}
+   ${[0,1].map(z=>`<path d="M${x0+(z+1)*zw-10} 40 v180" stroke="#94a3b8" stroke-dasharray="4 4"/>`).join('')}`;
+  const heat=L.done;
+  L.boxes.forEach((b,i)=>{const x=x0+b.z*zw+b.c*bw, y=50+b.r*(bh+60);
+    const rd=L.reads.find(r=>r.i===i);
+    s+=`<g class="bx" data-i="${i}" style="cursor:pointer"><rect x="${x}" y="${y}" width="${bw-4}" height="${bh}" rx="3" fill="${heat?loadCol(b.T):'url(#g-kraft)'}" stroke="${L.sel===i?'#f05a28':'#8d6a3b'}" stroke-width="${L.sel===i?3:1.2}"/>
+      ${heat?'':`<rect x="${x}" y="${y}" width="${bw-4}" height="${bh}" rx="3" fill="#fff" filter="url(#fx-kraft)" opacity=".7"/>`}
+      <rect x="${x+6}" y="${y+6}" width="${bw-16}" height="10" fill="#fff" opacity=".9"/><text x="${x+(bw-4)/2}" y="${y+14}" text-anchor="middle" font-size="8" fill="#334155">${b.id}</text>
+      ${rd||heat?`<text x="${x+(bw-4)/2}" y="${y+bh-8}" text-anchor="middle" font-size="10" font-weight="800" fill="${heat?'#0f1b33':'#12306b'}">${f1(rd?rd.v:b.T)}</text>`:''}
+      ${rd?`<circle cx="${x+bw-8}" cy="${y+4}" r="6" fill="#12306b"/><text x="${x+bw-8}" y="${y+7}" text-anchor="middle" font-size="8" fill="#fff">✓</text>`:''}</g>`;});
+  s+=`<text x="320" y="246" text-anchor="middle" font-size="10.5" fill="#64748b">${heat?'Mapa térmico real: azul ≤ 3 °C · verde ≤ 4 °C · ámbar 4.1–5 °C · rojo > 5 °C':'24 cajas en dos filas por zona · toca una caja para medirla'}</text></svg>`;
+  $('#truckv').innerHTML=s;
+  $$('#truckv .bx').forEach(g=>g.onclick=()=>{if(L.done)return;L.sel=+g.dataset.i;renderTruck();renderBox();});
+}
+function renderBox(){
+  if(L.sel===null){$('#mbox').innerHTML='';return;}
+  const b=L.boxes[L.sel], c=CD('pech'), g=pieceG('pech',160,80,-4,1.25,c,{});
+  $('#mbox').innerHTML=`<div class="stepbox"><h4>Caja ${b.id} · ${ZN[b.z]}</h4><div class="two"><div class="vis" style="margin:0"><svg viewBox="0 0 320 170" id="msvg"><rect width="320" height="170" fill="url(#g-table)"/><rect x="30" y="10" width="260" height="146" rx="22" fill="url(#g-tray)" stroke="#d4d6cf"/><rect x="42" y="22" width="236" height="122" rx="14" fill="#f1f2ed"/>${g.shadow}${g.body}<rect x="30" y="10" width="260" height="146" rx="22" fill="url(#g-film)"/></svg></div>
+    <div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="pill ${L.clean?'clean':'dirty'}">Punzón: ${L.clean?'desinfectado':'sin desinfectar'}</span><button class="btn btn-ghost btn-sm" id="mdis">🧴 Desinfectar</button></div>
+    <div class="row-btn"><button class="btn btn-accent" id="mgo">📏 Medir en el centro térmico</button></div><div style="font-size:12px;color:var(--muted);margin-top:6px">Hora del registro: ${hhmm(L.clock)}</div></div></div></div>`;
+  $('#mdis').onclick=()=>{L.clean=true;renderBox();};
+  $('#mgo').onclick=()=>{
+    const svg=$('#msvg'), gg=document.createElementNS('http://www.w3.org/2000/svg','g');gg.innerHTML=penThermo(126,80);svg.appendChild(gg);
+    $('#mgo').disabled=true;
+    animRead(svg.querySelector('#dsp'),12,b.T,1000,()=>{
+      L.reads=L.reads.filter(r=>r.i!==L.sel);L.reads.push({i:L.sel,v:b.T,h:hhmm(L.clock),clean:L.clean,resp:$('#resp').value.trim()});L.clock+=2;L.clean=false;renderReads();renderTruck();setTimeout(()=>{renderBox();renderCheck();},250);});
+  };
+}
+function renderReads(){
+  const t=$('#lect');t.querySelectorAll('tr:not(:first-child)').forEach(r=>r.remove());
+  L.reads.forEach(r=>{const b=L.boxes[r.i];const tr=document.createElement('tr');tr.innerHTML=`<td>${r.h}</td><td>${b.id} · ${['Frente','Centro','Puerta'][b.z]}</td><td><b>${f1(r.v)}</b></td><td>${r.clean?'✓':'✗'}</td>`;t.appendChild(tr);});
+}
+function renderCheck(){
+  if(L.reads.length<3||L.done){if(!L.done)$('#cfb').innerHTML=`<div class="fb mid">Llevas ${L.reads.length} de al menos 3 lecturas.</div>`;return;}
+  $('#cfb').innerHTML=`<div class="prob"><h4>Analiza tus lecturas</h4>
+   <div class="inrow">Promedio: <input id="cavg" type="number" step="0.1"> °C</div>
+   <div class="inrow">Lectura más desfavorable (la más alta): <input id="cmax" type="number" step="0.1"> °C</div>
+   <div class="inrow" style="margin-top:8px"><b>Decisión:</b></div>
+   <div class="steps"><button class="tm" style="text-align:left" data-d="acc">✅ Aceptar el lote: cumple ≤ 4 °C</button><button class="tm" style="text-align:left" data-d="mas">🟡 Separar el lote, medir más piezas para delimitar el problema y dictaminar</button><button class="tm" style="text-align:left" data-d="rech">⛔ Rechazar el lote completo</button></div>
+   <div class="row-btn"><button class="btn btn-accent" id="cchk" disabled>Revisar</button><span style="font-size:12px;color:var(--muted)">Puedes seguir midiendo cajas antes de revisar.</span></div></div>`;
+  let dsel=null;
+  $$('#cfb [data-d]').forEach(b=>b.onclick=()=>{dsel=b.dataset.d;$$('#cfb [data-d]').forEach(x=>x.classList.toggle('on',x===b));$('#cchk').disabled=false;});
+  $('#cchk').onclick=()=>checkLoad(dsel);
+}
+function checkLoad(d){
+  const vals=L.reads.map(r=>r.v), avg=vals.reduce((a,b)=>a+b,0)/vals.length, mx=Math.max(...vals);
+  const ia=parseFloat($('#cavg').value), im=parseFloat($('#cmax').value);
+  const okA=Math.abs(ia-Math.round(avg*10)/10)<=0.051, okM=Math.abs(im-mx)<=0.051;
+  const zones=new Set(L.reads.map(r=>L.boxes[r.i].z)), rep=zones.size===3;
+  const trueMax=Math.max(...L.boxes.map(b=>b.T)), allHot=L.boxes.every(b=>b.T>4), anyHot=trueMax>4;
+  const yourHot=mx>4;
+  let dOK, dMsg;
+  if(!yourHot){dOK=d==='acc';dMsg=d==='acc'?'Con tus lecturas, aceptar es coherente.':'Todas tus lecturas cumplen: con esa evidencia se acepta.';}
+  else{const allYours=vals.every(v=>v>4);
+    if(allYours&&vals.length>=3){dOK=d==='rech'||d==='mas';dMsg='Todas tus lecturas están fuera de criterio: se rechaza (medir más solo confirma la falla).';}
+    else{dOK=d==='mas'||d==='rech';dMsg=d==='acc'?'❌ Una lectura fuera de criterio indica que la cadena de frío falló en alguna parte: no se acepta solo porque el promedio cumpla.':'Correcto: una sola lectura fuera de criterio obliga a separar el lote y medir más piezas para delimitar el problema; después se rechaza o se acepta condicionado con segregación.';}}
+  let real='';
+  if(anyHot&&!yourHot) real=`⚠️ <b>Tu muestreo no detectó el problema:</b> en la carga había cajas hasta ${f1(trueMax)} °C ${L.kind==='puerta'?'junto a la puerta':L.kind==='centro'?'en el centro de la tarima, donde el aire frío circula peor':''}. ${rep?'Aun midiendo las tres zonas, conviene medir más cajas cuando hay sospecha (termógrafo, empaques húmedos).':'Mide en las tres zonas: inicio, centro y final de la carga.'}`;
+  else if(!anyHot) real='La carga real estaba completa dentro de criterio.';
+  else real=`Tu muestreo ${yourHot?'sí detectó':'no detectó'} cajas fuera de criterio (máximo real ${f1(trueMax)} °C).`;
+  const nc=L.reads.filter(r=>!r.clean).length, nr=L.reads.filter(r=>!r.resp).length;
+  L.done=true;renderTruck();
+  $('#cfb').innerHTML=`<div class="fb ${okA&&okM&&dOK&&rep&&!nc?'good':'mid'}">
+    ${okA?'✅':'❌'} Promedio: ${vals.map(f1).join(' + ')} = ${f1(vals.reduce((a,b)=>a+b,0))} ÷ ${vals.length} = <b>${f1(avg)} °C</b><br>
+    ${okM?'✅':'❌'} Lectura más desfavorable: <b>${f1(mx)} °C</b> ${mx>4?'(fuera de criterio)':'(cumple)'}<br>
+    ${rep?'✅ Mediste en las tres zonas de la carga.':'❌ No mediste en las tres zonas (inicio, centro y final): tu muestra no representa la carga.'}<br>
+    ${nc?`❌ ${nc} ${nc===1?'lectura':'lecturas'} sin desinfectar el punzón.`:'✅ Desinfectaste el punzón en cada lectura.'}<br>
+    ${nr?'❌ Faltó registrar al responsable en las lecturas (escribe tus iniciales arriba antes de medir).':'✅ Cada lectura quedó con hora y responsable.'}<br>
+    ${dOK?'✅':'❌'} Decisión: ${dMsg}</div>
+    <div class="fb ${anyHot&&!yourHot?'bad':'mid'}">${real}</div>
+    ${L.sc==='ej'?`<div class="sumbox"><b>Ejemplo resuelto del CECyBOOK:</b> 3.2, 3.8 y 5.1 °C → promedio 4.0 °C, pero una lectura (5.1 °C) no cumple. Se separa el lote, se miden más piezas y se dictamina con esa evidencia. Todo se anota en la bitácora.</div>`:''}
+    <div class="row-btn"><button class="btn btn-primary" id="cnew">🎲 Otra carga</button></div>`;
+  $('#cnew').onclick=()=>{buildLoad('rand');$$('[data-s]').forEach(b=>b.classList.toggle('on',b.dataset.s==='rand'));renderLoad();};
+}
+function renderLoad(){renderTruck();renderBox();renderReads();$('#cfb').innerHTML='<div class="fb mid">Toca una caja para empezar. Recuerda desinfectar el punzón antes de cada medición.</div>';}
+$$('[data-s]').forEach(b=>b.onclick=()=>{$$('[data-s]').forEach(x=>x.classList.toggle('on',x===b));buildLoad(b.dataset.s);renderLoad();});
+
+/* ===================== 4 · PRÁCTICA ===================== */
+function genCalc(first){
+  const P=[];
+  P.push(first?{t:'lote',r:[2.6,3.0,3.7]}:{t:'lote',r:[0,0,0].map(()=>Math.round((2+Math.random()*3.4)*10)/10)});
+  P.push(first?{t:'ice',v:1.6}:{t:'ice',v:Math.round((Math.random()<0.5?-1:1)*(0.2+Math.random()*1.8)*10)/10});
+  P.push({t:'lote',r:[0,0,0].map(()=>Math.round((2.5+Math.random()*2.6)*10)/10)});
+  return P;
+}
+let CP=genCalc(true);
+function renderCalc(){
+  $('#calc').innerHTML=CP.map((p,i)=>p.t==='lote'?`<div class="prob" data-i="${i}"><h4>${i+1}) Lecturas de un lote de pollo refrigerado: ${p.r.map(f1).join(' °C, ')} °C</h4>
+    <div class="inrow">Promedio <input data-a="avg" type="number" step="0.1"> °C</div><div class="inrow">Lectura más alta <input data-a="max" type="number" step="0.1"> °C</div>
+    <div class="inrow">¿Se acepta por temperatura? <select data-a="acc" style="font:inherit;padding:5px;border-radius:8px;border:1.5px solid var(--line)"><option value="">—</option><option value="si">Sí</option><option value="no">No</option></select></div>
+    <div class="row-btn"><button class="btn btn-primary btn-sm" data-c="${i}">Revisar</button></div><div class="out"></div></div>`
+   :`<div class="prob" data-i="${i}"><h4>${i+1}) Un termómetro marca ${f1(p.v)} °C en el baño de hielo</h4>
+    <div class="inrow">¿Cuántos grados se desvía de 0 °C? <input data-a="dev" type="number" step="0.1"> °C</div>
+    <div class="inrow">¿Está dentro de ± 1 °C? <select data-a="tol" style="font:inherit;padding:5px;border-radius:8px;border:1.5px solid var(--line)"><option value="">—</option><option value="si">Sí</option><option value="no">No</option></select></div>
+    <div class="row-btn"><button class="btn btn-primary btn-sm" data-c="${i}">Revisar</button></div><div class="out"></div></div>`).join('');
+  $$('#calc [data-c]').forEach(b=>b.onclick=()=>{
+    const i=+b.dataset.c, p=CP[i], box=$(`#calc .prob[data-i="${i}"]`), get=a=>box.querySelector(`[data-a="${a}"]`);
+    let out=[];
+    const empty=[...box.querySelectorAll('[data-a]')].some(e=>e.value==='');
+    if(empty){box.querySelector('.out').innerHTML='<div class="fb mid">Completa todas tus respuestas antes de revisar.</div>';return;}
+    if(p.t==='lote'){const sum=p.r.reduce((a,b)=>a+b,0), avg=Math.round(sum/3*10)/10, mx=Math.max(...p.r), acc=mx<=4?'si':'no';
+      const a=parseFloat(get('avg').value), m=parseFloat(get('max').value), q=get('acc').value;
+      get('avg').className=Math.abs(a-avg)<=0.051?'good':'bad';get('max').className=Math.abs(m-mx)<=0.051?'good':'bad';
+      out.push(`Promedio: (${p.r.map(f1).join(' + ')}) ÷ 3 = ${f1(sum)} ÷ 3 = <b>${f1(avg)} °C</b>.`,`Lectura más alta: <b>${f1(mx)} °C</b>.`,`${q===acc?'✅':'❌'} ${acc==='si'?'Sí se acepta: todas las lecturas son de 4 °C o menos.':'No se acepta tal cual: al menos una lectura supera 4 °C. Se separa el lote y se miden más piezas, aunque el promedio parezca bueno.'}`);}
+    else{const dev=Math.abs(p.v), tol=dev<=1?'si':'no', d=parseFloat(get('dev').value), q=get('tol').value;
+      get('dev').className=Math.abs(Math.abs(d)-dev)<=0.051?'good':'bad';
+      out.push(`Desviación: |${f1(p.v)} − 0| = <b>${f1(dev)} °C</b>.`,`${q===tol?'✅':'❌'} ${tol==='si'?'Está dentro de ± 1 °C: se puede usar.':'Está fuera de ± 1 °C: el termómetro debe ajustarse o cambiarse.'}`);}
+    box.querySelector('.out').innerHTML=`<div class="fb mid">${out.join('<br>')}</div>`;
+  });
+}
+$('#newc').onclick=()=>{CP=genCalc(false);renderCalc();};
+const VIGS=[
+ {svg:'emp',t:'El inspector apoya la punta del termómetro sobre la película del empaque y anota «3.0 °C».',o:[['Midió la superficie del empaque, no el centro térmico de la pieza',1],['Debió usar un termómetro más grande',0],['Debió medir dos veces en el mismo lugar',0]],w:'La superficie se enfría o calienta más rápido que el interior: la lectura no representa al producto.'},
+ {svg:'dis',t:'Mide la pieza de la caja 1 y, sin limpiar el punzón, lo inserta en la caja 2 y en la caja 3.',o:[['No desinfectó el punzón entre piezas',1],['Midió demasiadas cajas',0],['Debió medir solo una caja',0]],w:'El punzón puede pasar bacterias de una pieza a otra: se desinfecta entre cada inserción.'},
+ {svg:'hora',t:'En la bitácora escribe «Pollo – 3.2, 3.8, 5.1 – Aceptar», sin hora ni firma.',o:[['No registró la hora ni al responsable, y aceptó con una lectura fuera de criterio',1],['Escribió demasiados datos',0],['Debió escribir solo el promedio',0]],w:'Sin hora ni responsable el registro no sirve como evidencia; además, 5.1 °C está fuera de criterio.'},
+ {svg:'hueso',t:'Inserta el punzón en la pierna de pollo hasta que la punta toca el hueso.',o:[['Tocó el hueso: la lectura no representa al músculo',1],['Así se mide correctamente la pierna',0],['Debió medir solo la piel',0]],w:'Se mide en la parte más gruesa, sin tocar hueso.'},
+ {svg:'rapido',t:'Inserta el termómetro y anota la lectura en cuanto aparece el primer número.',o:[['No esperó a que la lectura se estabilizara',1],['Debió sacarlo más rápido',0],['No hay error',0]],w:'El sensor tarda unos segundos en igualar la temperatura del producto: se espera a que el valor deje de cambiar.'},
+ {svg:'hielo',t:'Para verificar el termómetro lo mete en un vaso con cubos de hielo, sin agua, y lee a los 10 segundos.',o:[['Usó hielo sin agua y no esperó el minuto con agitación',1],['Debió usar agua caliente',0],['Debió verificarlo después de medir',0]],w:'La verificación se hace con hielo picado y un poco de agua, un minuto con agitación: debe marcar 0 °C ± 1 °C.'}
+];
+function vigSVG(k){
+  const base=`<rect width="110" height="90" rx="10" fill="#f1f5f9"/>`;
+  const pen=(x,y,a)=>`<g transform="translate(${x},${y}) rotate(${a})"><rect x="-1.5" y="-30" width="3" height="30" fill="#9aa3ad"/><rect x="-7" y="-58" width="14" height="30" rx="5" fill="#fff" stroke="#94a3b8"/></g>`;
+  const piece=`<ellipse cx="55" cy="58" rx="36" ry="18" fill="#f2b6a4" stroke="#d58e7b"/>`;
+  const m={emp:base+`<rect x="12" y="34" width="86" height="46" rx="10" fill="#fff" stroke="#cbd5e1"/>`+piece+`<rect x="12" y="34" width="86" height="46" rx="10" fill="url(#g-film)"/>`+pen(28,36,20),
+   dis:base+[18,55,92].map(x=>`<rect x="${x-14}" y="50" width="28" height="26" fill="#d9b98a" stroke="#9c7a48"/>`).join('')+`<path d="M22 44 q16 -16 33 0 q16 -16 33 0" stroke="#dc2626" stroke-dasharray="3 3" fill="none"/>`+pen(55,46,0),
+   hora:base+`<rect x="16" y="12" width="78" height="66" fill="#fffdf7" stroke="#e7dcc3"/>${[24,36,48,60].map(y=>`<path d="M22 ${y} h66" stroke="#cbb88f"/>`).join('')}<text x="55" y="45" text-anchor="middle" font-size="14" fill="#dc2626">?</text>`,
+   hueso:base+`<path d="M18 58 C18 40 44 36 60 46 L86 48 C96 44 100 56 92 60 L60 62 C44 70 18 74 18 58 Z" fill="#f6dcc0" stroke="#e3b998"/><path d="M50 54 L94 54" stroke="#f5ecd7" stroke-width="5"/>`+pen(70,54,0),
+   rapido:base+`<text x="55" y="40" text-anchor="middle" font-size="22">⏱️</text><rect x="30" y="52" width="50" height="22" rx="4" fill="#c3d3ad"/><text x="55" y="68" text-anchor="middle" font-size="12" font-family="monospace" fill="#1d2b1a">12.4</text>`,
+   hielo:base+`<path d="M30 26 L80 26 L76 82 L34 82 Z" fill="#e3eef7" stroke="#9fb3c8"/>${[[36,40],[52,50],[62,36],[40,62],[60,66]].map(p=>`<rect x="${p[0]}" y="${p[1]}" width="14" height="12" rx="2" fill="#fff" stroke="#93c5fd"/>`).join('')}`+pen(56,62,0)};
+  return `<svg viewBox="0 0 110 90">${m[k]}</svg>`;
+}
+let VO=VIGS.map(v=>shuffle(v.o.map((_,i)=>i)));
+function renderVigs(){
+  $('#vigs').innerHTML=VIGS.map((v,i)=>`<div class="vig">${vigSVG(v.svg)}<div><div style="font-size:13.2px;margin-bottom:6px">${v.t}</div><div class="steps">${VO[i].map(j=>`<button class="tm" style="text-align:left" data-v="${i}" data-o="${j}">${v.o[j][0]}</button>`).join('')}</div><div class="out"></div></div></div>`).join('');
+  $$('#vigs [data-o]').forEach(b=>b.onclick=()=>{const i=+b.dataset.v, j=+b.dataset.o, ok=VIGS[i].o[j][1];
+    b.parentElement.querySelectorAll('.tm').forEach(x=>{x.disabled=true;if(VIGS[i].o[+x.dataset.o][1])x.classList.add('ok');});if(!ok)b.classList.add('no');
+    b.closest('.vig').querySelector('.out').innerHTML=`<div class="fb ${ok?'good':'bad'}">${ok?'✅ Correcto.':'❌ No es eso.'} ${VIGS[i].w}</div>`;});
+}
+
+/* ===================== Pestañas ===================== */
+function show(t){$$('.tab').forEach(x=>x.classList.toggle('on',x.dataset.t===t));$$('.pane').forEach(p=>p.classList.toggle('show',p.dataset.p===t));}
+$$('.tab').forEach(b=>b.onclick=()=>show(b.dataset.t));
+renderVer();renderD();buildLoad('ej');renderLoad();renderCalc();renderVigs();
+</script>
+</body>
+</html>

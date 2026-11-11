@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inspección ante y post mortem · Semana 1</title>
+<style>
+
+
+:root{
+  --navy:#12306b; --navy-2:#1d4196; --ink:#0f1b33; --text:#22304a; --muted:#64748b;
+  --bg:#eef2f8; --card:#ffffff; --line:#dbe3ef; --soft:#f6f8fc;
+  --orange:#f05a28; --magenta:#d61f5c; --meat:#b91c1c; --ok:#16a34a; --warn:#d97706; --bad:#dc2626;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;background:var(--bg);color:var(--text);padding:18px;line-height:1.45}
+.app{max-width:1200px;margin:0 auto;background:var(--card);border-radius:18px;box-shadow:0 12px 34px rgba(15,27,51,.10);overflow:hidden}
+.topbar{height:6px;background:linear-gradient(90deg,var(--meat),var(--orange),var(--magenta))}
+header{padding:16px 24px 6px}
+.back{display:inline-flex;align-items:center;gap:6px;background:#334155;color:#f8fafc;text-decoration:none;padding:8px 14px;border-radius:8px;font-weight:600;font-size:13px;border:1px solid #475569;margin-bottom:12px}
+.back:hover{background:#1e293b}
+.title-row{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+h1{margin:0;color:var(--navy);font-size:26px;letter-spacing:-.3px}
+.subtitle{color:var(--muted);font-size:14px;margin-top:2px;max-width:820px}
+.week-tag{background:var(--navy);color:#fff;font-weight:700;font-size:12px;padding:6px 12px;border-radius:999px;white-space:nowrap}
+.week-tag b{color:#ffb38f}
+.tabs{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:12px 24px 0}
+@media (max-width:480px){.tabs{grid-template-columns:1fr}}
+.tab{border:2px solid var(--line);background:#fff;border-radius:12px;padding:10px 14px;text-align:left;cursor:pointer;font:inherit;color:var(--muted)}
+.tab b{display:block;font-size:15px;color:inherit}
+.tab small{font-size:12.5px}
+.tab.on{border-color:var(--navy);background:#eef3ff;color:var(--navy)}
+.pane{display:none;padding:12px 24px 18px}
+.pane.show{display:block}
+.presets{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
+.presets .lbl{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-right:4px}
+.chip{border:1.5px solid var(--line);background:#fff;color:var(--text);padding:6px 11px;border-radius:999px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit}
+.chip:hover{border-color:var(--navy-2)}
+.chip.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.dock{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#f8fafc;margin-bottom:12px}
+.dock svg{display:block;width:100%;height:auto}
+@keyframes arrive{from{transform:translateX(560px)}to{transform:translateX(0)}}
+.truck-in{animation:arrive 1.1s cubic-bezier(.2,.8,.2,1)}
+.lab{display:grid;grid-template-columns:290px 1fr;gap:16px}
+@media (max-width:960px){.lab{grid-template-columns:1fr}}
+.col{display:flex;flex-direction:column;gap:12px;min-width:0}
+.card{background:var(--soft);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.card h3{margin:0 0 8px;font-size:14.5px;color:var(--navy)}
+.info{font-size:12.8px}
+.info div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px dashed var(--line);padding:3px 0}
+.info div:last-child{border:0}
+.info span{color:var(--muted)}
+.info b{text-align:right}
+.bubble{margin-top:8px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:12px;padding:7px 10px;font-size:12.5px;font-weight:600}
+.route{display:flex;flex-direction:column;gap:5px}
+.stn{display:flex;gap:8px;align-items:center;border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:6px 9px;font-size:12.8px;font-weight:600;color:var(--muted)}
+.stn i{font-style:normal;width:22px;height:22px;border-radius:50%;background:#e2e8f0;color:#475569;display:inline-flex;align-items:center;justify-content:center;font-size:11px;flex:0 0 auto}
+.stn .sc{margin-left:auto;font-size:11.5px;color:var(--muted)}
+.stn.on{border-color:var(--orange);background:#fff7ed;color:var(--ink)}
+.stn.on i{background:var(--orange);color:#fff}
+.stn.done{color:var(--ink)}
+.stn.done i{background:var(--ok);color:#fff}
+.panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.panel>h2{margin:0 0 4px;font-size:18px;color:var(--navy)}
+.panel>.lead{margin:0 0 10px;font-size:13.5px;color:var(--muted)}
+.vis{border:1px solid var(--line);border-radius:12px;background:#fbfcfe;overflow:hidden;margin-bottom:10px}
+.vis svg{display:block;width:100%;height:auto}
+.vis .cap{font-size:11.5px;color:var(--muted);padding:5px 10px;border-top:1px solid var(--line);background:#fff}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:700px){.two{grid-template-columns:1fr}}
+.crit{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.cr{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:7px 10px;background:#fff;font-size:13.2px}
+.cr .tg{display:flex;gap:4px}
+.cr .tg button{border:1.5px solid var(--line);background:#fff;border-radius:8px;padding:5px 9px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;color:var(--muted)}
+.cr .tg button.y.on{background:#dcfce7;border-color:var(--ok);color:#14532d}
+.cr .tg button.n.on{background:#fee2e2;border-color:var(--bad);color:#7f1d1d}
+.cr .tg button:disabled{cursor:default}
+.cr .ex{grid-column:1/-1;font-size:12.3px;padding:5px 8px;border-radius:8px}
+.cr .ex.good{background:#f0fdf4;color:#14532d}
+.cr .ex.bad{background:#fef2f2;color:#7f1d1d}
+.btn{border:0;border-radius:10px;padding:10px 14px;font-weight:700;font-size:13.5px;cursor:pointer;font-family:inherit}
+.btn:disabled{opacity:.45;cursor:default}
+.btn-accent{background:linear-gradient(90deg,var(--orange),var(--magenta));color:#fff}
+.btn-ghost{background:#fff;border:1.5px solid var(--line);color:var(--text)}
+.btn-primary{background:var(--navy);color:#fff}
+.btn-sm{padding:6px 10px;font-size:12.5px}
+.row-btn{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center}
+.fb{margin-top:10px;padding:10px 12px;border-radius:10px;font-size:13.2px}
+.fb.good{background:#f0fdf4;border:1px solid #bbf7d0;color:#14532d}
+.fb.bad{background:#fef2f2;border:1px solid #fecaca;color:#7f1d1d}
+.fb.mid{background:#fffbeb;border:1px solid #fde68a;color:#78350f}
+.paper{background:#fffdf7;border:1px solid #e7dcc3;border-radius:10px;padding:12px 14px;font-size:12.8px;box-shadow:0 2px 6px rgba(0,0,0,.05)}
+.paper h4{margin:0 0 6px;font-size:13px;letter-spacing:.5px;color:#7c5a1d}
+.paper div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px dotted #e7dcc3;padding:3px 0}
+.paper span{color:#8a7a5a}
+.seal{display:flex;align-items:center;gap:10px;margin-top:8px}
+.labels{display:flex;flex-direction:column;gap:6px}
+.lbl-card{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:#fff;font-size:12.6px}
+.lbl-card b{color:var(--navy)}
+.lbl-card.missing{border-style:dashed;color:var(--bad)}
+.stepbox{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:10px;background:#fbfcfe}
+.stepbox h4{margin:0 0 6px;font-size:13.5px;color:var(--navy)}
+.stepbox.lock{opacity:.45;pointer-events:none}
+.pos{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.pos button{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:7px 10px;font-weight:700;font-size:12.5px;cursor:pointer;font-family:inherit;color:var(--text)}
+.pos button.on{border-color:var(--navy);background:#eef3ff;color:var(--navy)}
+.pos button.ok{border-color:var(--ok)}
+.pill{display:inline-block;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px}
+.pill.clean{background:#dcfce7;color:#14532d}
+.pill.dirty{background:#fee2e2;color:#7f1d1d}
+.tgt{cursor:pointer}
+.tgt circle{transition:r .15s}
+.tgt:hover circle{r:17}
+table.tb{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff}
+table.tb th{background:var(--navy);color:#fff;text-align:left;padding:6px 8px;font-size:12px}
+table.tb td{border-bottom:1px solid var(--line);padding:6px 8px;vertical-align:top}
+.tbwrap{overflow-x:auto}
+.grp{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px;background:#fff}
+.grp h4{margin:0 0 6px;font-size:13.5px;color:var(--ink)}
+.dbtn{display:flex;gap:6px;flex-wrap:wrap}
+.dbtn button{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:8px 11px;font-weight:700;font-size:12.8px;cursor:pointer;font-family:inherit;color:var(--text)}
+.dbtn button.on[data-d=acc]{border-color:var(--ok);background:#dcfce7;color:#14532d}
+.dbtn button.on[data-d=cond]{border-color:var(--warn);background:#fef3c7;color:#78350f}
+.dbtn button.on[data-d=rech]{border-color:var(--bad);background:#fee2e2;color:#7f1d1d}
+.acts{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+@media (max-width:700px){.acts{grid-template-columns:1fr}}
+.act{display:flex;gap:8px;align-items:flex-start;border:1.5px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;font-size:12.8px;cursor:pointer}
+.act input{margin-top:2px}
+.act.on{border-color:var(--navy);background:#eef3ff}
+.act.req{border-color:var(--ok);background:#f0fdf4}
+.act.bad{border-color:var(--bad);background:#fef2f2}
+.chain{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
+@media (max-width:700px){.chain{grid-template-columns:1fr}}
+.chain div{background:#fff;border:1px solid var(--line);border-top:4px solid var(--navy);border-radius:10px;padding:7px 9px;font-size:12.3px}
+.chain div:nth-child(2){border-top-color:var(--orange)}
+.chain div:nth-child(3){border-top-color:var(--magenta)}
+.chain div:nth-child(4){border-top-color:var(--ok)}
+.chain b{display:block;font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.form{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px}
+@media (max-width:700px){.form{grid-template-columns:1fr}}
+.form label{font-size:12px;font-weight:700;color:var(--muted);display:flex;flex-direction:column;gap:3px}
+.form input{font:inherit;font-size:14px;padding:7px 9px;border-radius:8px;border:1.5px solid var(--line)}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+@media (max-width:800px){.kpis{grid-template-columns:1fr 1fr}}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 10px;text-align:center}
+.kpi small{display:block;font-size:11px;color:var(--muted);font-weight:600}
+.kpi b{font-size:17px;color:var(--navy)}
+.sumbox{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff;margin-top:10px}
+.miss{background:#fff7ed;border-left:4px solid var(--orange);padding:7px 10px;border-radius:8px;font-size:12.8px;margin:6px 0}
+details.teacher{margin:0 24px 22px;border:1px solid var(--line);border-radius:12px;padding:10px 14px;background:#fbfcfe;font-size:13.5px}
+details.teacher summary{cursor:pointer;font-weight:700;color:var(--navy)}
+details.teacher li{margin:3px 0}
+footer{padding:0 24px 18px;font-size:11.5px;color:var(--muted)}
+@media print{body{background:#fff;padding:0}.noprint,.tabs,header .back,details.teacher,footer,.pane[data-p=and]{display:none!important}.pane[data-p=bit]{display:block!important}.app{box-shadow:none}}
+
+.ctl{margin-bottom:11px}
+.ctl label{display:flex;justify-content:space-between;align-items:baseline;font-weight:600;font-size:13px;margin-bottom:3px;gap:8px}
+.ctl label .val{font-weight:800;font-size:16px;color:var(--navy);white-space:nowrap}
+.ctl input[type=range]{width:100%;cursor:pointer;accent-color:var(--navy)}
+.scale{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted)}
+.seg{display:flex;background:#e6ecf5;border-radius:10px;padding:3px;gap:3px}
+.seg button{flex:1;border:0;background:transparent;padding:7px 4px;border-radius:8px;font-weight:600;font-size:12px;color:#475569;cursor:pointer;font-family:inherit;line-height:1.2}
+.seg button.on{background:#fff;color:var(--navy);box-shadow:0 1px 3px rgba(0,0,0,.14)}
+.lg2{display:flex;gap:10px;flex-wrap:wrap;font-size:11.5px;color:var(--muted);margin-top:6px}.lg2 span{display:inline-flex;align-items:center;gap:4px}.lg2 i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.tabs.four{grid-template-columns:repeat(4,1fr)}
+@media (max-width:900px){.tabs.four{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:480px){.tabs.four{grid-template-columns:1fr}}
+.steps{display:flex;flex-direction:column;gap:6px}
+.chk{display:flex;gap:8px;align-items:center;font-size:13px}
+.legend{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);flex-wrap:wrap}
+.legend i{display:inline-block;width:150px;height:10px;border-radius:5px;background:linear-gradient(90deg,#1d4ed8,#06b6d4 13%,#22c55e 27%,#eab308 47%,#f97316 67%,#dc2626)}
+.tlist{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+@media (max-width:700px){.tlist{grid-template-columns:1fr 1fr}}
+.tm{border:1.5px solid var(--line);border-radius:12px;background:#fff;padding:8px;text-align:center;cursor:pointer;font-family:inherit;font-size:12.5px;font-weight:700;color:var(--text)}
+.tm.on{border-color:var(--navy);background:#eef3ff}
+.tm.ok{border-color:var(--ok);background:#f0fdf4}
+.tm.no{border-color:var(--bad);background:#fef2f2}
+.tm small{display:block;font-weight:600;color:var(--muted)}
+.prob{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff;margin-bottom:10px}
+.prob h4{margin:0 0 8px;color:var(--navy);font-size:14px}
+.inrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:5px 0;font-size:13.2px}
+.inrow input{width:90px;font:inherit;font-size:14px;padding:6px 8px;border-radius:8px;border:1.5px solid var(--line)}
+.inrow input.good{border-color:var(--ok);background:#f0fdf4}
+.inrow input.bad{border-color:var(--bad);background:#fef2f2}
+.vig{display:grid;grid-template-columns:110px 1fr;gap:12px;align-items:start;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:#fff;margin-bottom:10px}
+@media (max-width:600px){.vig{grid-template-columns:1fr}}
+.vig svg{width:110px;height:auto;display:block}
+
+.an-br{animation:abr 2.6s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 100%}
+.an-fast{animation-duration:.55s}
+.an-jit{animation:ajit .22s linear infinite;transform-box:fill-box}
+.an-tail{animation:atail 1.8s ease-in-out infinite;transform-box:view-box}
+@keyframes abr{0%,100%{transform:scale(1,1)}50%{transform:scale(1.012,1.035)}}
+@keyframes ajit{0%,100%{transform:translateX(0)}25%{transform:translateX(-1.4px)}75%{transform:translateX(1.4px)}}
+@keyframes atail{0%,100%{transform:rotate(0)}50%{transform:rotate(-12deg)}}
+@media (prefers-reduced-motion:reduce){.an-br,.an-jit,.an-tail{animation:none}}
+.meters{display:flex;flex-direction:column;gap:8px}
+.meter{font-size:12.5px;font-weight:700;color:var(--text)}
+.meter .bar{height:12px;border-radius:7px;background:#e2e8f0;overflow:hidden;margin-top:3px}
+.meter .bar i{display:block;height:100%;border-radius:7px;transition:width .4s}
+.res-tag{display:inline-block;font-weight:800;border-radius:999px;padding:4px 12px;font-size:13px;color:#fff}
+.lanes{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media (max-width:800px){.lanes{grid-template-columns:1fr}}
+.fill select{font:inherit;font-size:13.5px;padding:4px 6px;border-radius:8px;border:1.5px solid var(--line);margin:0 3px}
+.fill select.good{border-color:var(--ok);background:#f0fdf4}.fill select.bad{border-color:var(--bad);background:#fef2f2}
+.fill p{margin:8px 0;font-size:14px}
+.samples{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+@media (max-width:800px){.samples{grid-template-columns:repeat(2,1fr)}}
+.smp{border:1.5px solid var(--line);border-radius:12px;background:#fff;padding:6px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:700;color:var(--text)}
+.smp svg{display:block;width:100%;height:auto;border-radius:8px}
+.smp.on{border-color:var(--navy);background:#eef3ff}.smp.ok{border-color:var(--ok)}.smp.no{border-color:var(--bad)}
+
+.pick{cursor:pointer}.pick:hover{filter:drop-shadow(0 0 5px rgba(240,90,40,.85))}
+.hz{cursor:pointer}.hz:hover{filter:drop-shadow(0 0 5px rgba(240,90,40,.9))}
+.walk{animation:walk 3.4s ease-in-out infinite}
+@keyframes walk{0%,100%{transform:translateX(-26px)}50%{transform:translateX(26px)}}
+.limp{animation:walk 5s ease-in-out infinite,limp .8s ease-in-out infinite}
+@keyframes limp{0%,100%{translate:0 0;rotate:0deg}40%{translate:0 5px;rotate:2.5deg}}
+.stamp{animation:stamp .55s ease-out;transform-box:fill-box;transform-origin:center}
+@keyframes stamp{0%{opacity:0;scale:2.2}60%{opacity:1;scale:.94}100%{scale:1}}
+@media (prefers-reduced-motion:reduce){.walk,.limp,.stamp{animation:none}}
+.ckl{display:flex;flex-direction:column;gap:5px}
+.ck{display:grid;grid-template-columns:200px 1fr;gap:8px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:5px 7px;background:#fff;font-size:12.8px}
+.ck .btn{text-align:left;width:100%}
+.ck.on{background:#f8fafc}
+@media (max-width:560px){.ck{grid-template-columns:1fr}}
+.dec3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.dec3.four{grid-template-columns:repeat(2,1fr)}
+@media (max-width:560px){.dec3{grid-template-columns:1fr}}
+.dec3 .btn{background:#fff;border:1.5px solid var(--line);color:var(--text);font-size:12.8px}
+.dec3 .btn.good{border-color:var(--ok);background:#dcfce7;color:#14532d;opacity:1}
+.dec3 .btn.bad{border-color:var(--bad);background:#fee2e2;color:#7f1d1d;opacity:1}
+.pmgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;align-items:start}
+@media (max-width:960px){.pmgrid{grid-template-columns:1fr}}
+.pmgrid .dec3.four{grid-template-columns:1fr}
+.hls{display:flex;flex-direction:column;gap:4px;font-size:12.6px}
+.hl{border:1px solid var(--line);border-radius:8px;padding:5px 8px;background:#fff;color:var(--muted)}
+.hl.on{color:var(--text);background:#f8fafc}.hl b{display:block;font-size:12.6px}.hl.on b{color:var(--navy)}
+.cr .tg button.am.on{background:#dbeafe;border-color:#1d4ed8;color:#1e3a8a}
+.cr .tg button.pm.on{background:#ffedd5;border-color:#ea580c;color:#7c2d12}
+.kpis{margin-top:10px}
+
+.hlr{opacity:0;transition:opacity .2s;pointer-events:none}
+#rcWrap[data-h="0"] .h0,#rcWrap[data-h="1"] .h1,#rcWrap[data-h="2"] .h2,#rcWrap[data-h="3"] .h3{opacity:1;animation:hlp 1.2s ease-in-out infinite}
+@keyframes hlp{50%{stroke-opacity:.45}}
+#rcChk .cr{cursor:pointer}#rcChk .cr:hover{border-color:#fdba74;background:#fffaf5}
+.zin{animation:zin .45s ease-out;transform-box:fill-box;transform-origin:center}
+@keyframes zin{from{opacity:0;scale:.7}to{opacity:1;scale:1}}
+.gcl{animation:gcl .9s .55s ease-out both}.gcr{animation:gcr .9s .55s ease-out both}
+@keyframes gcl{from{translate:0 0}to{translate:-14px 0}}@keyframes gcr{from{translate:0 0}to{translate:14px 0}}
+.knife{animation:knf 1s ease-in both}
+@keyframes knf{0%{translate:0 -40px;opacity:0}15%{opacity:1}70%{translate:0 150px;opacity:1}100%{translate:0 190px;opacity:0}}
+@media (prefers-reduced-motion:reduce){.zin,.gcl,.gcr,.knife{animation:none}.knife{display:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar"></div>
+  <header>
+    <a class="back" href="index.html">⬅ Volver al Menú Principal</a>
+    <div class="title-row">
+      <div>
+        <h1>🩺 Inspección ante y post mortem</h1>
+        <div class="subtitle">Ponte en el lugar del médico veterinario del rastro: revisa a los animales vivos en los corrales, inspecciona canales y vísceras, y comprueba qué debe traer la carne cuando llega a la planta.</div>
+      </div>
+      <div class="week-tag">Módulo III · Semana 1 · <b>Figura 4</b></div>
+    </div>
+  </header>
+
+  <div class="tabs four">
+    <button class="tab on" data-t="am"><b>1 · Ante mortem</b><small>Animal vivo, en los corrales</small></button>
+    <button class="tab" data-t="pm"><b>2 · Post mortem</b><small>Canal, vísceras y ganglios</small></button>
+    <button class="tab" data-t="rc"><b>3 · Llega a la planta</b><small>Sello, lote y documentos</small></button>
+    <button class="tab" data-t="q"><b>4 · Comprueba tu avance</b><small>V/F y clasifica</small></button>
+  </div>
+
+  <!-- ===================== 1 · ANTE MORTEM ===================== -->
+  <div class="pane show" data-p="am">
+    <div class="panel"><h2>Inspección ante mortem</h2><p class="lead">Se hace en los corrales, <b>después del descanso</b>. El médico veterinario observa comportamiento, postura, marcha, respiración, mucosas, lesiones e identificación, y separa a los animales caídos o sospechosos.</p>
+      <div class="dock" id="amScene"></div>
+      <div class="kpis" id="amScore"></div>
+    </div>
+    <div class="two" style="margin-top:12px">
+      <div class="panel"><div class="vis" id="amZoom" style="margin:0"></div><p class="lead" style="margin:8px 0 0;font-size:12.5px">La vista se actualiza con lo que revisas: termómetro, frecuencia respiratoria, lupa de mucosas, lesiones marcadas y arete.</p></div>
+      <div class="panel" id="amFicha"></div>
+    </div>
+  </div>
+
+  <!-- ===================== 2 · POST MORTEM ===================== -->
+  <div class="pane" data-p="pm">
+    <div class="panel"><h2>Inspección post mortem · línea de cerdos</h2><p class="lead">Después del sacrificio se revisan la canal, las vísceras y los ganglios linfáticos, y se comprueba que las vísceras correspondan a su canal. Elige una canal y haz clic en cada parte para inspeccionarla.</p>
+      <div class="presets" id="pmCases"></div>
+    </div>
+    <div class="panel" style="margin-top:12px"><div class="dock" id="pmScene" style="margin:0"></div></div>
+    <div class="pmgrid" style="margin-top:12px">
+      <div class="panel"><h2 style="font-size:15px">🔎 Lupa</h2><div class="vis" id="pmLupa" style="margin:6px 0 0"></div></div>
+      <div class="panel"><h2 style="font-size:15px">📋 Hallazgos</h2><div class="hls" id="pmList"></div></div>
+      <div class="panel"><h2 style="font-size:15px">Dictamen post mortem</h2><div id="pmDec"></div></div>
+    </div>
+  </div>
+
+  <!-- ===================== 3 · PLANTA ===================== -->
+  <div class="pane" data-p="rc">
+    <div class="panel"><h2>¿Qué significa para la recepción en planta?</h2><p class="lead">Solo se recibe carne que proviene de un establecimiento que <b>inspecciona, identifica y documenta</b>: sello de inspección, número de establecimiento, lote y documentos de origen. Revisa cada entrega y decide.</p>
+      <div class="presets" id="rcCases"></div>
+    </div>
+    <div id="rcWrap">
+      <div class="two" style="margin-top:12px">
+        <div class="panel"><h2 style="font-size:15px">📦 Lo que llegó</h2><div class="vis" id="rcVis" style="margin:6px 0 0"></div></div>
+        <div class="panel"><h2 style="font-size:15px">📄 Lo que dicen los documentos</h2><div class="vis" id="rcDoc" style="margin:6px 0 0"></div></div>
+      </div>
+      <div class="panel" style="margin-top:12px"><h2 style="font-size:16px">Lista de verificación</h2><p class="lead">Pasa el cursor sobre cada pregunta (o tócala) para ver en qué parte del producto y de los documentos debes comparar.</p><div class="crit" id="rcChk"></div></div>
+    </div>
+  </div>
+
+  <!-- ===================== 4 · COMPRUEBA ===================== -->
+  <div class="pane" data-p="q">
+    <div class="two">
+      <div class="panel"><h2>Comprueba tu avance · Verdadero o falso</h2><p class="lead">Elige V o F.</p><div class="crit" id="vf"></div><div class="row-btn"><button class="btn btn-primary" id="vfchk">Revisar</button><button class="btn btn-ghost btn-sm" id="vfre">↺ Otra vez</button></div><div id="vffb"></div></div>
+      <div class="panel"><h2>¿Ante o post mortem?</h2><p class="lead">Clasifica cada actividad según la Figura 4.</p><div class="crit" id="cl"></div><div class="row-btn"><button class="btn btn-primary" id="clchk">Revisar</button><button class="btn btn-ghost btn-sm" id="clre">↺ Otra vez</button></div><div id="clfb"></div></div>
+    </div>
+  </div>
+
+  <details class="teacher">
+    <summary>👩‍🏫 Notas para el docente</summary>
+    <ul>
+      <li><b>Qué cubre:</b> la sección «Inspección ante y post mortem», la <b>Figura 4</b>, el «Verdadero o falso» (clave: a) F, b) V, c) V, d) F) y el punto 3 del resumen. Normas: NOM-009-ZOO-1994 (proceso sanitario de la carne). Referencias: Codex CAC/RCP 58-2005 y FAO (2007).</li>
+      <li><b>Ante mortem:</b> los tres resultados son los de la Figura 4.
+        <ul>
+          <li><b>Apto para sacrificio:</b> no hay hallazgos.</li>
+          <li><b>Sacrificio por separado:</b> lesión física o localizada (golpe, cojera, absceso) en un animal sin signos de enfermedad generalizada.</li>
+          <li><b>Retención para observación:</b> signos de enfermedad (fiebre, respiración agitada, mucosas anormales, decaimiento) o identificación y documentos que no coinciden.</li>
+        </ul>
+        Es una <b>simplificación didáctica</b>: el dictamen real lo emite el médico veterinario oficial o aprobado, según la norma y el criterio clínico.</li>
+      <li><b>Valores de referencia aproximados</b> (animal adulto en reposo):
+        <ul>
+          <li><b>Cerdo:</b> 38.5–39.5 °C y ≈ 15–25 respiraciones por minuto.</li>
+          <li><b>Bovino:</b> 38.0–39.3 °C y ≈ 10–30 respiraciones por minuto.</li>
+        </ul>
+        Varían con la edad, el calor y la excitación. Por eso se toman después del descanso.</li>
+      <li><b>Post mortem:</b> la regla de oro es distinguir una lesión <b>localizada</b> (decomiso parcial, por ejemplo el hígado con «manchas de leche» por <i>Ascaris suum</i> o un absceso encapsulado) de una enfermedad <b>generalizada</b> (decomiso total, por ejemplo ictericia generalizada o septicemia con petequias y ganglios afectados en varias regiones). Los ganglios linfáticos ayudan a decidirlo.</li>
+      <li><b>Retenida:</b> se usa cuando falta información para decidir, como muestras pendientes (residuos como el clenbuterol) o la pérdida de la relación canal–vísceras.</li>
+      <li><b>En pollo</b> (que se usa en el taller) la inspección ante mortem es por lote: comportamiento, signos respiratorios, crestas y mortalidad en el transporte. Ante la sospecha de una enfermedad de notificación obligatoria se avisa a SENASICA.</li>
+      <li><b>Pestaña 3:</b> enlaza con la recepción (Tabla de criterios, fila «Documentos y origen»).
+        <ul>
+          <li>Los números TIF son ficticios.</li>
+          <li>En el caso del lote que no coincide, algunas plantas retienen el producto mientras se aclara en lugar de rechazarlo. Lo importante es que <b>no se recibe</b> tal cual.</li>
+        </ul></li>
+    </ul>
+  </details>
+  <footer>Recurso didáctico complementario · CECyBOOK Módulo III · Semana 1 · Figura 4 · NOM-009-ZOO-1994 · FAO (2007) · FAO y OMS (2009), CAC/RCP 58-2005.</footer>
+</div>
+
+<script>
+const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const shuffle=a=>{const b=a.slice();for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;};
+/* ---------- Gráficos compartidos ---------- */
+let UID=0;
+const GDEFS=`
+ <filter id="fx-fib" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.008 0.24" numOctaves="2" seed="4"/><feColorMatrix values="0 0 0 0 0.6  0 0 0 0 0.25  0 0 0 0 0.22  2.6 0 0 0 -1.2"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-fib2" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.006 0.3" numOctaves="2" seed="9"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 0.92  0 0 0 0 0.88  2.4 0 0 0 -1.35"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-pore" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="turbulence" baseFrequency="0.7" numOctaves="1" seed="2"/><feColorMatrix values="0 0 0 0 0.66  0 0 0 0 0.5  0 0 0 0 0.4  -14 0 0 0 1.4"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-wrin" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.035 0.09" numOctaves="3" seed="7"/><feColorMatrix values="0 0 0 0 0.7  0 0 0 0 0.52  0 0 0 0 0.4  3 0 0 0 -1.55"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-marb" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.11 0.24" numOctaves="2" seed="12"/><feColorMatrix values="0 0 0 0 0.98  0 0 0 0 0.94  0 0 0 0 0.86  14 0 0 0 -9.2"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-grain" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.06 0.5" numOctaves="2" seed="5"/><feColorMatrix values="0 0 0 0 0.3  0 0 0 0 0.03  0 0 0 0 0.05  2 0 0 0 -0.9"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-frost" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="turbulence" baseFrequency="0.55" numOctaves="2" seed="21"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  6 0 0 0 -2.2"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-blot" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="3" seed="15"/><feColorMatrix values="0 0 0 0 0.52  0 0 0 0 0.56  0 0 0 0 0.46  5 0 0 0 -2.4"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-foam" x="0" y="0" width="100%" height="100%"><feTurbulence type="turbulence" baseFrequency="0.9" numOctaves="1" seed="1"/><feColorMatrix values="0 0 0 0 0.6  0 0 0 0 0.6  0 0 0 0 0.62  -5 0 0 0 1.1"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-kraft" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.9 0.06" numOctaves="2" seed="3"/><feColorMatrix values="0 0 0 0 0.42  0 0 0 0 0.28  0 0 0 0 0.12  1.6 0 0 0 -0.62"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-brush" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.004 0.9" numOctaves="2" seed="8"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  1.8 0 0 0 -0.75"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-grime" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="4" seed="31"/><feColorMatrix values="0 0 0 0 0.3  0 0 0 0 0.22  0 0 0 0 0.12  6 0 0 0 -2.6"/><feComposite operator="in" in2="SourceAlpha"/></filter>
+ <filter id="fx-blur1"><feGaussianBlur stdDeviation="1"/></filter>
+ <filter id="fx-blur2"><feGaussianBlur stdDeviation="2"/></filter>
+ <filter id="fx-blur4"><feGaussianBlur stdDeviation="4"/></filter>
+ <filter id="fx-blur8"><feGaussianBlur stdDeviation="8"/></filter>
+ <radialGradient id="g-dent"><stop offset="0" stop-color="#5b1a12" stop-opacity=".45"/><stop offset=".7" stop-color="#5b1a12" stop-opacity=".18"/><stop offset="1" stop-color="#5b1a12" stop-opacity="0"/></radialGradient>
+ <radialGradient id="g-pool" cx=".5" cy=".5" r=".6"><stop offset="0" stop-color="#c2414f" stop-opacity=".75"/><stop offset="1" stop-color="#e5808a" stop-opacity=".45"/></radialGradient>
+ <radialGradient id="g-drop" cx=".35" cy=".3" r=".75"><stop offset="0" stop-color="#ffffff" stop-opacity=".95"/><stop offset=".35" stop-color="#e7f1fb" stop-opacity=".35"/><stop offset=".85" stop-color="#7e94aa" stop-opacity=".45"/><stop offset="1" stop-color="#506579" stop-opacity=".6"/></radialGradient>
+ <linearGradient id="g-tray" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e8e9e4"/></linearGradient>
+ <linearGradient id="g-glove" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3f6fd8"/><stop offset=".5" stop-color="#7aa5f5"/><stop offset="1" stop-color="#3f6fd8"/></linearGradient>
+ <linearGradient id="g-steel" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8d969f"/><stop offset=".45" stop-color="#eef1f4"/><stop offset="1" stop-color="#7c858f"/></linearGradient>
+ <linearGradient id="g-table" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d9dde2"/><stop offset=".5" stop-color="#eef0f2"/><stop offset="1" stop-color="#c9ced4"/></linearGradient>
+ <linearGradient id="g-alu-l" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#c3c9d1"/><stop offset="1" stop-color="#e4e8ed"/></linearGradient>
+ <linearGradient id="g-alu-r" x1="1" y1="0" x2="0" y2="0"><stop offset="0" stop-color="#b9c0c9"/><stop offset="1" stop-color="#dfe4ea"/></linearGradient>
+ <linearGradient id="g-floor" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#9aa2ac"/><stop offset="1" stop-color="#c9cfd6"/></linearGradient>
+ <linearGradient id="g-ceil" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d3d8de"/><stop offset="1" stop-color="#eef1f4"/></linearGradient>
+ <linearGradient id="g-kraft" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d9b98a"/><stop offset="1" stop-color="#c39c66"/></linearGradient>
+ <linearGradient id="g-film" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".05"/><stop offset=".3" stop-color="#fff" stop-opacity=".45"/><stop offset=".38" stop-color="#fff" stop-opacity=".05"/><stop offset=".7" stop-color="#fff" stop-opacity=".2"/><stop offset=".76" stop-color="#fff" stop-opacity=".02"/><stop offset="1" stop-color="#fff" stop-opacity=".12"/></linearGradient>
+ <linearGradient id="g-drum" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1b4fa5"/><stop offset=".4" stop-color="#4f86e0"/><stop offset="1" stop-color="#173f86"/></linearGradient>
+ <linearGradient id="g-dev" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4b5563"/><stop offset="1" stop-color="#2b323b"/></linearGradient>
+ <linearGradient id="g-wood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c8a06a"/><stop offset="1" stop-color="#9a7444"/></linearGradient>
+ <pattern id="p-pad" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="16" height="16" fill="#fbfbf9"/><path d="M0 0H16M0 0V16" stroke="#e6e6e0" stroke-width="1.2"/></pattern>
+ <pattern id="p-pad-wet" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="16" height="16" fill="#fbe3e3"/><path d="M0 0H16M0 0V16" stroke="#efc4c4" stroke-width="1.2"/></pattern>`;
+document.body.insertAdjacentHTML('afterbegin',`<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>${GDEFS}</defs></svg>`);
+/* ===================== Animales (con opciones clínicas) ===================== */
+const IDEFS=`
+ <linearGradient id="pigB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbd7cf"/><stop offset=".55" stop-color="#f2b9ae"/><stop offset="1" stop-color="#d98f84"/></linearGradient>
+ <linearGradient id="pigS" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#e79a8f"/><stop offset="1" stop-color="#d17e74"/></linearGradient>
+ <linearGradient id="cowB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a5603a"/><stop offset=".6" stop-color="#8a4a2a"/><stop offset="1" stop-color="#5e2f19"/></linearGradient>
+ <linearGradient id="cowW" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e7e2da"/></linearGradient>
+ <linearGradient id="henB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".7" stop-color="#f1efea"/><stop offset="1" stop-color="#d9d4ca"/></linearGradient>
+ <linearGradient id="hoof" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5b4036"/><stop offset="1" stop-color="#2f211c"/></linearGradient>
+ <linearGradient id="woodF" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c79b63"/><stop offset="1" stop-color="#8f6838"/></linearGradient>
+ <linearGradient id="crate" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b82f6"/><stop offset="1" stop-color="#1d4ed8"/></linearGradient>
+ <radialGradient id="aSh"><stop offset="0" stop-color="#000" stop-opacity=".28"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
+ <radialGradient id="absc" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#fff3c4"/><stop offset=".55" stop-color="#f2c98a"/><stop offset="1" stop-color="#d9826f"/></radialGradient>
+ <filter id="aBl"><feGaussianBlur stdDeviation="1.2"/></filter>
+ <linearGradient id="musc" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#c76a62"/><stop offset=".45" stop-color="#e39b90"/><stop offset="1" stop-color="#d4857a"/></linearGradient>
+ <linearGradient id="lung" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6c2c3"/><stop offset=".6" stop-color="#e99a9f"/><stop offset="1" stop-color="#cf7a82"/></linearGradient>
+ <linearGradient id="heart" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b8443f"/><stop offset=".6" stop-color="#8e2a2a"/><stop offset="1" stop-color="#5e1618"/></linearGradient>
+ <linearGradient id="liver" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#93382f"/><stop offset=".6" stop-color="#6e2620"/><stop offset="1" stop-color="#4c1713"/></linearGradient>
+ <linearGradient id="kidn" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a5503f"/><stop offset="1" stop-color="#6b2a20"/></linearGradient>
+ <linearGradient id="splen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a3c63"/><stop offset="1" stop-color="#55203d"/></linearGradient>
+ <linearGradient id="bone" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#e8dccb"/><stop offset=".5" stop-color="#fbf6ee"/><stop offset="1" stop-color="#ddcdb7"/></linearGradient>
+ <filter id="lobul" x="0" y="0" width="1" height="1"><feTurbulence type="turbulence" baseFrequency="0.22" numOctaves="1" seed="6"/><feColorMatrix values="0 0 0 0 0.2  0 0 0 0 0.05  0 0 0 0 0.04  -9 0 0 0 1.05"/></filter>
+ <filter id="ink" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.5" numOctaves="2" seed="4" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.2"/><feComponentTransfer><feFuncA type="table" tableValues="0 .55 .85"/></feComponentTransfer></filter>`;
+
+document.body.insertAdjacentHTML('afterbegin',`<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>${IDEFS}</defs></svg>`);
+function pigX(o={}){
+  const legs=[[-34,0],[-22,1],[30,0],[42,1]], low=o.low?'rotate(14 44 -42)':'';
+  let s=`<ellipse cx="6" cy="1" rx="58" ry="6" fill="url(#aSh)"/>`;
+  s+=legs.map(([x,d],i)=>{const up=o.lift===i;return `<g ${up?`transform="rotate(-24 ${x} -16) translate(0,-6)"`:''}><path d="M${x-5} -16 L${x+5} -16 L${x+4} -3 L${x-4} -3 Z" fill="${d?'#e3a196':'#d68d82'}"/><path d="M${x-4.5} -4 L${x+4.5} -4 L${x+5} 0 L${x-5} 0 Z" fill="url(#hoof)"/></g>`;}).join('');
+  if(o.lift===0) s+=`<ellipse cx="-34" cy="-14" rx="8" ry="6" fill="#e0505f" opacity=".35" filter="url(#aBl)"/>`;
+  s+=`<g class="an-tail" style="transform-origin:-50px -36px"><path d="M-50 -36 c-8 -2 -10 -10 -4 -12 c5 -2 6 5 1 6 c-4 1 -6 -3 -3 -5" fill="none" stroke="#d98f84" stroke-width="2.4" stroke-linecap="round"/></g>
+  <path d="M-48 -34 C-54 -50 -30 -58 0 -58 C26 -58 46 -52 54 -40 C60 -30 58 -18 46 -14 C30 -10 -20 -10 -38 -14 C-50 -17 -52 -26 -48 -34 Z" fill="url(#pigB)"/>
+  <path d="M-38 -14 C-20 -9 30 -9 46 -14 C40 -12 -10 -6 -38 -14 Z" fill="#c97f74" opacity=".5"/>
+  <ellipse cx="-6" cy="-50" rx="34" ry="5" fill="#fff" opacity=".35" filter="url(#aBl)"/>
+  <g transform="${low}">
+  <path d="M40 -50 C52 -56 66 -50 70 -40 C74 -32 70 -22 60 -20 C50 -18 40 -26 38 -36 Z" fill="url(#pigB)"/>
+  ${o.absc?`<ellipse cx="52" cy="-21" rx="9" ry="7" fill="url(#absc)"/><ellipse cx="49" cy="-24" rx="3" ry="2" fill="#fff" opacity=".6"/>`:''}
+  <path d="M68 -42 C76 -44 80 -38 79 -32 C78 -27 72 -25 67 -28 Z" fill="url(#pigS)"/>
+  <ellipse cx="76" cy="-34" rx="3.6" ry="5.6" fill="#e9a79c" stroke="#c4776c" stroke-width=".8"/><ellipse cx="75.6" cy="-35.5" rx="1" ry="1.6" fill="#7a3d36"/><ellipse cx="76.4" cy="-32" rx="1" ry="1.6" fill="#7a3d36"/>
+  ${o.nasal?`<path d="M77 -29 q2 6 0 10 q-2 -3 0 -10z" fill="#e9eef2" stroke="#c7d2dc" stroke-width=".5"/>`:''}
+  <path d="M46 -50 C48 -62 56 -66 62 -64 C60 -58 58 -52 54 -47 Z" fill="#eaa69b" stroke="#cf8a7f" stroke-width=".8"/>
+  ${o.tag?`<rect x="52" y="-60" width="7" height="8" rx="1.5" fill="#facc15" stroke="#a16207" stroke-width=".6" transform="rotate(-18 55 -56)"/>`:''}
+  ${o.low?`<path d="M57.5 -41 q2.5 1.4 5 0" stroke="#2b1b17" stroke-width="1.3" fill="none"/>`:`<circle cx="60" cy="-41" r="1.9" fill="#2b1b17"/><circle cx="60.6" cy="-41.6" r=".6" fill="#fff"/>`}
+  ${o.mouth?`<path d="M64 -24 Q70 -18 76 -25 Q70 -21 64 -24 Z" fill="#7a2e2a"/>`:`<path d="M64 -25 q6 2 11 -1" stroke="#b9726a" stroke-width="1" fill="none"/>`}
+  </g>`;
+  return s;
+}
+function cowX(o={}){
+  const low=o.low?'rotate(16 52 -70)':'';
+  return `<ellipse cx="10" cy="1" rx="74" ry="7" fill="url(#aSh)"/>
+  ${[[-46,1],[-34,0],[34,1],[46,0]].map(([x,d])=>`<path d="M${x-6} -30 L${x+6} -30 L${x+5} -4 L${x-5} -4 Z" fill="${d?'#7a3f22':'#5e2f19'}"/><path d="M${x-5} -10 L${x+5} -10 L${x+5} -4 L${x-5} -4 Z" fill="#f3efe8"/><path d="M${x-5.5} -4 L${x+5.5} -4 L${x+6} 0 L${x-6} 0 Z" fill="url(#hoof)"/>`).join('')}
+  <g class="an-tail" style="transform-origin:-60px -66px"><path d="M-60 -66 C-68 -54 -66 -34 -64 -20" stroke="#6b3a20" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M-64 -24 c-4 2 -5 8 0 10 c5 -2 4 -8 0 -10 z" fill="#f3efe8"/></g>
+  <path d="M-62 -60 C-64 -78 -40 -84 -10 -84 C20 -84 46 -82 56 -74 C66 -66 66 -42 60 -32 C54 -26 40 -26 30 -27 L-46 -27 C-60 -28 -64 -42 -62 -60 Z" fill="url(#cowB)"/>
+  <path d="M-46 -27 C-20 -24 20 -24 50 -28 C44 -22 -20 -20 -46 -27 Z" fill="url(#cowW)"/>
+  <ellipse cx="-10" cy="-78" rx="44" ry="5" fill="#fff" opacity=".18" filter="url(#aBl)"/>
+  ${o.thin?`<path d="M-30 -70 q4 18 0 36 M-20 -72 q4 18 0 38 M-10 -72 q4 18 0 38" stroke="#4a2414" stroke-width="1.2" fill="none" opacity=".5"/>`:''}
+  <g transform="${low}">
+  <path d="M48 -78 C58 -86 74 -84 80 -76 L84 -60 C78 -48 66 -40 56 -42 C50 -50 46 -66 48 -78 Z" fill="url(#cowB)"/>
+  <path d="M74 -82 C84 -86 96 -80 98 -70 C100 -60 98 -50 92 -46 C86 -42 78 -44 74 -52 C70 -60 68 -76 74 -82 Z" fill="url(#cowW)"/>
+  <path d="M86 -52 C94 -54 100 -50 100 -45 C100 -40 94 -38 88 -40 C84 -42 83 -48 86 -52 Z" fill="#e8b7a5" stroke="#c98f7d" stroke-width=".8"/><ellipse cx="95" cy="-46" rx="1.2" ry="1.8" fill="#5a2d22"/>
+  <path d="M72 -78 C66 ${o.low?-74:-82} 58 ${o.low?-72:-80} 56 ${o.low?-68:-76} C62 -72 68 -72 72 -74 Z" fill="#8a4a2a"/>
+  ${o.tag?`<rect x="60" y="-76" width="8" height="9" rx="1.5" fill="#facc15" stroke="#a16207" stroke-width=".6"/>`:''}
+  <path d="M90 -82 C94 -88 100 -88 102 -84" stroke="#efe6cf" stroke-width="3" fill="none" stroke-linecap="round"/>
+  ${o.low?`<path d="M83.5 -66 q2.5 1.4 5 0" stroke="#1f1310" stroke-width="1.3" fill="none"/>`:`<circle cx="86" cy="-66" r="2.1" fill="#1f1310"/><circle cx="86.6" cy="-66.6" r=".7" fill="#fff"/>`}
+  ${o.drool?`<path d="M97 -40 q1 6 -1 10" stroke="#bfdbfe" stroke-width="1.5" fill="none"/>`:''}
+  </g>`;
+}
+function henX(o={}){
+  const comb=o.comb||'#dc2626';
+  if(o.dead) return `<ellipse cx="2" cy="1" rx="24" ry="3.5" fill="url(#aSh)"/><path d="M-20 -8 C-22 -20 -6 -24 8 -22 C20 -20 24 -12 22 -6 C18 -1 8 0 -2 0 C-12 0 -19 -3 -20 -8 Z" fill="url(#henB)" stroke="#b9b2a4" stroke-width="1"/><path d="M-12 -12 C-4 -18 8 -16 12 -10" stroke="#cfc8bb" fill="none"/><path d="M-18 -10 l-8 -4 M-18 -6 l-9 -1" stroke="#e5a01a" stroke-width="2" stroke-linecap="round"/><circle cx="29" cy="-5" r="6.4" fill="url(#henB)" stroke="#d6d1c6" stroke-width=".8"/><path d="M25 -1 q-2 3 1 4 q-1 3 2 3 q0 3 3 2 Z" fill="${comb}" opacity=".85"/><path d="M34 -4 L39 -1 L33 -1 Z" fill="#d1a054"/><path d="M27 -7.5 l3 3 M30 -7.5 l-3 3" stroke="#1f1310" stroke-width="1"/>`;
+  if(o.dead0) return `<g transform="rotate(84 0 -8)"><path d="M-20 -22 C-22 -36 -6 -42 8 -38 C20 -35 25 -26 23 -18 C21 -10 11 -7 0 -7 C-12 -7 -19 -12 -20 -22 Z" fill="url(#henB)" stroke="#d6d1c6" stroke-width=".8"/><circle cx="20" cy="-34" r="7" fill="url(#henB)" stroke="#d6d1c6" stroke-width=".8"/><path d="M15 -40 q1 -4 3 -2 q1 -4 3 -1 q2 -3 3 0 Z" fill="${comb}"/><path d="M18.5 -36 l3 3 M21.5 -36 l-3 3" stroke="#1f1310" stroke-width="1"/><path d="M-3 -10 L-6 2 M5 -10 L4 2" stroke="#e5a01a" stroke-width="2" stroke-linecap="round"/></g>`;
+  const ly=o.lying?6:0;
+  return `<ellipse cx="2" cy="1" rx="22" ry="3.5" fill="url(#aSh)"/>
+  ${o.lying?'':`<path d="M-3 -10 L-4 -1 M5 -10 L6 -1" stroke="#e5a01a" stroke-width="2.2" stroke-linecap="round"/><path d="M-8 0 h8 M-4 0 l-3 -2 M2 0 h8 M6 0 l-3 -2" stroke="#e5a01a" stroke-width="1.6" stroke-linecap="round"/>`}
+  <g transform="translate(0,${ly})">
+  <path d="M-18 -24 C-26 -30 -28 -40 -22 -42 C-20 -36 -16 -32 -12 -30 Z" fill="url(#henB)" stroke="#d6d1c6" stroke-width=".8"/>
+  <path d="M-20 -22 C-22 -36 -6 -42 8 -38 C20 -35 25 -26 23 -18 C21 -10 11 -7 0 -7 C-12 -7 -19 -12 -20 -22 Z" fill="url(#henB)" stroke="${o.ruff?'#b9b2a4':'#d6d1c6'}" stroke-width="${o.ruff?1.6:.8}" ${o.ruff?'stroke-dasharray="2 1.5"':''}/>
+  <path d="M-12 -26 C-6 -32 8 -30 12 -22 C6 -16 -6 -14 -12 -20 Z" fill="#f4f1ea" stroke="#cfc8bb" stroke-width=".8"/>
+  <circle cx="20" cy="${o.lying?-32:-36}" r="7.2" fill="url(#henB)" stroke="#d6d1c6" stroke-width=".8"/>
+  <g transform="translate(0,${o.lying?4:0})">
+  <path d="M15 -42 q1 -5 3 -2 q1 -5 3 -1 q2 -4 3 0 q2 -2 1 3 Z" fill="${comb}"/>
+  ${o.beak?`<path d="M26 -37 L33 -36 L27 -34 Z" fill="#f59e0b"/><path d="M26 -33 L32 -31 L26 -31.5 Z" fill="#d97706"/>`:`<path d="M26 -36 L33 -34 L26 -32 Z" fill="#f59e0b"/>`}
+  <path d="M25 -31 q2 4 -1 6 q-2 -3 1 -6 z" fill="${comb}"/>
+  ${o.eye?`<circle cx="22" cy="-37" r="1.8" fill="#cbd5e1"/><path d="M23 -35 q1 3 0 5" stroke="#cbd5e1" stroke-width="1"/>`:''}<circle cx="22" cy="-37" r="1.3" fill="#1f1310"/></g></g>`;
+}
+
+/* ===================== 1 · ANTE MORTEM ===================== */
+const DEC_AM={apto:'✅ Apto para sacrificio',sep:'⚠️ Sacrificio por separado',ret:'⛔ Retención para observación'};
+const CK_M=[['comp','🧍 Comportamiento y postura'],['marcha','🚶 Marcha (hacerlo caminar)'],['resp','💨 Respiración'],['muc','👁️ Mucosas (ojo y encías)'],['temp','🌡️ Temperatura rectal'],['les','🔎 Lesiones y signos'],['id','🏷️ Identificación y documentos']];
+const CK_A=[['comp','🧍 Comportamiento del lote'],['resp','💨 Respiración'],['muc','🐓 Crestas y barbillas'],['les','🔎 Lesiones, ojos y plumaje'],['mort','📉 Mortalidad en el transporte'],['id','🏷️ Documentos del lote']];
+const AM=[
+ {k:'p1',esp:'cerdo',tag:'A-101',o:{tag:1},rpm:20,muc:'#ee9ea6',f:{comp:'Alerta, se mueve con el grupo y responde al ruido.',marcha:'Camina con pasos firmes y apoya las cuatro patas.',resp:'20 respiraciones por minuto, tranquila (referencia en cerdo adulto: ≈ 15–25).',muc:'Rosadas y húmedas.',temp:'39.1 °C (referencia en cerdo: ≈ 38.5–39.5 °C).',les:'Piel íntegra, sin heridas, bultos ni secreciones.',id:'Arete A-101: aparece en la guía de tránsito.'},
+  ans:'apto',why:'No hay hallazgos anormales y la identificación coincide con la guía. Pasa a la línea de sacrificio.'},
+ {k:'p2',esp:'cerdo',tag:'A-102',o:{tag:1,lift:0},rpm:22,muc:'#ee9ea6',limp:1,f:{comp:'Alerta, pero se queda atrás del grupo y evita moverse.',marcha:'Cojera severa: no apoya la pata trasera izquierda.',resp:'22 rpm, tranquila.',muc:'Rosadas y húmedas.',temp:'39.3 °C, dentro de lo normal.',les:'Corvejón trasero izquierdo inflamado (golpe durante el viaje). Sin secreciones ni otros signos.',id:'Arete A-102: aparece en la guía de tránsito.'},
+  ans:'sep',why:'Es una lesión física (golpe del viaje) en un animal sin signos de enfermedad. No debe esperar en el corral: se sacrifica por separado y su canal recibe una revisión post mortem más detallada en la zona lesionada.'},
+ {k:'p3',esp:'cerdo',tag:'A-103',o:{tag:1,low:1,nasal:1,mouth:1},rpm:52,muc:'#b8567d',f:{comp:'Decaído, apartado del grupo, con la cabeza baja.',marcha:'Camina lento, con debilidad.',resp:'52 rpm, respira por la boca y tose.',muc:'Congestionadas (rojo-moradas).',temp:'41.4 °C: fiebre.',les:'Secreción nasal; sin heridas.',id:'Arete A-103: aparece en la guía de tránsito.'},
+  ans:'ret',why:'Fiebre, respiración agitada, tos y mucosas congestionadas son signos de enfermedad. El animal es sospechoso: se separa al corral de observación y el médico veterinario decide después (sacrificio por separado, decomiso o aviso a SENASICA).'},
+ {k:'p4',esp:'cerdo',tag:'A-188',o:{tag:1},rpm:19,muc:'#ee9ea6',f:{comp:'Alerta, postura normal.',marcha:'Marcha normal.',resp:'19 rpm, tranquila.',muc:'Rosadas y húmedas.',temp:'39.0 °C, normal.',les:'Sin lesiones visibles.',id:'Arete A-188: NO aparece en la guía de tránsito y el transportista no trae otro documento.'},
+  ans:'ret',why:'Aunque está sano, no se puede comprobar su origen. Se retiene hasta aclarar la identificación y los documentos; no entra a sacrificio con el lote.'},
+ {k:'p5',esp:'cerdo',tag:'A-105',o:{tag:1,absc:1},rpm:21,muc:'#ee9ea6',f:{comp:'Alerta, come y bebe.',marcha:'Marcha normal.',resp:'21 rpm, tranquila.',muc:'Rosadas y húmedas.',temp:'39.4 °C, normal.',les:'Absceso (bulto con pus) del tamaño de un limón en la papada.',id:'Arete A-105: aparece en la guía de tránsito.'},
+  ans:'sep',why:'Es una lesión localizada en un animal sin fiebre ni otros signos. Se sacrifica por separado (al final de la jornada) para no contaminar la línea, y en post mortem se decide si basta con decomisar la zona.'},
+ {k:'b1',esp:'res',tag:'2402 7731',o:{tag:1},rpm:24,muc:'#e99ca0',f:{comp:'Alerta, atenta al entorno, rumia.',marcha:'Camina con pasos firmes.',resp:'24 rpm, tranquila (referencia en bovino: ≈ 10–30).',muc:'Rosadas y húmedas.',temp:'38.6 °C (referencia en bovino: ≈ 38.0–39.3 °C).',les:'Sin lesiones visibles.',id:'Arete SINIIGA 2402 7731: coincide con la guía.'},
+  ans:'apto',why:'Animal sano y bien identificado: apto para sacrificio.'},
+ {k:'b2',esp:'res',tag:'2402 7745',o:{tag:1,low:1,thin:1,drool:1},rpm:38,muc:'#e3c25a',f:{comp:'Decaída, orejas caídas, no rumia.',marcha:'Camina lento y se cansa.',resp:'38 rpm, algo agitada.',muc:'Amarillentas (ictericia).',temp:'40.6 °C: fiebre.',les:'Se marcan las costillas (mala condición corporal).',id:'Arete SINIIGA 2402 7745: coincide con la guía.'},
+  ans:'ret',why:'Fiebre, mucosas amarillas, decaimiento y mala condición indican una enfermedad. Se retiene en observación; si se sacrifica, será por separado y con inspección post mortem completa.'},
+ {k:'l1',esp:'pollo',tag:'Lote P-14',lote:{ok:1},muc:'#dc2626',f:{comp:'Las aves están alertas, se mueven y vocalizan.',resp:'Normal, con el pico cerrado.',muc:'Crestas y barbillas rojas y brillantes.',les:'Ojos limpios, plumaje limpio; 3 aves con raspones leves.',mort:'2 de 600 aves (0.3 %) murieron en el viaje.',id:'La remisión y el certificado coinciden con el lote P-14.'},
+  ans:'apto',why:'El lote se ve sano y la mortalidad en el transporte es baja. El lote es apto para sacrificio.'},
+ {k:'l2',esp:'pollo',tag:'Lote P-15',lote:{ok:0},muc:'#7c3a8a',f:{comp:'Muchas aves echadas, con las plumas erizadas y poco movimiento.',resp:'Respiran con el pico abierto y se escuchan estertores.',muc:'Crestas y barbillas moradas (cianosis) e inflamadas.',les:'Ojos llorosos y secreción nasal en varias aves.',mort:'31 de 600 aves (5.2 %) muertas: mucho más de lo esperado.',id:'La remisión y el certificado coinciden con el lote P-15.'},
+  ans:'ret',why:'Signos respiratorios, cianosis y mortalidad alta sugieren una enfermedad del lote. Se retiene el lote completo y el médico veterinario decide; ante sospecha de una enfermedad de notificación obligatoria (p. ej., influenza aviar o Newcastle) se avisa a SENASICA.'}
+];
+const GUIA={cerdo:'A-101 · A-102 · A-103 · A-104 · A-105',res:'2402 7731 · 2402 7745',pollo:'P-14 (600 aves) · P-15 (600 aves)'};
+let AMS={}, AMK='p1';
+AM.forEach(a=>AMS[a.k]={seen:{},dec:null});
+function crateG(x,y,a,sc=1){
+  const sick=!a.lote.ok, hens=[0,1,2,3,4];
+  let s=`<g transform="translate(${x},${y}) scale(${sc})"><rect x="0" y="0" width="210" height="96" rx="8" fill="url(#crate)"/><rect x="6" y="6" width="198" height="84" rx="5" fill="#dbeafe" opacity=".7"/>`;
+  hens.forEach(i=>{const hx=26+i*38, o=sick?{comb:a.muc,beak:i!==2,ruff:1,lying:i===1||i===3,eye:i===0,dead:i===2}:{comb:a.muc};s+=`<g transform="translate(${hx},86) scale(1.05)">${henX(o)}</g>`;});
+  s+=Array.from({length:14},(_,b)=>`<rect x="${8+b*14.5}" y="6" width="2.6" height="84" fill="#1d4ed8" opacity=".75"/>`).join('')+`<rect x="0" y="0" width="210" height="8" rx="4" fill="#1e40af"/></g>`;
+  return s;
+}
+function amScene(){
+  const st=k=>{const r=AMS[k];return r.dec?(r.dec===AM.find(a=>a.k===k).ans?'#16a34a':'#dc2626'):'#64748b';};
+  const pick=(a,inner,bx,by)=>`<g class="pick ${AMK===a.k?'sel':''}" data-a="${a.k}">${inner}<circle cx="${bx}" cy="${by}" r="12" fill="${st(a.k)}" stroke="${AMK===a.k?'#f05a28':'#fff'}" stroke-width="3"/><text x="${bx}" y="${by+4.5}" text-anchor="middle" font-size="12" font-weight="800" fill="#fff">${AM.indexOf(a)+1}</text></g>`;
+  let s=`<svg viewBox="0 0 900 320"><rect width="900" height="320" fill="#eaf2fb"/><rect y="236" width="900" height="84" fill="#d9cfbd"/><rect y="236" width="900" height="84" fill="#fff" filter="url(#fx-grime)" opacity=".25"/>
+   <polygon points="10,26 890,26 878,44 22,44" fill="#94a3b8"/>
+   <text x="220" y="66" text-anchor="middle" font-size="13" font-weight="800" fill="#12306b">Corral 1 · cerdos (descanso 4 h)</text>
+   <text x="600" y="66" text-anchor="middle" font-size="13" font-weight="800" fill="#12306b">Corral 2 · bovinos</text>
+   <text x="808" y="66" text-anchor="middle" font-size="13" font-weight="800" fill="#12306b">Aves (jaulas)</text>
+   ${[18,212,420,470,600,730].map(x=>`<rect x="${x-4}" y="120" width="8" height="126" rx="2" fill="url(#woodF)"/>`).join('')}
+   ${[140,168,196].map(y=>`<rect x="14" y="${y}" width="410" height="7" rx="3" fill="url(#woodF)"/><rect x="466" y="${y}" width="268" height="7" rx="3" fill="url(#woodF)"/>`).join('')}`;
+  const P=AM.filter(a=>a.esp==='cerdo'), pos=[[96,224],[220,222],[344,224],[150,292],[300,292]];
+  P.forEach((a,i)=>{const [x,y]=pos[i];s+=pick(a,`<g transform="translate(${x},${y}) scale(.88)"><g class="an-br" style="animation-duration:${(60/a.rpm).toFixed(2)}s">${pigX(a.o)}</g></g>`,x+8,y-70);});
+  const B=AM.filter(a=>a.esp==='res');[[540,268],[662,300]].forEach(([x,y],i)=>{const a=B[i];s+=pick(a,`<g transform="translate(${x},${y}) scale(.66)"><g class="an-br" style="animation-duration:${(60/a.rpm).toFixed(2)}s">${cowX(a.o)}</g></g>`,x+10,y-72);});
+  const L=AM.filter(a=>a.esp==='pollo');[[752,96],[752,200]].forEach(([x,y],i)=>{const a=L[i];s+=pick(a,`${crateG(x,y,a,.55)}<text x="${x+58}" y="${y+66}" text-anchor="middle" font-size="11" font-weight="700" fill="#334155">${a.tag}</text>`,x+122,y);});
+  return s+`<text x="450" y="312" text-anchor="middle" font-size="11.5" fill="#475569">Haz clic en un animal o en una jaula para inspeccionarlo</text></svg>`;
+}
+function amZoom(a){
+  const r=AMS[a.k], sn=r.seen;
+  let s=`<svg viewBox="0 0 520 300"><rect width="520" height="300" fill="#eef4fb"/><rect y="236" width="520" height="64" fill="#d9cfbd"/><rect y="236" width="520" height="64" fill="#fff" filter="url(#fx-grime)" opacity=".25"/>
+   ${[60,150,240,330,420,500].map(x=>`<rect x="${x-3}" y="120" width="6" height="116" fill="url(#woodF)" opacity=".55"/>`).join('')}${[146,176].map(y=>`<rect x="0" y="${y}" width="520" height="6" fill="url(#woodF)" opacity=".55"/>`).join('')}`;
+  if(a.esp==='pollo'){
+    s+=crateG(36,104,a,1.68);
+    if(sn.muc) s+=lupa(430,70,`<g transform="translate(-4,40) scale(3.2)"><circle cx="0" cy="-8" r="7" fill="url(#henB)"/><path d="M-5 -14 q1 -5 3 -2 q1 -5 3 -1 q2 -4 3 0 q2 -2 1 3 Z" fill="${a.muc}"/><path d="M5 -3 q2 4 -1 6 q-2 -3 1 -6 z" fill="${a.muc}"/><path d="M6 -9 L12 -7 L6 -5 Z" fill="#f59e0b"/><circle cx="2" cy="-9" r="1.2" fill="#111"/></g>`,'Cresta');
+    if(sn.mort) s+=badge(14,14,'📉 '+(a.lote.ok?'0.3 % muertas':'5.2 % muertas'),a.lote.ok?'#e0f2fe':'#fee2e2',a.lote.ok?'#0369a1':'#b91c1c');
+  }else{
+    const pig=a.esp==='cerdo', sc=pig?2.35:1.62, walk=sn.marcha;
+    s+=`<g transform="translate(${pig?232:220},250)"><g class="${walk?(a.limp?'limp':'walk'):''}"><g transform="scale(${sc})"><g class="an-br" style="animation-duration:${(60/a.rpm).toFixed(2)}s">${pig?pigX(a.o):cowX(a.o)}</g></g></g></g>`;
+    if(sn.temp){const v=a.f.temp.match(/[\d.]+/)[0], hot=+v>(pig?39.8:39.5);s+=badge(14,14,'🌡️ '+v+' °C',hot?'#fee2e2':'#e0f2fe',hot?'#b91c1c':'#0369a1');}
+    if(sn.muc) s+=lupa(440,74,`<ellipse cx="0" cy="0" rx="44" ry="26" fill="#fff"/><path d="M-44 0 Q0 46 44 0 Q0 30 -44 0Z" fill="${a.muc}"/><circle cx="0" cy="-4" r="17" fill="#4b2e1f"/><circle cx="0" cy="-4" r="8" fill="#111"/><circle cx="5" cy="-9" r="3" fill="#fff"/><path d="M-44 0 Q0 -38 44 0" stroke="${pig?'#d98f84':'#8a4a2a'}" stroke-width="7" fill="none"/>`,'Conjuntiva');
+    if(sn.les){const pts=a.o.absc?[[pig?232+52*sc:0,250-21*sc]]:a.limp?[[232-34*sc,250-12*sc]]:a.o.nasal?[[232+77*sc,250-27*sc]]:a.o.thin?[[220-20*sc,250-54*sc]]:[];pts.forEach(([x,y])=>s+=`<circle cx="${x}" cy="${y}" r="26" fill="none" stroke="#f05a28" stroke-width="3" stroke-dasharray="7 5"/>`);}
+  }
+  if(sn.resp&&a.rpm) s+=badge(14,52,'💨 '+a.rpm+' rpm',a.rpm>32?'#fee2e2':'#e0f2fe',a.rpm>32?'#b91c1c':'#0369a1');
+  if(sn.id&&a.esp!=='pollo') s+=`<g transform="translate(${a.esp==='res'?272:300},18)"><rect width="${a.esp==='res'?134:104}" height="40" rx="6" fill="#facc15" stroke="#a16207" stroke-width="2"/><circle cx="12" cy="20" r="5" fill="#fff" stroke="#a16207"/><text x="${a.esp==='res'?73:60}" y="26" text-anchor="middle" font-size="15" font-weight="800" font-family="monospace" fill="#422006">${a.tag}</text></g>`;
+  return s+`</svg>`;
+}
+function lupa(cx,cy,inner,lab){const u=++UID;return `<g transform="translate(${cx},${cy})"><defs><clipPath id="lp${u}"><circle r="52"/></clipPath></defs><circle r="56" fill="#fff" stroke="#334155" stroke-width="5"/><g clip-path="url(#lp${u})"><rect x="-60" y="-60" width="120" height="120" fill="#f8fafc"/>${inner}</g><path d="M38 40 L62 66" stroke="#334155" stroke-width="10" stroke-linecap="round"/><text y="74" text-anchor="middle" font-size="11" font-weight="700" fill="#334155">${lab}</text></g>`;}
+function badge(x,y,t,bg,fg){return `<g transform="translate(${x},${y})"><rect width="${t.length*8.2+16}" height="30" rx="8" fill="${bg}" stroke="${fg}" stroke-opacity=".35"/><text x="10" y="20" font-size="14" font-weight="800" fill="${fg}">${t}</text></g>`;}
+function renderAM(){
+  $('#amScene').innerHTML=amScene();
+  $$('#amScene .pick').forEach(g=>g.onclick=()=>{AMK=g.dataset.a;renderAM();$('#amFicha').scrollIntoView({behavior:'smooth',block:'nearest'});});
+  const a=AM.find(x=>x.k===AMK), r=AMS[a.k], CK=a.esp==='pollo'?CK_A:CK_M, n=Object.keys(r.seen).length;
+  $('#amZoom').innerHTML=amZoom(a);
+  const name=a.esp==='pollo'?`${a.tag} · pollos de engorda`:a.esp==='cerdo'?`Cerdo · arete ${r.seen.id?a.tag:'—'}`:`Bovino · arete ${r.seen.id?a.tag:'—'}`;
+  $('#amFicha').innerHTML=`<h2>${AM.indexOf(a)+1} · ${name}</h2><p class="lead">Revisa al animal como lo haría el médico veterinario. Elige qué observar.</p>
+   <div class="ckl">${CK.map(([k,l])=>`<div class="ck ${r.seen[k]?'on':''}"><button class="btn btn-ghost btn-sm" data-ck="${k}" ${r.seen[k]?'disabled':''}>${l}</button>${r.seen[k]?`<span>${a.f[k]}</span>`:''}</div>`).join('')}</div>
+   ${r.seen.id?`<div class="paper" style="margin-top:8px"><h4>${a.esp==='pollo'?'REMISIÓN DE LOTES':'GUÍA DE TRÁNSITO · ARETES DEL EMBARQUE'}</h4>${GUIA[a.esp]}</div>`:''}
+   <h3 style="margin:12px 0 6px;font-size:14px;color:var(--navy)">Dictamen ante mortem</h3>
+   ${n<4&&!r.dec?`<div class="fb mid">Revisa al menos 4 aspectos antes de dictaminar (${n} de 4).</div>`:''}
+   <div class="dec3">${Object.entries(DEC_AM).map(([k,l])=>`<button class="btn ${r.dec===k?(k===a.ans?'good':'bad'):''} ${r.dec&&k===a.ans?'good':''}" data-dc="${k}" ${n<4||r.dec?'disabled':''}>${l}</button>`).join('')}</div>
+   ${r.dec?`<div class="fb ${r.dec===a.ans?'good':'bad'}">${r.dec===a.ans?'✅ Correcto.':'❌ No. Lo adecuado es <b>'+DEC_AM[a.ans].slice(2)+'</b>.'} ${a.why}</div>
+     <div class="row-btn">${nextAM()?`<button class="btn btn-primary" id="amNext">Siguiente animal ➜</button>`:`<span style="font-weight:800;color:var(--navy)">🏁 Revisaste todos los corrales.</span>`}<button class="btn btn-ghost btn-sm" id="amRe">↺ Reiniciar corrales</button></div>`:''}`;
+  $$('#amFicha [data-ck]').forEach(b=>b.onclick=()=>{r.seen[b.dataset.ck]=1;renderAM();});
+  $$('#amFicha [data-dc]').forEach(b=>b.onclick=()=>{r.dec=b.dataset.dc;renderAM();});
+  if($('#amNext'))$('#amNext').onclick=()=>{AMK=nextAM();renderAM();};
+  if($('#amRe'))$('#amRe').onclick=()=>{AM.forEach(x=>AMS[x.k]={seen:{},dec:null});AMK='p1';renderAM();};
+  const done=AM.filter(x=>AMS[x.k].dec), ok=done.filter(x=>AMS[x.k].dec===x.ans);
+  $('#amScore').innerHTML=`<div class="kpi"><small>Dictaminados</small><b>${done.length} de ${AM.length}</b></div><div class="kpi"><small>Correctos</small><b>${ok.length}</b></div><div class="kpi"><small>Aptos</small><b>${done.filter(x=>AMS[x.k].dec==='apto').length}</b></div><div class="kpi"><small>Por separado</small><b>${done.filter(x=>AMS[x.k].dec==='sep').length}</b></div><div class="kpi"><small>Retenidos</small><b>${done.filter(x=>AMS[x.k].dec==='ret').length}</b></div>`;
+}
+function nextAM(){const x=AM.find(a=>!AMS[a.k].dec);return x?x.k:null;}
+
+/* ===================== 2 · POST MORTEM ===================== */
+const DEC_PM={apr:'✅ Aprobada (sello oficial)',ret:'⏸️ Retenida para revisión',par:'✂️ Decomiso parcial',tot:'🗑️ Decomiso total'};
+const ZN=[['canal','Canal'],['pul','Pulmones'],['cor','Corazón'],['hig','Hígado'],['rin','Riñones'],['baz','Bazo'],['gan','Ganglios linfáticos'],['id','Relación canal–vísceras'],['mue','Registro de muestras']];
+const NRM={canal:'Color normal; sin lesiones, golpes ni contaminación.',pul:'Rosados y esponjosos; sin lesiones.',cor:'Tamaño y color normales; pericardio liso.',hig:'Color, tamaño y consistencia normales.',rin:'Superficie lisa, color uniforme.',baz:'Tamaño y color normales.',gan:'Tamaño normal; al corte, sin lesiones.',id:'',mue:'No se tomaron muestras de esta canal.'};
+const PM=[
+ {k:'m1',t:'0458',v:'0458',f:{},ans:'apr',why:'Canal, vísceras y ganglios sin hallazgos, e identificación completa: se aprueba y se le pone el sello oficial.'},
+ {k:'m2',t:'0461',v:'0461',milk:1,f:{hig:'Manchas blancas («manchas de leche») por la migración de larvas de Ascaris suum.'},ans:'par',bad:['hig'],why:'La lesión está limitada al hígado: se decomisa el hígado y la canal con las demás vísceras se aprueba.'},
+ {k:'m3',t:'0466',v:'0466',absc:1,f:{canal:'Absceso encapsulado en la pierna; el resto de la canal está normal.',gan:'Los ganglios de la pierna y de las demás regiones están normales.'},ans:'par',bad:['canal'],why:'Lesión localizada y ganglios normales: se recorta y decomisa la zona afectada, y el resto de la canal se aprueba.'},
+ {k:'m4',t:'0470',v:'0470',ict:1,f:{canal:'Grasa, tejido conectivo y superficies de color amarillo en toda la canal (ictericia generalizada).',hig:'Hígado amarillento y agrandado.'},ans:'tot',bad:['canal','hig'],why:'La ictericia generalizada afecta toda la canal: decomiso total.'},
+ {k:'m5',t:'0473',v:'0473',sept:1,f:{canal:'Pequeñas hemorragias (petequias) en la grasa y la piel.',rin:'Riñones con numerosas petequias.',baz:'Bazo agrandado y oscuro.',gan:'Ganglios de varias regiones agrandados y hemorrágicos.'},ans:'tot',bad:['canal','rin','baz','gan'],why:'Lesiones en muchos órganos y ganglios de distintas regiones indican una enfermedad generalizada (septicemia): decomiso total.'},
+ {k:'m6',t:'0478',v:'0487',f:{},ans:'ret',bad:['id'],why:'Se perdió la relación canal–vísceras: no se sabe qué vísceras corresponden a esta canal. Se retiene hasta aclararlo; sin esa relación no puede aprobarse.'},
+ {k:'m7',t:'0481',v:'0481',samp:1,f:{mue:'El médico veterinario tomó muestras de hígado y orina por sospecha de clenbuterol (el lote venía señalado).'},ans:'ret',bad:['mue'],why:'La canal se ve normal, pero hay muestras pendientes de laboratorio: queda retenida hasta conocer el resultado.'}
+];
+let PMS={}, PMK='m1';
+PM.forEach(c=>PMS[c.k]={seen:{},dec:null});
+const R2=i=>((Math.sin(i*12.9898)*43758.5453)%1+1)%1;
+/* ---------- defs extra para tejidos ---------- */
+const PDEFS=`
+ <filter id="tx-fibD" x="0" y="0" width="1" height="1"><feTurbulence type="fractalNoise" baseFrequency="0.006 0.15" numOctaves="3" seed="4"/><feColorMatrix type="matrix" values="0 0 0 0 0.3  0 0 0 0 0.05  0 0 0 0 0.06  3.2 0 0 0 -1.62"/></filter>
+ <filter id="tx-fibL" x="0" y="0" width="1" height="1"><feTurbulence type="fractalNoise" baseFrequency="0.005 0.2" numOctaves="3" seed="9"/><feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 0.95  0 0 0 0 0.93  -3.4 0 0 0 1.5"/></filter>
+ <filter id="tx-mot" x="0" y="0" width="1" height="1"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="3" seed="5"/><feColorMatrix type="matrix" values="0 0 0 0 0.2  0 0 0 0 0.02  0 0 0 0 0.04  2.4 0 0 0 -1.15"/></filter>
+ <filter id="tx-wet" x="0" y="0" width="1" height="1"><feTurbulence type="fractalNoise" baseFrequency="0.03 0.06" numOctaves="2" seed="7" result="n"/><feGaussianBlur in="n" stdDeviation="1.2" result="b"/><feSpecularLighting in="b" surfaceScale="2.6" specularConstant=".95" specularExponent="30" lighting-color="#ffffff" result="s"><feDistantLight azimuth="235" elevation="50"/></feSpecularLighting><feComposite in="s" in2="SourceAlpha" operator="in"/></filter>
+ <filter id="tx-lob" x="0" y="0" width="1" height="1"><feTurbulence type="turbulence" baseFrequency="0.32" numOctaves="1" seed="12"/><feColorMatrix values="0 0 0 0 0.16  0 0 0 0 0.03  0 0 0 0 0.03  -11 0 0 0 1.15"/></filter>
+ <filter id="tx-sep" x="0" y="0" width="1" height="1"><feTurbulence type="turbulence" baseFrequency="0.11" numOctaves="2" seed="3"/><feColorMatrix values="0 0 0 0 0.62  0 0 0 0 0.26  0 0 0 0 0.3  -10 0 0 0 1.1"/></filter>
+ <filter id="tx-fat" x="0" y="0" width="1" height="1"><feTurbulence type="fractalNoise" baseFrequency="0.09" numOctaves="2" seed="17"/><feColorMatrix values="0 0 0 0 0.85  0 0 0 0 0.75  0 0 0 0 0.62  4 0 0 0 -2.1"/></filter>
+ <filter id="tx-skin" x="0" y="0" width="1" height="1"><feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="1" seed="2"/><feColorMatrix values="0 0 0 0 0.62  0 0 0 0 0.42  0 0 0 0 0.38  -12 0 0 0 5.6"/></filter>
+ <filter id="tx-smear" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.08" numOctaves="2" seed="9" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="14"/><feGaussianBlur stdDeviation="1.8"/></filter>
+ <linearGradient id="sk" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#e9bfb0"/><stop offset=".35" stop-color="#f8e2d8"/><stop offset=".7" stop-color="#f3d3c6"/><stop offset="1" stop-color="#dfae9f"/></linearGradient>
+ <linearGradient id="fatG" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f6ead9"/><stop offset=".5" stop-color="#fffaf2"/><stop offset="1" stop-color="#efe0cc"/></linearGradient>
+ <radialGradient id="vert" cx=".5" cy=".5" r=".6"><stop offset="0" stop-color="#b8574f"/><stop offset=".7" stop-color="#d79a8a"/><stop offset="1" stop-color="#f4ebe0"/></radialGradient>
+ <linearGradient id="steelT" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4f6f8"/><stop offset=".5" stop-color="#dfe4e9"/><stop offset="1" stop-color="#c8cfd6"/></linearGradient>
+ <linearGradient id="gb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7fa35a"/><stop offset="1" stop-color="#3f6b2c"/></linearGradient>
+ <linearGradient id="tend" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#e8dccd"/><stop offset=".5" stop-color="#fbf6ef"/><stop offset="1" stop-color="#ddcdb9"/></linearGradient>
+ <linearGradient id="paper" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f4f1e8"/></linearGradient>`;
+document.body.insertAdjacentHTML('afterbegin',`<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>${PDEFS}</defs></svg>`);
+const wet=(op=.45,b=[-110,-100,220,200])=>`<rect x="${b[0]}" y="${b[1]}" width="${b[2]}" height="${b[3]}" fill="#fff" filter="url(#tx-wet)" opacity="${op}" style="mix-blend-mode:screen"/>`;
+
+/* ---------- Media canal de cerdo (cara interna, colgada de la pierna) ---------- */
+const CO='M-10,6 C-14,30 -34,52 -56,78 C-80,108 -86,150 -72,186 C-64,206 -62,226 -62,250 C-62,290 -64,330 -66,366 C-68,396 -64,420 -52,440 C-44,452 -30,458 -16,460 L30,460 C40,456 50,448 56,436 C62,420 60,400 58,380 C56,350 60,320 62,290 C64,260 62,232 58,210 C54,192 48,180 46,170 C52,150 56,128 50,104 C42,76 26,48 14,26 C10,16 10,10 10,6 Z';
+const DORS='M-10,6 C-14,30 -34,52 -56,78 C-80,108 -86,150 -72,186 C-64,206 -62,226 -62,250 C-62,290 -64,330 -66,366 C-68,396 -64,420 -52,440 C-44,452 -30,458 -16,460';
+const VENT='M56,436 C62,420 60,400 58,380 C56,350 60,320 62,290 C64,260 62,232 58,210 C54,192 48,180 46,170';
+const edgeX=y=>{const P=[[186,-72],[250,-62],[366,-66],[440,-52],[460,-16]];for(let i=0;i<P.length-1;i++){if(y<=P[i+1][0]){const t=(y-P[i][0])/(P[i+1][0]-P[i][0]);return P[i][1]+t*(P[i+1][1]-P[i][1]);}}return -16;};
+function carcassG(c){
+  const u=++UID;
+  let s=`<defs><clipPath id="cc${u}"><path d="${CO}"/></clipPath></defs>
+   <path d="${CO}" transform="translate(7,9)" fill="#1e293b" opacity=".25" filter="url(#fx-blur4)"/>
+   <path d="${CO}" fill="url(#musc)"/>
+   <g clip-path="url(#cc${u})">
+   <g transform="rotate(84)"><rect x="0" y="-100" width="470" height="200" filter="url(#tx-fibD)" opacity=".3"/><rect x="0" y="-100" width="470" height="200" filter="url(#tx-fibL)" opacity=".2"/></g>
+   <rect x="-100" y="0" width="200" height="470" filter="url(#tx-mot)" opacity=".22"/>
+   <path d="M-52,92 C-22,104 14,98 36,82 M-66,150 C-30,162 10,156 44,140 M-30,58 C-26,100 -14,140 6,180 M-58,118 C-50,140 -44,164 -40,186" stroke="#f3d6cc" stroke-width="2.4" fill="none" opacity=".75"/>
+   <path d="M-48,96 C-28,120 -14,150 -12,180 C-30,170 -48,150 -60,120Z" fill="#a8463f" opacity=".22"/>
+   <!-- hueso de la cadera cortado -->
+   <path d="M18,116 C30,112 40,122 40,138 C40,154 34,170 24,172 C14,172 10,158 12,142 C13,130 12,120 18,116Z" fill="url(#vert)" stroke="#efe4d6" stroke-width="2.4"/>
+   <!-- solomillo (psoas) y manteca -->
+   <path d="M-40,194 C-16,212 -10,262 -20,306 C-30,302 -40,262 -40,194Z" fill="#9d3a36"/><path d="M-36,200 C-22,220 -18,262 -22,300" stroke="#c46a62" stroke-width="2" fill="none" opacity=".6"/>
+   <path d="M-12,202 C4,192 28,198 42,210 C54,222 52,246 46,262 C42,280 32,296 14,300 C0,302 -8,292 -6,278 C-4,262 -14,252 -12,236 C-11,222 -18,210 -12,202Z" fill="url(#fatG)"/>
+   <path d="M-12,202 C4,192 28,198 42,210 C54,222 52,246 46,262 C42,280 32,296 14,300 C0,302 -8,292 -6,278 C-4,262 -14,252 -12,236 C-11,222 -18,210 -12,202Z" fill="#000" filter="url(#tx-fat)" opacity=".5"/>
+   <path d="M2,214 q14 6 30 -2 M0,240 q16 6 34 0 M4,266 q14 4 28 -2" stroke="#ead6bf" stroke-width="1.6" fill="none"/>
+   <!-- diafragma -->
+   <path d="M-46,304 C-10,310 26,322 64,340" stroke="#7f2422" stroke-width="9" fill="none" opacity=".85"/><path d="M-30,306 C0,312 26,322 50,334" stroke="#e8d2c6" stroke-width="2" fill="none" opacity=".7"/>`;
+  // costillas
+  for(let i=0;i<11;i++){const y=318+i*12.2, x=edgeX(y)+30;
+    s+=`<path d="M${x},${y} C${x+30},${y+6} ${x+64},${y+15} ${x+100},${y+26}" stroke="#93413a" stroke-width="9" fill="none" opacity=".45"/>
+      <path d="M${x},${y} C${x+30},${y+6} ${x+64},${y+15} ${x+100},${y+26}" stroke="#efe4d6" stroke-width="5.2" fill="none"/>
+      <path d="M${x},${y-1.4} C${x+30},${y+4.6} ${x+64},${y+13.6} ${x+100},${y+24.6}" stroke="#fff" stroke-width="1.2" fill="none" opacity=".8"/>`;}
+  s+=`<rect x="-70" y="312" width="140" height="150" fill="#f6dcd8" opacity=".12"/>`;
+  // columna vertebral partida
+  for(let y=192;y<452;y+=13){const e=edgeX(y), x=e+15, w=y<300?16:14;
+    s+=`<path d="M${e+3},${y+5} L${x-5},${y+6}" stroke="#efe4d6" stroke-width="3" stroke-linecap="round"/>
+      <rect x="${x}" y="${y}" width="${w}" height="11" rx="2.5" fill="url(#vert)" stroke="#efe4d6" stroke-width="1.6"/><rect x="${x}" y="${y+11}" width="${w}" height="2" fill="#dfe8f1"/>`;}
+  s+=`<path d="M${edgeX(192)+11},192 ${Array.from({length:21},(_,i)=>{const y=192+i*13;return `L${edgeX(y)+11},${y}`;}).join(' ')}" stroke="#f1d4cc" stroke-width="3" fill="none"/>`;
+  // grasa dorsal, piel y capas de la panza
+  s+=`<path d="${CO}" fill="none" stroke="url(#fatG)" stroke-width="12"/>
+   <path d="${DORS}" fill="none" stroke="#fff8ef" stroke-width="30"/><path d="${DORS}" fill="none" stroke="#000" stroke-width="30" filter="url(#tx-fat)" opacity=".35"/>
+   <path d="${VENT}" fill="none" stroke="#fff8ef" stroke-width="22"/><path d="${VENT}" transform="translate(-9,0)" fill="none" stroke="#d27f74" stroke-width="3"/><path d="${VENT}" transform="translate(-4,0)" fill="none" stroke="#f7e8da" stroke-width="2"/>
+   <!-- corvejón con tendón -->
+   <path d="M-16,0 L16,0 L18,40 C8,46 -8,46 -20,40Z" fill="url(#sk)"/><path d="M-6,4 C-4,18 -2,30 0,42" stroke="url(#tend)" stroke-width="7" stroke-linecap="round"/>
+   <!-- corte del cuello -->
+   <path d="M-40,452 C-20,446 20,446 46,444 L46,470 L-40,470Z" fill="#a9463f" opacity=".5"/><ellipse cx="${edgeX(450)+24}" cy="452" rx="9" ry="6" fill="url(#vert)" stroke="#efe4d6"/>`;
+  if(c.ict) s+=`<rect x="-100" y="0" width="200" height="470" fill="#f0c020" opacity=".5" style="mix-blend-mode:multiply"/>`;
+  if(c.sept) for(let i=0;i<90;i++){const y=20+R2(i+70)*430, onfat=i%2, x=onfat?edgeX(Math.max(y,186))+4+R2(i+3)*8:-50+R2(i)*100;s+=`<circle cx="${x}" cy="${y}" r="${0.9+R2(i+9)*1.5}" fill="#8b1220" opacity=".85"/>`;}
+  s+=wet(.4,[-100,0,200,470])+`<path d="${CO}" fill="none" stroke="#7a2f2a" stroke-width="10" opacity=".14" filter="url(#fx-blur2)"/></g>
+   <path d="${CO}" fill="none" stroke="#e3b9a9" stroke-width="2.2"/>`;
+  if(c.absc) s+=`<g transform="translate(-30,112)"><ellipse rx="18" ry="14" fill="#c0605a" opacity=".6" filter="url(#fx-blur1)"/><ellipse rx="15" ry="12" fill="url(#absc)" stroke="#b5544e" stroke-width="2"/><ellipse cx="-4" cy="-4" rx="6" ry="3.5" fill="#fff" opacity=".7"/></g>`;
+  [[44,180],[-14,190],[34,440]].forEach(([x,y])=>{s+=`<g class="hz" data-z="gan"><ellipse cx="${x}" cy="${y}" rx="${c.sept?11:8}" ry="${c.sept?7.5:5.5}" fill="${c.sept?'#8f1d2a':'#d9c4a6'}" stroke="${c.sept?'#4c0b14':'#9c8263'}" stroke-width="1.3"/><ellipse cx="${x-2}" cy="${y-2}" rx="3" ry="1.6" fill="#fff" opacity=".6"/></g>`;});
+  return s;
+}
+function stampG(n,sc=1,smear){return `<g transform="scale(${sc})" filter="url(#${smear?'tx-smear':'ink'})" opacity="${smear?.75:1}"><ellipse rx="44" ry="28" fill="none" stroke="#6d28d9" stroke-width="3"/><ellipse rx="38" ry="22" fill="none" stroke="#6d28d9" stroke-width="1.4"/><text y="-6" text-anchor="middle" font-size="7.6" font-weight="900" fill="#6d28d9">INSPECCIONADO</text><text y="5" text-anchor="middle" font-size="8" font-weight="900" fill="#6d28d9">Y APROBADO</text><text y="16" text-anchor="middle" font-size="8.5" font-weight="800" fill="#6d28d9">${n}</text></g>`;}
+
+/* ---------- Vísceras ---------- */
+function lungsG(){
+  const u=++UID, LC='M-8,-36 C-26,-48 -54,-40 -62,-18 C-66,-6 -54,2 -40,-2 C-26,-6 -12,-16 -8,-36Z', LD='M-8,-22 C-22,-6 -42,0 -60,-6 C-74,16 -68,54 -44,74 C-28,86 -10,80 -7,60 C-6,30 -6,4 -8,-22Z';
+  const lob=(P,i)=>`<defs><clipPath id="lb${u}${i}"><path d="${P}"/></clipPath></defs><path d="${P}" fill="url(#lung)"/><g clip-path="url(#lb${u}${i})"><rect x="-80" y="-60" width="90" height="150" filter="url(#tx-sep)" opacity=".5"/><path d="${P}" fill="none" stroke="#b25c66" stroke-width="7" opacity=".25" filter="url(#fx-blur2)"/>${wet(.5)}</g><path d="${P}" fill="none" stroke="#c4707a" stroke-width="1"/>`;
+  return `<path d="M-7,-86 h14 v52 h-14z" fill="#f1d8d2"/>${Array.from({length:7},(_,i)=>`<path d="M-7,${-83+i*7} q7 3 14 0" stroke="#d6b0a8" stroke-width="2.4" fill="none"/>`).join('')}
+   <path d="M-6,-36 C-12,-30 -16,-24 -20,-16 M6,-36 C12,-30 16,-24 20,-16" stroke="#e8c9c2" stroke-width="5" stroke-linecap="round"/>
+   ${lob(LD,'a')}${lob(LC,'b')}<g transform="scale(-1,1)">${lob(LD,'c')}${lob(LC,'d')}</g>
+   <path d="M8,-6 C20,0 30,6 34,18 C24,22 14,16 8,8Z" fill="url(#lung)" stroke="#c4707a" stroke-width="1"/>`;
+}
+function heartG(){
+  const B='M-4,-34 C-30,-36 -44,-12 -38,12 C-32,34 -12,52 6,62 C16,44 34,24 36,0 C38,-24 22,-36 -4,-34Z', u=++UID;
+  return `<path d="M-8,-34 C-10,-52 -2,-64 10,-66 C20,-66 24,-58 20,-52 C14,-52 10,-46 10,-34Z" fill="#f1dcd2" stroke="#d6b6aa"/><path d="M-20,-30 C-24,-44 -18,-52 -10,-52 C-6,-46 -8,-38 -6,-32Z" fill="#e9c6c2" stroke="#d6b0aa"/>
+   <path d="M-30,-24 C-44,-28 -46,-40 -34,-42 C-26,-38 -22,-30 -24,-24Z" fill="#7a2432" stroke="#4c1015" stroke-width=".8"/><path d="M28,-24 C42,-28 44,-40 32,-42 C24,-38 20,-30 22,-24Z" fill="#83283a" stroke="#4c1015" stroke-width=".8"/>
+   <defs><clipPath id="hc${u}"><path d="${B}"/></clipPath></defs><path d="${B}" fill="url(#heart)"/>
+   <g clip-path="url(#hc${u})"><path d="M-40,-10 C-20,-24 16,-26 38,-10 L38,-40 L-40,-40Z" fill="#f4e6cc"/><path d="M-40,-10 C-20,-24 16,-26 38,-10 L38,-40 L-40,-40Z" fill="#000" filter="url(#tx-fat)" opacity=".4"/>
+   <path d="M2,-24 C-2,0 0,30 6,62" stroke="#f4e6cc" stroke-width="5" fill="none"/><path d="M2,-24 C-2,0 0,30 6,62" stroke="#6b1a24" stroke-width="1.4" fill="none"/>${wet(.6)}</g>
+
+   <path d="${B}" fill="none" stroke="#4c1015" stroke-width="1" opacity=".6"/>`;
+}
+function liverG(c){
+  const u=++UID, L=[['M-100,-4 C-102,-36 -76,-54 -40,-52 C-30,-30 -30,12 -40,42 C-70,46 -98,28 -100,-4Z'],['M52,-46 C80,-44 102,-28 102,-4 C102,22 82,38 40,46 C54,20 62,-12 52,-46Z'],['M-50,-54 C-24,-62 0,-58 8,-50 C6,-14 2,22 -6,52 C-22,56 -40,52 -48,44 C-40,12 -40,-26 -50,-54Z'],['M-2,-50 C24,-60 50,-58 62,-48 C64,-12 58,22 46,46 C28,52 10,54 -8,52 C0,22 4,-12 -2,-50Z']];
+  let s='';
+  L.forEach(([P],i)=>{s+=`<defs><clipPath id="lv${u}${i}"><path d="${P}"/></clipPath></defs><path d="${P}" transform="translate(2,4)" fill="#2b0b08" opacity=".35" filter="url(#fx-blur2)"/><path d="${P}" fill="url(#liver)"/><g clip-path="url(#lv${u}${i})"><rect x="-110" y="-70" width="220" height="140" filter="url(#tx-lob)" opacity=".7"/>`;
+    if(c.ict) s+=`<rect x="-110" y="-70" width="220" height="140" fill="#d9a520" opacity=".5" style="mix-blend-mode:multiply"/><rect x="-110" y="-70" width="220" height="140" fill="#e2b13a" opacity=".25"/>`;
+    if(c.milk) [[-70,-14,12],[-60,20,8],[-24,-26,11],[-18,18,9],[24,-20,13],[30,24,9],[74,-6,12],[60,22,7],[-84,4,6],[0,-6,7]].forEach(([x,y,r])=>{s+=`<path d="M${x-r},${y} q${r*0.4},${-r} ${r},${-r*0.7} q${r*0.9},${r*0.1} ${r*0.8},${r*0.8} q${-r*0.2},${r*0.9} ${-r},${r*0.6} q${-r*0.8},0 ${-r*0.8},${-r*0.7}z" fill="#f5efe6" opacity=".88" filter="url(#fx-blur1)"/>`;});
+    s+=`<path d="${P}" fill="none" stroke="#2b0b08" stroke-width="8" opacity=".25" filter="url(#fx-blur2)"/>${wet(.55)}</g><path d="${P}" fill="none" stroke="#3b100d" stroke-width="1" opacity=".6"/>`;});
+  s+=`<path d="M20,24 C32,18 42,26 38,38 C34,50 20,50 15,42 C11,34 13,27 20,24Z" fill="url(#gb)" stroke="#2f5220"/><ellipse cx="22" cy="30" rx="5" ry="2.5" fill="#fff" opacity=".45"/>`;
+  return s;
+}
+function kidneyG(c,dx){
+  const P='M-20,-32 C-4,-38 14,-30 16,-14 C12,-8 8,-2 10,6 C16,22 4,36 -14,36 C-32,34 -38,12 -36,-8 C-35,-20 -30,-29 -20,-32Z', u=++UID;
+  let s=`<g transform="translate(${dx},0)"><defs><clipPath id="kd${u}"><path d="${P}"/></clipPath></defs><path d="${P}" transform="translate(2,4)" fill="#2b0b08" opacity=".3" filter="url(#fx-blur2)"/><path d="${P}" fill="url(#kidn)"/><g clip-path="url(#kd${u})"><rect x="-40" y="-40" width="60" height="80" filter="url(#tx-mot)" opacity=".3"/>`;
+  if(c.sept) for(let i=0;i<34;i++) s+=`<circle cx="${-32+R2(i+5)*44}" cy="${-28+R2(i+33)*60}" r="${0.8+R2(i)*1.4}" fill="#2a0508"/>`;
+  return s+`${wet(.7)}</g><path d="M8,-6 C14,-4 18,0 16,6 C12,8 8,6 8,2Z" fill="#f3e4cc"/><path d="M12,4 C24,12 26,30 22,46" stroke="#efdccf" stroke-width="3" fill="none"/></g>`;
+}
+function spleenG(c){
+  const P='M-86,-4 C-64,-16 0,-16 64,-12 C84,-10 90,4 72,10 C22,15 -40,16 -80,10 C-92,7 -94,-1 -86,-4Z', u=++UID;
+  return `<g transform="scale(${c.sept?1.15:1},${c.sept?1.8:1})"><defs><clipPath id="sp${u}"><path d="${P}"/></clipPath></defs><path d="${P}" transform="translate(2,4)" fill="#1e0610" opacity=".3" filter="url(#fx-blur2)"/><path d="${P}" fill="url(#splen)"/><g clip-path="url(#sp${u})">${c.sept?`<path d="${P}" fill="#2a0618" opacity=".4"/>`:''}<rect x="-100" y="-20" width="200" height="40" filter="url(#tx-mot)" opacity=".35"/><path d="M-70,1 C-30,-1 20,0 64,-1" stroke="#f1e2c8" stroke-width="3.2" fill="none"/><path d="M-70,1 C-30,-1 20,0 64,-1" stroke="#6b1a35" stroke-width="1" fill="none"/>${wet(.6)}</g></g>`;
+}
+function tagG(x,y,t,lab){return `<g transform="translate(${x},${y})"><path d="M0,0 v14" stroke="#64748b" stroke-width="1.5"/><rect x="-31" y="14" width="62" height="36" rx="5" fill="url(#paper)" stroke="#94a3b8" stroke-width="1.5"/><circle cx="0" cy="20" r="2.5" fill="#94a3b8"/><text y="31" text-anchor="middle" font-size="8" fill="#64748b">${lab}</text><text y="45" text-anchor="middle" font-size="13.5" font-weight="800" font-family="monospace" fill="#0f1b33">${t}</text></g>`;}
+function pmScene(c){
+  const r=PMS[c.k], sn=r.seen;
+  const hz=(z,inner)=>`<g class="hz ${sn[z]?'seen':''}" data-z="${z}">${inner}</g>`;
+  const tick=(z,x,y)=>sn[z]?`<g transform="translate(${x},${y})" pointer-events="none"><circle r="10" fill="#16a34a" stroke="#fff" stroke-width="2"/><path d="M-4.5,0 l3,3.5 l6,-7" stroke="#fff" stroke-width="2.2" fill="none"/></g>`:'';
+  let s=`<svg viewBox="0 0 860 500"><rect width="860" height="500" fill="#f4f6f9"/>
+   ${Array.from({length:22},(_,i)=>`<path d="M${i*40} 0 V500" stroke="#dfe5ec" stroke-width="1.5"/>`).join('')}${Array.from({length:13},(_,i)=>`<path d="M0 ${i*40} H860" stroke="#dfe5ec" stroke-width="1.5"/>`).join('')}
+   <rect y="470" width="860" height="30" fill="#cfd6de"/>
+   <rect x="0" y="10" width="300" height="12" rx="4" fill="url(#g-steel)"/><circle cx="150" cy="16" r="9" fill="#475569" stroke="#cbd5e1" stroke-width="2"/>
+   <path d="M150,24 v10" stroke="#64748b" stroke-width="5"/><path d="M134,34 h32 M136,34 C136,44 146,46 150,46 M164,34 C164,44 154,46 150,46" stroke="#64748b" stroke-width="5" fill="none" stroke-linecap="round"/>
+   <g transform="translate(150,40) scale(.93)">${hz('canal',carcassG(c))}</g>
+   ${hz('id',tagG(232,22,c.t,'CANAL'))}
+   <rect x="304" y="64" width="544" height="400" rx="20" fill="#000" opacity=".16" filter="url(#fx-blur4)"/>
+   <rect x="300" y="58" width="544" height="400" rx="20" fill="url(#g-steel)"/><rect x="314" y="72" width="516" height="372" rx="14" fill="url(#steelT)"/>
+   <rect x="314" y="72" width="516" height="372" rx="14" fill="#fff" filter="url(#fx-brush)" opacity=".55"/>
+   <path d="M330,430 q60 -6 120 2 M610,436 q50 -4 100 0" stroke="#b33a3a" stroke-width="3" opacity=".18" fill="none" filter="url(#fx-blur1)"/>
+   <text x="572" y="94" text-anchor="middle" font-size="13" font-weight="800" fill="#12306b">Charola de vísceras</text>
+   ${hz('pul',`<g transform="translate(408,214)"><rect x="-74" y="-90" width="148" height="170" fill="transparent"/>${lungsG()}</g>`)}
+   ${hz('cor',`<g transform="translate(408,368)"><rect x="-50" y="-70" width="100" height="134" fill="transparent"/>${heartG()}</g>`)}
+   ${hz('hig',`<g transform="translate(606,198)">${liverG(c)}</g>`)}
+   ${hz('rin',`<g transform="translate(772,196)"><rect x="-62" y="-40" width="114" height="90" fill="transparent"/>${kidneyG(c,-26)}${kidneyG(c,28)}</g>`)}
+   ${hz('baz',`<g transform="translate(588,340)"><rect x="-96" y="-22" width="190" height="40" fill="transparent"/>${spleenG(c)}</g>`)}
+   ${hz('id',tagG(790,58,c.v,'VÍSCERAS'))}
+   ${hz('mue',`<g transform="translate(742,312)"><rect x="0" y="0" width="74" height="96" rx="6" fill="url(#paper)" stroke="#94a3b8" stroke-width="1.5"/><rect x="22" y="-6" width="30" height="12" rx="3" fill="#94a3b8"/>${[22,36,50,64].map(y=>`<path d="M10 ${y} h54" stroke="#cbd5e1" stroke-width="2"/>`).join('')}<text x="37" y="86" text-anchor="middle" font-size="9" font-weight="700" fill="#334155">MUESTRAS</text>${c.samp?`<g transform="translate(60,40) rotate(18)"><rect x="-6" y="-26" width="12" height="44" rx="6" fill="#fef3c7" stroke="#a16207"/><rect x="-7" y="-30" width="14" height="8" rx="2" fill="#dc2626"/></g>`:''}</g>`)}
+   ${[['Pulmones',408,116],['Hígado',606,124],['Riñones',772,264],['Bazo',588,378],['Corazón',490,404]].map(([t,x,y])=>`<g pointer-events="none" transform="translate(${x},${y})"><rect x="${-t.length*3.9-10}" y="-11" width="${t.length*7.8+20}" height="22" rx="11" fill="#fff" opacity=".92" stroke="#12306b" stroke-opacity=".35"/><text y="4.5" text-anchor="middle" font-size="12" font-weight="800" fill="#12306b">${t}</text></g>`).join('')}
+   <g pointer-events="none"><path d="M234,236 L198,210 M234,236 L144,218 M240,250 L188,446" stroke="#12306b" stroke-opacity=".45" stroke-width="1.5" fill="none" stroke-dasharray="4 3"/><rect x="218" y="230" width="74" height="22" rx="11" fill="#fff" opacity=".92" stroke="#12306b" stroke-opacity=".35"/><text x="255" y="245.5" text-anchor="middle" font-size="12" font-weight="800" fill="#12306b">Ganglios</text></g>
+   <path d="M466,400 L446,392" stroke="#12306b" stroke-opacity=".45" stroke-width="1.5" pointer-events="none"/>
+   ${tick('canal',96,60)}${tick('pul',462,140)}${tick('cor',446,310)}${tick('hig',700,140)}${tick('rin',822,160)}${tick('baz',684,322)}${tick('gan',200,214)}${tick('id',262,52)}${tick('mue',820,312)}`;
+  const stamp=r.dec==='apr';
+  if(stamp) s+=`<g class="stamp" transform="translate(126,200) rotate(-10)">${stampG('TIF 123',0.95)}</g><g class="stamp" transform="translate(118,330) rotate(-6)">${stampG('TIF 123',0.8)}</g>`;
+  if(r.dec==='tot') s+=`<g class="stamp" transform="translate(150,260) rotate(-14)"><rect x="-90" y="-22" width="180" height="44" rx="6" fill="#fff" opacity=".9" stroke="#dc2626" stroke-width="4"/><text y="9" text-anchor="middle" font-size="22" font-weight="900" fill="#dc2626">DECOMISO</text></g>`;
+  if(r.dec==='ret') s+=`<g class="stamp" transform="translate(150,260) rotate(-10)"><rect x="-84" y="-22" width="168" height="44" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="4"/><text y="9" text-anchor="middle" font-size="22" font-weight="900" fill="#b45309">RETENIDA</text></g>`;
+  if(r.dec==='par'){const p=c.milk?[608,198,114,66]:[150-30*.93,40+112*.93,28,24];s+=`<g class="stamp"><ellipse cx="${p[0]}" cy="${p[1]}" rx="${p[2]}" ry="${p[3]}" fill="none" stroke="#dc2626" stroke-width="4" stroke-dasharray="10 6"/><text x="${p[0]}" y="${p[1]-p[3]-8}" text-anchor="middle" font-size="13" font-weight="900" fill="#dc2626">✂️ decomiso</text></g><g class="stamp" transform="translate(128,330) rotate(-8)">${stampG('TIF 123',0.85)}</g>`;}
+  return s+`</svg>`;
+}
+function pmLupa(c,z){
+  let inner='';
+  if(z==='canal') inner=`<g class="zin"><g transform="translate(150,8) scale(.42)">${carcassG(c)}</g></g>`;
+  else if(z==='pul') inner=`<g class="zin"><g transform="translate(150,112) scale(1.1)">${lungsG()}</g></g>`;
+  else if(z==='cor') inner=`<g class="zin"><g transform="translate(150,112) scale(1.45)">${heartG()}</g></g>`;
+  else if(z==='hig') inner=`<g class="zin"><g transform="translate(150,104) scale(1.3)">${liverG(c)}</g></g>`;
+  else if(z==='rin') inner=`<g class="zin"><g transform="translate(150,98) scale(1.8)">${kidneyG(c,-26)}${kidneyG(c,28)}</g></g>`;
+  else if(z==='baz') inner=`<g class="zin"><g transform="translate(150,104) scale(1.4)">${spleenG(c)}</g></g>`;
+  else if(z==='gan'){const big=c.sept, rx=big?60:44, ry=big?40:30, cap=big?'#4c0b14':'#9c8263', out=big?'#8f1d2a':'#d9c4a6', inn=big?'#b91c1c':'#eadbc3';
+    const half=(sg)=>`<g class="${sg<0?'gcl':'gcr'}"><path d="M0,${-ry} A${rx},${ry} 0 0 ${sg<0?0:1} 0,${ry}Z" fill="${out}" stroke="${cap}" stroke-width="3"/><path d="M0,${-ry+5} A${rx-5},${ry-5} 0 0 ${sg<0?0:1} 0,${ry-5}Z" fill="${inn}"/>${big?Array.from({length:14},(_,i)=>`<circle cx="${sg*(6+R2(i+sg*10)*(rx-16))}" cy="${-ry+12+R2(i+40)*(2*ry-24)}" r="${2+R2(i+3)*4}" fill="#450a0a" opacity=".85"/>`).join(''):`<path d="M0,${-ry+8} A${rx-10},${ry-10} 0 0 ${sg<0?0:1} 0,${ry-8}" fill="none" stroke="#cdb895" stroke-width="2" stroke-dasharray="4 4"/>`}</g>`;
+    inner=`<g transform="translate(150,100)"><rect x="-150" y="-100" width="300" height="200" fill="#fbf3e9"/>${half(-1)}${half(1)}<g class="knife"><path d="M-3,-120 L3,-120 L2,-40 L0,-30 L-2,-40Z" fill="#cbd5e1" stroke="#64748b"/><rect x="-5" y="-160" width="10" height="40" rx="3" fill="#1e293b"/></g><text y="${ry+28}" text-anchor="middle" font-size="12" fill="#475569">Incisión del ganglio linfático</text></g>`;}
+  else if(z==='id') inner=`${tagG(92,24,c.t,'CANAL')}${tagG(208,24,c.v,'VÍSCERAS')}<text x="150" y="150" text-anchor="middle" font-size="30" font-weight="900" fill="${c.t===c.v?'#16a34a':'#dc2626'}">${c.t===c.v?'=':'≠'}</text>`;
+  else if(z==='mue') inner=`<g transform="translate(60,26)"><rect width="180" height="156" rx="8" fill="url(#paper)" stroke="#94a3b8" stroke-width="2"/><text x="90" y="22" text-anchor="middle" font-size="12" font-weight="800" fill="#12306b">Registro de muestras</text><text x="12" y="48" font-size="11" fill="#334155">Canal: ${c.t}</text><text x="12" y="70" font-size="11" fill="#334155">${c.samp?'Muestra: hígado y orina':'Muestra: ninguna'}</text><text x="12" y="92" font-size="11" fill="#334155">${c.samp?'Análisis: clenbuterol':'—'}</text><text x="12" y="116" font-size="11" font-weight="700" fill="${c.samp?'#b45309':'#16a34a'}">${c.samp?'Resultado: PENDIENTE':'Sin pendientes'}</text><path d="M110,140 q8 -14 16 -2 q8 10 16 -6 q6 -8 14 0" stroke="#1e3a8a" stroke-width="1.5" fill="none"/></g>`;
+  const u=++UID;return `<svg viewBox="0 0 300 210" style="overflow:hidden"><defs><clipPath id="lc${u}"><rect width="300" height="210"/></clipPath></defs><rect width="300" height="210" fill="#f4f6f8"/><rect width="300" height="210" fill="#fff" filter="url(#fx-brush)" opacity=".4"/><g clip-path="url(#lc${u})">${inner}</g></svg>`;
+}
+let PMZ=null;
+function renderPM(){
+  const c=PM.find(x=>x.k===PMK), r=PMS[c.k], n=Object.keys(r.seen).length;
+  $('#pmCases').innerHTML=PM.map((x,i)=>{const q=PMS[x.k];return `<button class="chip ${x.k===PMK?'on':''}" data-c="${x.k}">Canal ${x.t} ${q.dec?(q.dec===x.ans?'✓':'✗'):''}</button>`;}).join('');
+  $$('#pmCases [data-c]').forEach(b=>b.onclick=()=>{PMK=b.dataset.c;PMZ=null;renderPM();});
+  $('#pmScene').innerHTML=pmScene(c);
+  $$('#pmScene .hz').forEach(g=>g.onclick=e=>{e.stopPropagation();const z=g.dataset.z;r.seen[z]=1;PMZ=z;renderPM();});
+  const txt=z=>z==='id'?(c.t===c.v?`Canal ${c.t} y vísceras ${c.v}: coinciden.`:`La canal dice ${c.t} y la charola de vísceras ${c.v}: NO coinciden.`):(c.f[z]||NRM[z]);
+  $('#pmLupa').innerHTML=PMZ?`${pmLupa(c,PMZ)}<div class="cap"><b>${ZN.find(x=>x[0]===PMZ)[1]}:</b> ${txt(PMZ)}</div>`:`<div style="padding:30px 16px;text-align:center;color:var(--muted);font-size:13px">🔎 Haz clic en la canal, en cada víscera, en los ganglios (los óvalos de la canal), en las etiquetas o en el registro de muestras.</div>`;
+  $('#pmList').innerHTML=ZN.map(([z,l])=>`<div class="hl ${r.seen[z]?'on':''}"><b>${r.seen[z]?'✔':'○'} ${l}</b>${r.seen[z]?`<span>${txt(z)}</span>`:''}</div>`).join('');
+  $('#pmDec').innerHTML=`${n<6&&!r.dec?`<div class="fb mid">Inspecciona al menos 6 de los 9 puntos antes de dictaminar (${n} de 6).</div>`:''}
+   <div class="dec3 four">${Object.entries(DEC_PM).map(([k,l])=>`<button class="btn ${r.dec===k?(k===c.ans?'good':'bad'):''} ${r.dec&&k===c.ans?'good':''}" data-dc="${k}" ${n<6||r.dec?'disabled':''}>${l}</button>`).join('')}</div>
+   ${r.dec?`<div class="fb ${r.dec===c.ans?'good':'bad'}">${r.dec===c.ans?'✅ Correcto.':'❌ No. Lo adecuado es <b>'+DEC_PM[c.ans].slice(3)+'</b>.'} ${c.why}${(c.bad||[]).some(z=>!r.seen[z])?' <br><b>Ojo:</b> no revisaste '+c.bad.filter(z=>!r.seen[z]).map(z=>ZN.find(x=>x[0]===z)[1].toLowerCase()).join(', ')+', que era donde estaba el hallazgo.':''}</div>
+   <div class="row-btn">${PM.find(x=>!PMS[x.k].dec)?`<button class="btn btn-primary" id="pmNext">Siguiente canal ➜</button>`:`<span style="font-weight:800;color:var(--navy)">🏁 ${PM.filter(x=>PMS[x.k].dec===x.ans).length} de ${PM.length} correctas.</span>`}<button class="btn btn-ghost btn-sm" id="pmRe">↺ Reiniciar</button></div>`:''}`;
+  $$('#pmDec [data-dc]').forEach(b=>b.onclick=()=>{r.dec=b.dataset.dc;renderPM();});
+  if($('#pmNext'))$('#pmNext').onclick=()=>{PMK=PM.find(x=>!PMS[x.k].dec).k;PMZ=null;renderPM();};
+  if($('#pmRe'))$('#pmRe').onclick=()=>{PM.forEach(x=>PMS[x.k]={seen:{},dec:null});PMK='m1';PMZ=null;renderPM();};
+}
+
+/* ===================== 3 · LLEGA A LA PLANTA ===================== */
+const RQ=['¿Trae sello de inspección legible?','¿El número de establecimiento coincide con los documentos?','¿El lote coincide con la factura o remisión?','¿Trae los documentos de origen completos?'];
+const RC=[
+ {k:'r1',tipo:'canal',sello:'TIF 123',doc:{prov:'Empacadora La Loma',est:'TIF 123',prod:'Media canal de cerdo',lote:'L-0915',lp:'L-0915',cert:1},a:[1,1,1,1],why:'Sello legible, el número del establecimiento y el lote coinciden con la remisión y el certificado, y los documentos están completos.'},
+ {k:'r2',tipo:'canal',sello:null,doc:{prov:'Empacadora La Loma',est:'TIF 123',prod:'Media canal de cerdo',lote:'L-0916',lp:'L-0916',cert:1},a:[0,0,1,1],why:'La canal no tiene sello de inspección: no hay evidencia física de que fue inspeccionada, aunque los papeles digan lo contrario. Sin sello no se puede comparar el número de establecimiento.'},
+ {k:'r3',tipo:'canal',sello:'TIF 123',doc:{prov:'Cárnicos del Bajío',est:'TIF 456',prod:'Media canal de cerdo',lote:'L-0917',lp:'L-0917',cert:1},a:[1,0,1,1],why:'El sello dice TIF 123, pero la remisión y el certificado dicen TIF 456: el origen no coincide.'},
+ {k:'r4',tipo:'caja',sello:'TIF 789',doc:{prov:'Avícola San Juan',est:'TIF 789',prod:'Pechuga de pollo',lote:'L-0270',lp:'L-0207',cert:1},a:[1,1,0,1],why:'La etiqueta dice lote L-0207 y la remisión L-0270. Aunque traiga sello, no se puede asegurar qué producto es: se rechaza (o se retiene hasta aclarar, según el procedimiento de la planta).'},
+ {k:'r5',tipo:'caja',sello:'TIF 789',doc:{prov:'Avícola San Juan',est:'TIF 789',prod:'Pechuga de pollo',lote:'L-1103',lp:'L-1103',cert:0},a:[1,1,1,0],why:'La caja y la etiqueta están bien, pero falta el certificado de inspección: con documentos incompletos no se recibe.'},
+ {k:'r6',tipo:'canal',sello:'TIF 123',smear:1,doc:{prov:'Empacadora La Loma',est:'TIF 123',prod:'Media canal de cerdo',lote:'L-0921',lp:'L-0921',cert:1},a:[0,0,1,1],why:'Los sellos están corridos y no se pueden leer: no se puede confirmar el establecimiento de origen. Un sello ilegible equivale a no tener sello.'},
+ {k:'r7',tipo:'caja',sello:'TIF 789',doc:{prov:'Avícola San Juan',est:'TIF 789',prod:'Pechuga de pollo',lote:'L-1104',lp:'L-1104',cert:1},a:[1,1,1,1],why:'Todo coincide: sello, establecimiento, lote y documentos.'}
+];
+let RS={}, RK='r1';
+RC.forEach(c=>RS[c.k]={a:[null,null,null,null],dec:null});
+const HL=(cls,x,y,w,h,rx=8)=>`<rect class="hlr ${cls}" x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" fill="#f97316" fill-opacity=".08" stroke="#f97316" stroke-width="3.5" stroke-dasharray="9 5"/>`;
+function skinCarcass(c){
+  const u=++UID;
+  let s=`<defs><clipPath id="sc${u}"><path d="${CO}"/></clipPath><radialGradient id="hh${u}" cx=".35" cy=".3" r=".5"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs>
+   <path d="${CO}" transform="translate(8,10)" fill="#1e293b" opacity=".25" filter="url(#fx-blur4)"/>
+   <path d="${CO}" fill="url(#sk)"/><g clip-path="url(#sc${u})">
+   <rect x="-100" y="0" width="200" height="470" filter="url(#tx-skin)" opacity=".55"/>
+   <rect x="-100" y="0" width="200" height="470" filter="url(#tx-mot)" opacity=".08"/>
+   <ellipse cx="-24" cy="120" rx="60" ry="70" fill="url(#hh${u})"/><ellipse cx="-18" cy="300" rx="34" ry="110" fill="#fff" opacity=".18" filter="url(#fx-blur8)"/>
+   <path d="M-80,186 C-40,198 20,200 50,186" stroke="#d8a595" stroke-width="2" fill="none" opacity=".5"/><path d="M-70,420 C-30,410 20,412 56,428" stroke="#d8a595" stroke-width="2" fill="none" opacity=".5"/>
+   ${[200,236,272,308,344,380].map((y,i)=>`<ellipse cx="${(i%2?54:56)}" cy="${y}" rx="3" ry="4" fill="#d99486"/>`).join('')}
+   <path d="${CO}" fill="none" stroke="#b97f70" stroke-width="16" opacity=".22" filter="url(#fx-blur4)"/>${wet(.12,[-100,0,200,470])}</g>
+   <path d="${CO}" fill="none" stroke="#d4a596" stroke-width="1.8"/>
+   <path d="M-16,0 L16,0 L18,40 C8,46 -8,46 -20,40Z" fill="#efc9bb"/><path d="M-6,4 C-4,18 -2,30 0,42" stroke="url(#tend)" stroke-width="7" stroke-linecap="round"/>`;
+  if(c.sello) [[-26,124,-14,1],[-18,272,-6,.9],[-6,396,-10,.9]].forEach(([x,y,r,k])=>{s+=`<g transform="translate(${x},${y}) rotate(${r})">${stampG(c.sello,k,c.smear)}</g>`;});
+  return s;
+}
+function rcSVG(c){
+  if(c.tipo==='canal'){
+    const lup=c.sello?`<g transform="scale(2.1) rotate(-14)">${stampG(c.sello,1,c.smear)}</g>`:`<text y="4" text-anchor="middle" font-size="13" font-weight="700" fill="#a8786c">sin sello</text>`, u=++UID;
+    return `<svg viewBox="0 0 460 330"><rect width="460" height="330" fill="#eef3f8"/>${Array.from({length:12},(_,i)=>`<path d="M${i*40} 0 V330" stroke="#dde4ec" stroke-width="1.5"/>`).join('')}<rect y="300" width="460" height="30" fill="#cfd6de"/>
+     <rect x="0" y="8" width="300" height="10" rx="4" fill="url(#g-steel)"/><circle cx="140" cy="13" r="7" fill="#475569" stroke="#cbd5e1" stroke-width="2"/><path d="M140,20 v8 M128,28 h24" stroke="#64748b" stroke-width="4" stroke-linecap="round"/>
+     <g transform="translate(140,28) scale(.6)">${skinCarcass(c)}</g>
+     <g transform="translate(172,34) rotate(8)"><path d="M-30,0 L-6,0" stroke="#64748b" stroke-width="1.5"/><rect x="-6" y="-14" width="78" height="40" rx="4" fill="url(#paper)" stroke="#94a3b8" stroke-width="1.5"/><circle cx="2" cy="0" r="2.5" fill="#94a3b8"/><text x="33" y="-1" text-anchor="middle" font-size="8" fill="#64748b">${c.doc.prov.toUpperCase().slice(0,18)}</text><text x="33" y="16" text-anchor="middle" font-size="12" font-weight="800" font-family="monospace" fill="#0f1b33">LOTE ${c.doc.lp}</text></g>
+     ${HL('h2',160,14,98,52)}
+     ${c.sello?HL('h0',100,88,64,52,26)+HL('h0',108,176,58,40,20)+HL('h0',118,250,56,40,20):HL('h0',92,60,104,230,16)}
+     <g transform="translate(360,150)"><defs><clipPath id="lu${u}"><circle r="74"/></clipPath></defs><circle r="80" fill="#fff" stroke="#334155" stroke-width="6"/><g clip-path="url(#lu${u})"><rect x="-80" y="-80" width="160" height="160" fill="url(#sk)"/><rect x="-80" y="-80" width="160" height="160" filter="url(#tx-skin)" opacity=".6"/>${lup}</g><path d="M56,58 L84,88" stroke="#334155" stroke-width="12" stroke-linecap="round"/><text y="104" text-anchor="middle" font-size="12" font-weight="700" fill="#334155">Sello en la pierna (lupa)</text></g>
+     ${HL('h0 h1',276,66,168,168,84)}</svg>`;
+  }
+  const d=c.doc;
+  return `<svg viewBox="0 0 460 330"><rect width="460" height="330" fill="url(#g-table)"/><rect width="460" height="330" fill="#fff" filter="url(#fx-brush)" opacity=".4"/>
+   <path d="M44,296 L300,296 L376,246 L120,246Z" fill="#000" opacity=".2" filter="url(#fx-blur8)"/>
+   <path d="M40,110 L110,58 L380,58 L310,110Z" fill="#e2c596"/><path d="M40,110 L110,58 L380,58 L310,110Z" fill="#000" filter="url(#fx-kraft)" opacity=".25"/>
+   <path d="M168,110 L238,58 L262,58 L192,110Z" fill="#c9a26b" opacity=".85"/><path d="M75,84 L345,84" stroke="#b8925c" stroke-width="1.5"/>
+   <path d="M310,110 L380,58 L380,238 L310,290Z" fill="#b98e58"/><path d="M310,110 L380,58 L380,238 L310,290Z" fill="#000" filter="url(#fx-kraft)" opacity=".3"/>
+   <g transform="matrix(1,-0.743,0,1,310,110)"><text x="35" y="40" text-anchor="middle" font-size="12" font-weight="900" fill="#b91c1c">SAN JUAN</text><text x="35" y="60" text-anchor="middle" font-size="16" fill="#7c2d12">↑↑</text><text x="35" y="84" text-anchor="middle" font-size="8.5" font-weight="700" fill="#5b3a1a">0 – 4 °C</text><rect x="16" y="120" width="38" height="16" rx="8" fill="#8a6338" opacity=".7"/></g>
+   <rect x="40" y="110" width="270" height="180" fill="url(#g-kraft)"/><rect x="40" y="110" width="270" height="180" fill="#000" filter="url(#fx-kraft)" opacity=".3"/>
+   <rect x="168" y="110" width="24" height="44" fill="#c9a26b" opacity=".85"/>
+   <text x="56" y="134" font-size="13" font-weight="900" fill="#b91c1c">AVÍCOLA SAN JUAN</text><text x="56" y="148" font-size="8" font-weight="700" fill="#5b3a1a">PRODUCTO REFRIGERADO · MANTÉNGASE DE 0 A 4 °C</text>
+   <rect x="128" y="264" width="44" height="14" rx="7" fill="#8a6338" opacity=".7"/>
+   <g transform="translate(62,158)"><rect x="2" y="3" width="226" height="98" rx="3" fill="#000" opacity=".15" filter="url(#fx-blur2)"/><rect width="226" height="98" rx="3" fill="url(#paper)" stroke="#d6d3cc"/><rect width="226" height="16" rx="3" fill="#12306b"/><text x="7" y="12" font-size="9" font-weight="800" fill="#fff">${d.prov.toUpperCase()}</text>
+    <text x="7" y="30" font-size="9.5" font-weight="800" fill="#111">${d.prod.toUpperCase()} · REFRIGERADA</text>
+    <text x="7" y="45" font-size="10" fill="#111">LOTE: <tspan font-weight="900">${d.lp}</tspan></text>
+    <text x="7" y="58" font-size="8.5" fill="#333">CADUCIDAD: 14/02/2027</text><text x="7" y="70" font-size="8.5" fill="#333">PESO NETO: 10.00 kg</text>
+    ${Array.from({length:36},(_,i)=>`<rect x="${7+i*2.7}" y="76" width="${i%3?1.2:2}" height="16" fill="#111"/>`).join('')}
+    <g transform="translate(180,62) scale(.72)">${stampG(c.sello,1)}</g></g>
+   ${HL('h0 h1',204,180,92,64,30)}${HL('h2',62,190,120,22,6)}
+   <text x="230" y="318" text-anchor="middle" font-size="11" fill="#475569">Caja recibida en el andén</text></svg>`;
+}
+function docSVG(c){
+  const d=c.doc, canal=c.tipo==='canal', cant=canal?'4 medias':'10 cajas', kg=canal?'356.8':'100.0';
+  const cert=d.cert?`<g transform="translate(240,32) rotate(2.5)"><rect x="3" y="4" width="208" height="276" fill="#000" opacity=".15" filter="url(#fx-blur4)"/><rect width="208" height="276" fill="url(#paper)" stroke="#cbd5e1"/><rect x="8" y="8" width="192" height="260" fill="none" stroke="#1e3a8a" stroke-width="1" opacity=".5"/>
+     <text x="104" y="32" text-anchor="middle" font-size="11" font-weight="900" fill="#1e3a8a">CERTIFICADO DE INSPECCIÓN</text><text x="104" y="45" text-anchor="middle" font-size="7.5" fill="#475569">Producto de establecimiento Tipo Inspección Federal</text>
+     <text x="16" y="72" font-size="9" fill="#475569">Establecimiento:</text><text x="200" y="72" text-anchor="end" font-size="10" font-weight="900" fill="#0f1b33">${d.est}</text>
+     <text x="16" y="92" font-size="9" fill="#475569">Producto:</text><text x="200" y="92" text-anchor="end" font-size="9" font-weight="700" fill="#0f1b33">${d.prod}</text>
+     <text x="16" y="112" font-size="9" fill="#475569">Lote:</text><text x="200" y="112" text-anchor="end" font-size="10" font-weight="900" fill="#0f1b33">${d.lote}</text>
+     <text x="16" y="132" font-size="9" fill="#475569">Cantidad:</text><text x="200" y="132" text-anchor="end" font-size="9" font-weight="700" fill="#0f1b33">${cant} · ${kg} kg</text>
+     <text x="16" y="152" font-size="9" fill="#475569">Fecha de emisión:</text><text x="200" y="152" text-anchor="end" font-size="9" font-weight="700" fill="#0f1b33">08/02/2027</text>
+     <g transform="translate(160,212)" opacity=".75"><circle r="30" fill="none" stroke="#1d4ed8" stroke-width="2.5"/><circle r="24" fill="none" stroke="#1d4ed8" stroke-width="1"/><text y="-4" text-anchor="middle" font-size="6.5" font-weight="800" fill="#1d4ed8">SELLO OFICIAL</text><text y="7" text-anchor="middle" font-size="7" font-weight="800" fill="#1d4ed8">${d.est}</text></g>
+     <path d="M20,226 q10 -18 22 -2 q10 14 20 -6 q8 -12 18 2" stroke="#1e3a8a" stroke-width="1.5" fill="none"/><path d="M16,240 h100" stroke="#94a3b8"/><text x="66" y="252" text-anchor="middle" font-size="7.5" fill="#475569">Médico veterinario responsable</text></g>
+     ${HL('h1',244,60,208,26,6)}${HL('h2',242,100,208,26,6)}${HL('h3',232,24,224,296,10)}`
+   :`<g transform="translate(240,32) rotate(2.5)"><rect width="208" height="276" fill="#f8fafc" stroke="#dc2626" stroke-width="2" stroke-dasharray="8 6"/><text x="110" y="130" text-anchor="middle" font-size="12" font-weight="800" fill="#b91c1c">Certificado de inspección</text><text x="110" y="148" text-anchor="middle" font-size="11" fill="#b91c1c">NO SE ANEXÓ</text></g>${HL('h3',232,24,224,296,10)}`;
+  return `<svg viewBox="0 0 460 330"><rect width="460" height="330" fill="#e9e3d6"/><rect width="460" height="330" fill="#fff" filter="url(#fx-brush)" opacity=".35"/>${cert}
+   <g transform="translate(14,18) rotate(-1.5)"><rect x="3" y="4" width="232" height="290" fill="#000" opacity=".18" filter="url(#fx-blur4)"/><rect width="232" height="290" fill="url(#paper)" stroke="#cbd5e1"/>
+    <circle cx="24" cy="26" r="13" fill="#12306b"/><text x="24" y="30" text-anchor="middle" font-size="10" font-weight="900" fill="#fff">${d.prov.split(' ').map(w=>w[0]).join('').slice(0,2)}</text>
+    <text x="44" y="24" font-size="10" font-weight="900" fill="#12306b">${d.prov.toUpperCase()}</text><text x="44" y="35" font-size="7" fill="#64748b">RFC XAXX010101000 · León, Gto.</text>
+    <text x="222" y="56" text-anchor="end" font-size="14" font-weight="900" fill="#b91c1c">REMISIÓN</text><text x="222" y="68" text-anchor="end" font-size="8" fill="#475569">Folio 00${4580+RC.indexOf(c)} · 08/02/2027</text>
+    <text x="10" y="88" font-size="8.5" fill="#475569">Cliente: <tspan font-weight="700" fill="#0f1b33">Planta de cárnicos · CECyTE</tspan></text>
+    <text x="10" y="104" font-size="8.5" fill="#475569">Establecimiento de origen: <tspan font-weight="900" fill="#0f1b33" font-size="10">${d.est}</tspan></text>
+    <rect x="8" y="116" width="216" height="16" fill="#12306b"/><text x="12" y="127" font-size="8" font-weight="800" fill="#fff">Producto</text><text x="112" y="127" font-size="8" font-weight="800" fill="#fff">Lote</text><text x="160" y="127" font-size="8" font-weight="800" fill="#fff">Cant.</text><text x="220" y="127" text-anchor="end" font-size="8" font-weight="800" fill="#fff">kg</text>
+    <text x="12" y="146" font-size="8.5" fill="#0f1b33">${d.prod}</text><text x="112" y="146" font-size="9.5" font-weight="900" fill="#0f1b33">${d.lote}</text><text x="160" y="146" font-size="8.5" fill="#0f1b33">${cant}</text><text x="220" y="146" text-anchor="end" font-size="8.5" fill="#0f1b33">${kg}</text>
+    <path d="M8,152 H224 M8,170 H224 M8,188 H224" stroke="#e2e8f0"/><text x="220" y="206" text-anchor="end" font-size="9" font-weight="800" fill="#0f1b33">Total: ${kg} kg</text>
+    <text x="10" y="226" font-size="8" fill="#475569">Transporte: refrigerado · placas GTO-48-21</text>
+    <text x="10" y="242" font-size="8" fill="#475569">Anexos: ${d.cert?'certificado de inspección':'—'}</text>
+    <path d="M24,268 q10 -16 20 -2 q10 12 18 -4 q8 -10 18 0" stroke="#1e3a8a" stroke-width="1.4" fill="none"/><path d="M14,276 h90" stroke="#94a3b8"/><text x="58" y="286" text-anchor="middle" font-size="7" fill="#475569">Entrega</text><path d="M128,276 h90" stroke="#94a3b8"/><text x="172" y="286" text-anchor="middle" font-size="7" fill="#475569">Recibe</text></g>
+   ${HL('h1',14,108,234,22,6)}${HL('h2',112,146,72,24,6)}${HL('h3',8,12,246,306,10)}</svg>`;
+}
+function renderRC(){
+  const c=RC.find(x=>x.k===RK), r=RS[c.k];
+  $('#rcCases').innerHTML=RC.map((x,i)=>{const q=RS[x.k], acc=x.a.every(v=>v);return `<button class="chip ${x.k===RK?'on':''}" data-c="${x.k}">Entrega ${i+1} ${q.dec?((q.dec==='acc')===acc?'✓':'✗'):''}</button>`;}).join('');
+  $$('#rcCases [data-c]').forEach(b=>b.onclick=()=>{RK=b.dataset.c;$('#rcWrap').removeAttribute('data-h');renderRC();});
+  $('#rcVis').innerHTML=rcSVG(c);
+  $('#rcDoc').innerHTML=docSVG(c);
+  const acc=c.a.every(v=>v), all=r.a.every(v=>v!==null);
+  $('#rcChk').innerHTML=RQ.map((q,i)=>`<div class="cr" data-row="${i}"><span><b style="color:var(--orange)">👁</b> ${q}</span><div class="tg"><button class="y ${r.a[i]===1?'on':''}" data-q="${i}" data-v="1" ${r.dec?'disabled':''}>Sí</button><button class="n ${r.a[i]===0?'on':''}" data-q="${i}" data-v="0" ${r.dec?'disabled':''}>No</button></div>${r.dec?`<div class="ex ${r.a[i]===c.a[i]?'good':'bad'}">${r.a[i]===c.a[i]?'✓':'✗'} La respuesta es <b>${c.a[i]?'sí':'no'}</b>.</div>`:''}</div>`).join('')+
+   `<div class="row-btn"><button class="btn btn-ghost" data-d="acc" ${!all||r.dec?'disabled':''} style="${r.dec==='acc'?'border-color:var(--navy)':''}">✅ Aceptar</button><button class="btn btn-ghost" data-d="rech" ${!all||r.dec?'disabled':''} style="${r.dec==='rech'?'border-color:var(--navy)':''}">⛔ Rechazar</button>${!all?'<span style="font-size:12.5px;color:var(--muted)">Responde las 4 preguntas para decidir.</span>':''}</div>
+   ${r.dec?`<div class="fb ${(r.dec==='acc')===acc?'good':'bad'}">${(r.dec==='acc')===acc?'✅ Correcto.':'❌ No.'} Se debe <b>${acc?'aceptar':'rechazar'}</b>. ${c.why}</div><div class="row-btn">${RC.find(x=>!RS[x.k].dec)?'<button class="btn btn-primary" id="rcNext">Siguiente entrega ➜</button>':'<span style="font-weight:800;color:var(--navy)">🏁 '+RC.filter(x=>RS[x.k].dec&&((RS[x.k].dec==='acc')===x.a.every(v=>v))).length+' de '+RC.length+' entregas bien decididas.</span>'}</div>`:''}`;
+  const W=$('#rcWrap');
+  $$('#rcChk [data-row]').forEach(row=>{row.onmouseenter=()=>W.dataset.h=row.dataset.row;row.onmouseleave=()=>W.removeAttribute('data-h');row.addEventListener('click',()=>W.dataset.h=row.dataset.row);});
+  $$('#rcChk [data-q]').forEach(b=>b.onclick=()=>{r.a[+b.dataset.q]=+b.dataset.v;renderRC();W.dataset.h=b.dataset.q;});
+  $$('#rcChk [data-d]').forEach(b=>b.onclick=()=>{r.dec=b.dataset.d;renderRC();});
+  if($('#rcNext'))$('#rcNext').onclick=()=>{RK=RC.find(x=>!RS[x.k].dec).k;W.removeAttribute('data-h');renderRC();};
+}
+
+/* ===================== 4 · COMPRUEBA ===================== */
+const VF=[['a) La inspección ante mortem se hace sobre la canal y las vísceras.','F','Es al revés: ante mortem se revisa al animal vivo en los corrales; la canal y las vísceras se revisan en post mortem.'],
+ ['b) Un animal sospechoso de enfermedad se separa del resto en los corrales.','V','Los animales sospechosos se separan y quedan en observación.'],
+ ['c) En la inspección post mortem se revisan los ganglios linfáticos.','V','Los ganglios linfáticos muestran si una lesión es local o generalizada.'],
+ ['d) Si el lote no coincide con la factura, igual se puede recibir porque trae sello.','F','El sello no basta: el producto debe estar identificado y su lote debe coincidir con los documentos.']];
+const CL=shuffle([['Revisión en corrales después del descanso','a'],['Comportamiento, postura y marcha','a'],['Respiración y mucosas del animal','a'],['Separar animales caídos o sospechosos','a'],['Temperatura rectal de un animal sospechoso','a'],['Color, lesiones y contaminación de la canal','p'],['Aspecto y tamaño de hígado, pulmones y riñones','p'],['Corte de ganglios linfáticos','p'],['Comprobar la relación canal–vísceras','p'],['Poner el sello oficial de aprobada','p']]);
+let VFA={}, CLA={}, VFchk=false, CLchk=false;
+function renderQ(){
+  $('#vf').innerHTML=VF.map(([t,a,e],i)=>`<div class="cr"><span>${t}</span><div class="tg"><button class="y ${VFA[i]==='V'?'on':''}" data-i="${i}" data-v="V" ${VFchk?'disabled':''}>V</button><button class="n ${VFA[i]==='F'?'on':''}" data-i="${i}" data-v="F" ${VFchk?'disabled':''}>F</button></div>${VFchk?`<div class="ex ${VFA[i]===a?'good':'bad'}">${VFA[i]===a?'✓':'✗'} <b>${a==='V'?'Verdadero':'Falso'}.</b> ${e}</div>`:''}</div>`).join('');
+  $$('#vf [data-i]').forEach(b=>b.onclick=()=>{VFA[b.dataset.i]=b.dataset.v;renderQ();});
+  $('#cl').innerHTML=CL.map(([t,a],i)=>`<div class="cr"><span>${t}</span><div class="tg"><button class="am ${CLA[i]==='a'?'on':''}" data-j="${i}" data-v="a" ${CLchk?'disabled':''}>Ante</button><button class="pm ${CLA[i]==='p'?'on':''}" data-j="${i}" data-v="p" ${CLchk?'disabled':''}>Post</button></div>${CLchk&&CLA[i]!==a?`<div class="ex bad">✗ Es <b>${a==='a'?'ante mortem (animal vivo)':'post mortem (canal y vísceras)'}</b>.</div>`:''}</div>`).join('');
+  $$('#cl [data-j]').forEach(b=>b.onclick=()=>{CLA[b.dataset.j]=b.dataset.v;renderQ();});
+  const vo=VF.filter((x,i)=>VFA[i]===x[1]).length, co=CL.filter((x,i)=>CLA[i]===x[1]).length;
+  $('#vffb').innerHTML=VFchk?`<div class="fb ${vo===4?'good':'mid'}">${vo} de 4. Clave: a) F · b) V · c) V · d) F.</div>`:'';
+  $('#clfb').innerHTML=CLchk?`<div class="fb ${co===CL.length?'good':'mid'}">${co} de ${CL.length} correctas.</div>`:'';
+}
+$('#vfchk').onclick=()=>{if(Object.keys(VFA).length<4){$('#vffb').innerHTML='<div class="fb mid">Contesta las 4 afirmaciones.</div>';return;}VFchk=true;renderQ();};
+$('#vfre').onclick=()=>{VFA={};VFchk=false;renderQ();};
+$('#clchk').onclick=()=>{if(Object.keys(CLA).length<CL.length){$('#clfb').innerHTML='<div class="fb mid">Clasifica todas las tarjetas.</div>';return;}CLchk=true;renderQ();};
+$('#clre').onclick=()=>{CLA={};CLchk=false;renderQ();};
+
+/* ===================== Pestañas ===================== */
+function show(t){$$('.tab').forEach(x=>x.classList.toggle('on',x.dataset.t===t));$$('.pane').forEach(p=>p.classList.toggle('show',p.dataset.p===t));window.scrollTo({top:0,behavior:'smooth'});}
+$$('.tab').forEach(b=>b.onclick=()=>show(b.dataset.t));
+renderAM();renderPM();renderRC();renderQ();
+</script>
+</body>
+</html>

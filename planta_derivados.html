@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Planta de productos cárnicos · Semana 1</title>
+<style>
+:root{
+  --navy:#12306b; --navy-2:#1d4196; --ink:#0f1b33; --text:#22304a; --muted:#64748b;
+  --bg:#eef2f8; --card:#ffffff; --line:#dbe3ef; --soft:#f6f8fc;
+  --orange:#f05a28; --magenta:#d61f5c; --ok:#16a34a; --warn:#d97706; --bad:#dc2626;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;background:var(--bg);color:var(--text);padding:18px;line-height:1.45}
+.app{max-width:1480px;margin:0 auto;background:var(--card);border-radius:18px;box-shadow:0 12px 34px rgba(15,27,51,.10);overflow:hidden}
+.topbar{height:6px;background:linear-gradient(90deg,#b91c1c,var(--orange),var(--magenta))}
+header{padding:16px 24px 6px}
+.back{display:inline-flex;align-items:center;gap:6px;background:#334155;color:#f8fafc;text-decoration:none;padding:8px 14px;border-radius:8px;font-weight:600;font-size:13px;border:1px solid #475569;margin-bottom:12px}
+.back:hover{background:#1e293b}
+.title-row{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+h1{margin:0;color:var(--navy);font-size:26px;letter-spacing:-.3px}
+.subtitle{color:var(--muted);font-size:14px;margin-top:2px;max-width:820px}
+.week-tag{background:var(--navy);color:#fff;font-weight:700;font-size:12px;padding:6px 12px;border-radius:999px;white-space:nowrap}
+.week-tag b{color:#ffb38f}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px 24px 4px}
+@media (max-width:600px){.modes{grid-template-columns:1fr}}
+.mode{border:2px solid var(--line);background:#fff;border-radius:12px;padding:10px 14px;text-align:left;cursor:pointer;font:inherit;color:var(--muted)}
+.mode b{font-size:15px;display:block;color:inherit}
+.mode small{font-size:12.5px}
+.mode.on{border-color:var(--navy);background:#eef3ff;color:var(--navy)}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:10px 24px 0}
+.toolbar .grp{display:flex;gap:6px;align-items:center;flex-wrap:wrap;background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:6px 10px;font-size:12.5px}
+.toolbar .grp>span{font-weight:700;color:var(--muted);text-transform:uppercase;font-size:11px;letter-spacing:.5px;margin-right:2px}
+.lay{display:inline-flex;align-items:center;gap:5px;border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:4px 10px;font-weight:600;cursor:pointer;font-size:12.5px;font-family:inherit;color:var(--muted)}
+.lay i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.lay.on{color:var(--ink);border-color:#9fb3e0;background:#f8faff}
+.lay:not(.on) i{opacity:.3}
+.rt{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:4px 10px;font-weight:700;cursor:pointer;font-size:12.5px;font-family:inherit;color:var(--muted)}
+.rt.on{color:#fff;border-color:transparent}
+.main{display:grid;grid-template-columns:1fr;gap:14px;padding:12px 24px 16px}
+@media (max-width:1040px){.main{grid-template-columns:1fr}}
+.plan{border:1px solid var(--line);border-radius:14px;background:#f8fafc;overflow:hidden;position:relative}
+svg{display:block;width:100%;height:auto;user-select:none}
+.room{cursor:pointer}
+.room rect.bg{transition:fill .25s,opacity .25s}
+.audit .room{cursor:crosshair}
+.legend{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;font-size:12px;background:var(--soft);padding:8px 10px;border-radius:10px;border:1px solid var(--line);margin-top:10px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:14px;height:10px;border-radius:3px;display:inline-block}
+.side{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px;align-items:start}
+.card{background:var(--soft);border:1px solid var(--line);border-radius:14px;padding:13px 15px;font-size:13.5px}
+.badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.4px}
+.card h2{margin:6px 0 4px;font-size:18px;color:var(--navy)}
+.card h4{margin:10px 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--navy-2)}
+.card ul{margin:0;padding-left:18px}
+.card li{margin:3px 0}
+.card .book{margin-top:10px;padding-top:8px;border-top:1px dashed var(--line);font-size:12.5px;color:#475569}
+.rtags{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.rtags span{font-size:11px;font-weight:800;color:#fff;border-radius:999px;padding:2px 8px}
+.pills{display:flex;flex-wrap:wrap;gap:5px}
+.pill{border:1px solid var(--line);background:#fff;border-radius:999px;padding:3px 9px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit;color:var(--muted)}
+.pill.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.bal{padding:0 24px 16px}
+.bal .ctl{display:flex;gap:14px;flex-wrap:wrap;align-items:center;background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:8px 12px;font-size:13px;margin-bottom:8px}
+.bal .ctl label{display:flex;flex-direction:column;font-weight:700;font-size:12px;color:#475569;min-width:170px}
+.bal .ctl input{accent-color:var(--navy)}
+.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+@media (max-width:1040px){.kpis{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:560px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:9px 11px}
+.kpi .k{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.kpi .v{font-size:19px;font-weight:800;color:var(--ink)}
+.kpi .s{font-size:11.5px;color:var(--muted)}
+.score{display:flex;gap:8px}
+.score div{flex:1;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px;text-align:center}
+.score b{display:block;font-size:22px;color:var(--navy)}
+.score span{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase}
+.finding{background:#fff;border:1px solid var(--line);border-left:4px solid var(--ok);border-radius:10px;padding:8px 10px;margin:8px 0;font-size:12.5px}
+.finding.missed{border-left-color:var(--bad)}
+.finding .t{font-weight:800;font-size:13px}
+.finding b{color:var(--ink)}
+.btn{border:0;border-radius:10px;padding:9px 12px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit}
+.btn-ghost{background:#fff;border:1.5px solid var(--line);color:var(--text)}
+.btn-primary{background:var(--navy);color:#fff}
+.toast{position:absolute;left:50%;top:12px;transform:translateX(-50%);background:#0f1b33;color:#fff;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:600;opacity:0;transition:opacity .25s;pointer-events:none;max-width:90%;text-align:center}
+.toast.show{opacity:.95}
+details.teacher{margin:0 24px 22px;border:1px solid var(--line);border-radius:12px;padding:10px 14px;background:#fbfcfe;font-size:13.5px}
+details.teacher summary{cursor:pointer;font-weight:700;color:var(--navy)}
+details.teacher li{margin:3px 0}
+footer{padding:0 24px 18px;font-size:11.5px;color:var(--muted)}
+@keyframes pulse{0%{r:18;opacity:.9}100%{r:34;opacity:0}}
+.pulse{animation:pulse 1.2s ease-out infinite}
+
+.prod{display:flex;gap:8px;align-items:flex-start;background:#fff;border:1px solid var(--line);border-radius:10px;padding:6px 8px;margin-top:6px}
+.prod svg{flex:0 0 auto;width:74px!important;height:42px!important}.prod small{color:var(--muted);font-weight:700}.prod .ops{font-size:12px;color:#475569;margin-top:2px}
+.tb2{padding:10px 0 0;justify-content:center}
+.side .info{grid-column:span 2}
+@media (max-width:760px){.side .info{grid-column:auto}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar"></div>
+  <header>
+    <a class="back" href="index.html">⬅ Volver al Menú Principal</a>
+    <div class="title-row">
+      <div>
+        <h1>🏭 Planta de productos cárnicos: áreas y derivados</h1>
+        <div class="subtitle">¿Qué pasa con la carne después del andén? Una recepción y cuatro rutas de proceso. Sigue cada derivado, revisa las áreas y sus temperaturas, calcula el rendimiento del día y pon a prueba tu ojo de inspector sanitario.</div>
+      </div>
+      <div class="week-tag">Módulo III · Semana 1 · <b>Panorama del módulo</b></div>
+    </div>
+  </header>
+
+  <div class="modes">
+    <button class="mode on" data-m="explore"><b>🗺️ Explorar la planta</b><small>Rutas de los derivados, flujos, zonas sanitarias y temperaturas.</small></button>
+    <button class="mode" data-m="audit"><b>🕵️ Auditoría sanitaria</b><small>Encuentra las 8 no conformidades escondidas en el plano.</small></button>
+  </div>
+
+  <div class="main">
+    <div>
+      <div class="plan" id="planBox"><svg id="svg" viewBox="0 0 1000 640"></svg><div class="toast" id="toast"></div></div>
+      <div class="legend" id="legend"></div>
+  <div class="toolbar tb2" id="tbExplore">
+    <div class="grp"><span>Ruta</span><div id="routes" style="display:flex;gap:5px;flex-wrap:wrap"></div></div>
+    <div class="grp"><span>Flujos</span><div id="layers" style="display:flex;gap:5px;flex-wrap:wrap"></div></div>
+    <div class="grp"><span>Vista</span><button class="lay" id="zoneBtn"><i style="background:linear-gradient(90deg,#ef4444,#f59e0b,#10b981)"></i>Zonas sanitarias</button><button class="lay" id="tempBtn"><i style="background:linear-gradient(90deg,#7c3aed,#3b82f6,#e2e8f0,#ef4444)"></i>Temperaturas</button></div>
+  </div>
+
+    </div>
+    <div class="side" id="side"></div>
+  </div>
+
+  <div class="bal" id="balBox">
+    <div class="ctl">
+      <label>Carne en canal recibida por día <span id="v-C"></span><input type="range" id="C" min="500" max="5000" step="100" value="2000"></label>
+      <label>Rendimiento de deshuese <span id="v-rd"></span><input type="range" id="rd" min="60" max="80" step="1" value="70"></label>
+      <label>Carne para jamón <span id="v-pj"></span><input type="range" id="pj" min="0" max="100" step="5" value="30"></label>
+      <label>Carne para salchicha <span id="v-ps"></span><input type="range" id="ps" min="0" max="100" step="5" value="30"></label>
+      <label>Carne para chorizo <span id="v-pc"></span><input type="range" id="pc" min="0" max="100" step="5" value="20"></label>
+      <span style="font-size:12px;color:var(--muted)">El resto de la carne va a hamburguesa. Supuestos didácticos: jamón con 25 % de salmuera y 12 % de merma de cocción; en la salchicha la carne es el 55 % de la pasta y se pierde 8 % al cocer; chorizo con 90 % de carne y grasa; hamburguesa con 92 % de carne.</span>
+    </div>
+    <div class="kpis" id="kpis"></div>
+  </div>
+
+  <details class="teacher">
+    <summary>👩‍🏫 Notas para el docente</summary>
+    <ul>
+      <li><b>Propósito:</b> este recurso no corresponde a una figura del libro; da un panorama del módulo. Conecta la recepción (Semana 1) con lo que viene:
+        <ul>
+          <li>acondicionamiento y POES (Unidad 5);</li>
+          <li>elaboración de derivados (Unidad 6: hamburguesa, chorizo, salchicha, jamón, carne seca, nuggets y paté);</li>
+          <li>empaque y almacenamiento (Unidad 7).</li>
+        </ul></li>
+      <li><b>Uso sugerido (20–30 min):</b>
+        <ul>
+          <li>En «Explorar», recorrer cada ruta por separado y comparar: los crudos (hamburguesa y chorizo) nunca cruzan el horno, mientras que los cocidos, la carne seca y los nuggets sí.</li>
+          <li>Activar «Zonas sanitarias» y «Temperaturas» y discutir por qué hay dos filtros sanitarios y cámaras separadas.</li>
+          <li>Después, «Auditoría sanitaria» por equipos.</li>
+        </ul></li>
+      <li><b>Principios del plano:</b> se ilustran principios de higiene que la NOM-251-SSA1-2009 pide para evitar la contaminación cruzada:
+        <ul>
+          <li>marcha hacia adelante;</li>
+          <li>separación de lo crudo y lo cocido mediante hornos de doble puerta (OMS: «separar crudos y cocinados»);</li>
+          <li>personal de cada zona con su propio filtro sanitario;</li>
+          <li>almacenes separados para materia prima, producto terminado, ingredientes, empaque y químicos;</li>
+          <li>subproductos y residuos con salida propia.</li>
+        </ul></li>
+      <li><b>Temperaturas:</b>
+        <ul>
+          <li>La materia prima refrigerada va a 4 °C o menos y la congelada a −18 °C o menos.</li>
+          <li>El ambiente de las salas (≈ 10 °C) y la pasta fría en el cutter (≈ 12 °C o menos) son referencias comunes de la industria.</li>
+          <li>La temperatura interna de cocción depende del producto y del proceso validado: se verifica con termómetro y se registra.</li>
+        </ul></li>
+      <li><b>Rendimiento:</b> los supuestos (deshuese, salmuera, mermas, % de carne en la fórmula) son valores didácticos para comparar escenarios. En la Unidad 6 se calculan con las fórmulas reales de cada práctica.</li>
+      <li><b>Simplificaciones:</b> plano esquemático, sin escala. Las líneas de color representan el recorrido del producto entre áreas.</li>
+    </ul>
+  </details>
+  <footer>Recurso didáctico complementario · CECyBOOK Módulo III · Semana 1 · NOM-251-SSA1-2009 · NOM-194-SSA1-2004 · NOM-213-SSA1-2018 · FAO (2007) · OMS (2007).</footer>
+</div>
+
+<script>
+const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
+const NS='http://www.w3.org/2000/svg';
+const ZONE={
+  cru:{name:'Zona cruda (materia prima)',c:'#ef4444',fill:'#fee2e2'},
+  tra:{name:'Zona intermedia y transición',c:'#f59e0b',fill:'#fef3c7'},
+  lim:{name:'Zona limpia (producto cocido o empacado)',c:'#10b981',fill:'#d1fae5'},
+  ext:{name:'Área administrativa',c:'#94a3b8',fill:'#e2e8f0'}
+};
+const RT={cru:{n:'Crudos: hamburguesa y chorizo',s:'Crudos',c:'#dc2626'},coc:{n:'Cocidos: salchicha, jamón y paté',s:'Cocidos',c:'#2563eb'},sec:{n:'Carne seca',s:'Carne seca',c:'#92400e'},nug:{n:'Nuggets',s:'Nuggets',c:'#d97706'}};
+
+/* ===================== Áreas ===================== */
+const ROOMS=[
+ {id:'lab',p:'Laboratorio',s:'Laboratorio',n:'Laboratorio de control de calidad',x:40,y:50,w:170,h:110,z:'tra',T:20,r:['cru','coc','sec','nug'],
+  what:'Analiza muestras de la recepción, del proceso y del producto terminado, y libera los lotes.',eq:['Potenciómetro (pH) y termómetros','Balanza analítica y estufa (humedad)','Incubadora para microbiología'],
+  ctl:['Materia prima: temperatura, pH y evaluación sensorial','Proceso: temperatura de la pasta y temperatura interna de cocción','Producto terminado: microbiología según la NOM-213-SSA1-2018'],
+  dis:'Con ventanilla pasamuestras: el personal del laboratorio no cruza las salas de proceso.',book:'Submódulo 1: análisis físicos, químicos y microbiológicos (Unidades 2–4).'},
+ {id:'ofi',p:'Oficina y comedor',s:'Oficina',n:'Oficina, documentos y comedor',x:210,y:50,w:170,h:110,z:'ext',T:22,r:[],
+  what:'Área administrativa: bitácoras, POES, plan HACCP, fichas técnicas y trazabilidad. Comedor separado del proceso.',eq:['Archivo de bitácoras y registros','Comedor'],ctl:['No se consumen alimentos en las áreas de proceso','Lo que no se registra, no se puede demostrar'],
+  dis:'Sin comunicación directa con las salas: desde aquí solo se pasa a los vestidores.',book:'Bitácora de recepción y trazabilidad (Semana 1).'},
+ {id:'alm',p:'Ingredientes y aditivos',s:'Ingredientes',n:'Almacén de ingredientes no cárnicos y aditivos',x:380,y:50,w:180,h:110,z:'tra',T:18,r:['cru','coc','sec','nug'],
+  what:'Sal, especias, sales de cura, fosfatos, proteínas, almidones, pan molido y tripas.',eq:['Estantería sanitaria separada del piso','Báscula para pesar la fórmula','Pasamateriales hacia la sala de molienda'],
+  ctl:['Primeras entradas, primeras salidas (PEPS)','Sales de cura identificadas y pesadas con exactitud','Cada insumo con su lote para la trazabilidad'],
+  dis:'Los insumos entran por su propia puerta; el cartón y las tarimas de madera se quedan aquí.',book:'Unidad 6.2: ingredientes no cárnicos, aditivos y formulación.'},
+ {id:'ves',p:'Vestidores y filtros',s:'Vestidores',n:'Vestidores y filtros sanitarios (zona cruda | zona cocida)',x:560,y:50,w:230,h:110,z:'tra',T:22,r:[],
+  what:'El personal se cambia y pasa por un filtro sanitario distinto según la zona en que trabaja: cruda o de producto cocido.',eq:['Casilleros separados (ropa de calle y de trabajo)','Lavamanos de accionamiento no manual','Tapete sanitizante o lavabotas'],
+  ctl:['Uniforme limpio, cofia, cubrebocas, botas','Sin joyería ni celular','Personal enfermo no manipula alimentos (Figura 5)'],
+  dis:'Dos salidas: una a la zona cruda y otra a la zona cocida. El personal no cruza de una zona a otra.',book:'Figura 5 y simulador «BPM: ¿quién puede entrar al andén?».'},
+ {id:'emq',p:'Material de empaque',s:'Empaque',n:'Almacén de material de empaque',x:790,y:50,w:170,h:110,z:'tra',T:20,r:['cru','coc','sec','nug'],
+  what:'Bolsas para vacío, películas, charolas, tripas artificiales, cajas y etiquetas.',eq:['Anaqueles cerrados contra el polvo','Control de lotes de etiquetas'],ctl:['Material limpio y seco','Etiquetas con lote y caducidad correctos'],
+  dis:'Entra a la zona limpia sin pasar por la zona cruda.',book:'Unidad 7: envases, empaques y etiquetado.'},
+ {id:'rec',p:'Recepción',s:'Recepción',n:'Andén de recepción de canales y carne',x:40,y:170,w:110,h:150,z:'cru',T:4,r:['cru','coc','sec','nug'],
+  what:'Primer punto de control: documentos, vehículo, temperatura, evaluación sensorial, empaque y dictamen.',eq:['Andén con cortina de aire','Riel aéreo para canales','Báscula y termómetro de punzón'],
+  ctl:['Refrigerada ≤ 4 °C en el centro de la pieza','Congelada sin signos de descongelación','Sello, lote y documentos de origen'],
+  dis:'Zona cruda en contacto con el exterior. Lo aceptado pasa de inmediato a la cámara.',book:'Semana 1: Tabla 1, Figuras 2, 7 y 8. Simulador «Andén de recepción».'},
+ {id:'cam',p:'Cámaras de materia prima',s:'Cámaras MP',n:'Cámaras de materia prima',x:150,y:170,w:120,h:150,z:'cru',T:2,r:['cru','coc','sec','nug'],
+  what:'Refrigeración (0–4 °C) y congelación (≤ −18 °C) solo para materia prima cárnica.',eq:['Cámara de refrigeración con registrador','Cámara de congelación','Rieles y anaqueles sanitarios'],
+  ctl:['Temperatura registrada','PEPS','Nunca se guarda producto terminado aquí'],
+  dis:'Separada de las cámaras de producto terminado para evitar la contaminación cruzada.',book:'Cadena de frío (Semana 1, Figura 6).'},
+ {id:'des',p:'Despiece y deshuese',s:'Despiece',n:'Despiece, deshuese y acondicionamiento',x:270,y:170,w:120,h:150,z:'cru',T:10,r:['cru','coc','sec','nug'],
+  what:'Se separan cortes, se retiran hueso, cartílago, nervios y grasa no deseada; se filetea la carne para carne seca.',eq:['Mesas de acero inoxidable','Sierra de banda','Cuchillos y chairas con esterilizador'],
+  ctl:['Ambiente frío (≈ 10 °C)','Producto que no espere fuera de refrigeración','Limpieza y desinfección según los POES'],
+  dis:'Los huesos y recortes salen hacia el área de subproductos sin cruzar otras salas.',book:'Unidad 1.7 (cortes primarios, deshuese y rendimiento) y Unidad 5.4.'},
+ {id:'mol',p:'Molienda, emulsión y curado',s:'Molienda',n:'Formulación, molienda, emulsión y curado',x:390,y:170,w:120,h:150,z:'cru',T:8,r:['cru','coc','sec','nug'],
+  what:'Se pesa la fórmula; se muele, se mezcla, se hace la emulsión en cutter con hielo, se prepara la salmuera, se inyecta y se masajea.',eq:['Molino','Mezcladora','Cutter','Inyectora y masajeadora (tombler)'],
+  ctl:['Pasta fría (≈ 12 °C o menos en el cutter)','Sales de cura y fosfatos dentro del límite','Peso exacto de la fórmula'],
+  dis:'Los ingredientes llegan pesados desde el almacén, sin cartón ni tarimas.',book:'Unidad 6: 6.2–6.6.'},
+ {id:'emb',p:'Embutido y formado',s:'Embutido',n:'Embutido, moldeado, formado y empanizado',x:510,y:170,w:120,h:150,z:'cru',T:10,r:['cru','coc','nug'],
+  what:'La pasta se embute en tripa, se moldea (hamburguesa, jamón) o se forma y empaniza (nuggets).',eq:['Embutidora','Atadora o clipadora','Formadora y línea de empanizado','Moldes para jamón'],
+  ctl:['Peso y calibre','Equipo limpio y desinfectado','Producto que avance sin esperar'],
+  dis:'Desde aquí los crudos van a su empaque y los cocidos entran al horno.',book:'Unidad 6: 6.3–6.8.'},
+ {id:'hor',p:'Hornos: cocción y ahumado',s:'Hornos',n:'Hornos de cocción, secado y ahumado (doble puerta)',x:630,y:170,w:110,h:150,z:'tra',T:75,r:['coc','sec','nug'],
+  what:'El producto crudo entra por la zona cruda y sale cocido por la zona limpia. Es la barrera entre lo crudo y lo cocido.',eq:['Hornos de cocción y ahumado de doble puerta','Marmitas','Freidor continuo (nuggets)','Termómetro de punzón y registrador'],
+  ctl:['Temperatura interna del producto según el proceso validado (se verifica y registra)','Tiempo de cocción, secado o ahumado'],
+  dis:'Las dos puertas nunca se abren al mismo tiempo; el personal de cada lado es distinto.',book:'Unidad 6: 6.5–6.8 y 6.10 (HACCP).'},
+ {id:'enf',p:'Enfriamiento',s:'Enfriamiento',n:'Enfriamiento rápido y congelación',x:740,y:170,w:100,h:150,z:'lim',T:2,r:['coc','sec','nug'],
+  what:'Ducha fría y cámara de enfriamiento rápido; túnel de congelación para nuggets.',eq:['Ducha de agua fría','Cámara de enfriamiento rápido','Túnel de congelación'],
+  ctl:['Cruzar rápido la zona de peligro (5–60 °C)','Registro de tiempo y temperatura'],
+  dis:'Zona limpia: después de cocer, el riesgo principal es la recontaminación.',book:'Unidad 6.10: control de variables y HACCP.'},
+ {id:'emp',p:'Rebanado y empaque',s:'Rebanado',n:'Pelado, rebanado y empaque al vacío',x:840,y:170,w:120,h:150,z:'lim',T:8,r:['coc','sec','nug'],
+  what:'Se pelan las salchichas, se rebana el jamón y se empaca al vacío o en atmósfera modificada; se etiqueta.',eq:['Peladora','Rebanadora','Empacadora al vacío','Etiquetadora'],
+  ctl:['La sala más limpia de la planta','Equipo y personal exclusivos','Etiqueta con lote y caducidad'],
+  dis:'Recibe empaque desde su almacén y producto solo desde el enfriamiento.',book:'Unidad 7: empaque, etiquetado y vida útil.'},
+ {id:'sub',p:'Huesos y subproductos',s:'Subproductos',n:'Huesos, grasa y subproductos',x:40,y:330,w:110,h:130,z:'cru',T:4,r:[],
+  what:'Huesos, grasa no aprovechable y recortes se separan para venta, aprovechamiento o tratamiento.',eq:['Contenedores refrigerados identificados'],ctl:['Enfriar y dar destino diario','Salida propia'],
+  dis:'Nunca pasan por la zona limpia.',book:'Unidad 6.9: aprovechamiento de subproductos.'},
+ {id:'lav',p:'Lavado de equipo y utensilios',s:'Lavado',n:'Lavado de equipo y utensilios',x:150,y:330,w:240,h:130,z:'tra',T:45,r:[],
+  what:'Se lavan, enjuagan y desinfectan charolas, moldes, cuchillos y piezas de equipo.',eq:['Tarjas de tres secciones','Agua caliente','Escurrideros sanitarios'],ctl:['Detergente → enjuague → desinfectante (POES)','Concentración de cloro verificada'],
+  dis:'Los utensilios de la zona cruda y de la zona cocida se lavan por separado.',book:'Unidad 5: POES, limpieza y desinfección.'},
+ {id:'crd',p:'Empaque de crudos',s:'Empaque crudos',n:'Empaque y congelación de productos crudos',x:390,y:330,w:240,h:130,z:'cru',T:-18,r:['cru'],
+  what:'La hamburguesa y el chorizo se empacan y se refrigeran o congelan sin pasar por la zona cocida.',eq:['Empacadora','Congelador de placas','Etiquetadora'],ctl:['Empaque cerrado y etiquetado','Hamburguesa congelada a −18 °C o menos'],
+  dis:'Los productos crudos nunca cruzan a la zona de producto cocido.',book:'Unidad 6.3 (hamburguesa) y 6.4 (chorizo).'},
+ {id:'camR',p:'Cámara de refrigerados',s:'Cámara 0–4 °C',n:'Cámara de producto terminado refrigerado',x:630,y:330,w:165,h:130,z:'lim',T:2,r:['cru','coc','sec'],
+  what:'Producto terminado, empacado y etiquetado: salchicha, jamón, paté, chorizo y carne seca.',eq:['Cámara con registro continuo y alarma','Anaqueles sanitarios'],ctl:['0–4 °C','PEPS y control de vida útil','Solo producto terminado'],
+  dis:'Separada de la materia prima y de los congelados.',book:'Unidad 7.4: almacenamiento y rotación.'},
+ {id:'camC',p:'Cámara de congelados',s:'Congelados',n:'Cámara de producto terminado congelado',x:795,y:330,w:165,h:130,z:'lim',T:-20,r:['cru','nug'],
+  what:'Hamburguesas y nuggets congelados hasta su distribución.',eq:['Cámara a −18 °C o menos con alarma','Puertas de cierre rápido'],ctl:['≤ −18 °C sin fluctuaciones','PEPS'],
+  dis:'Separada de la cámara de refrigerados: temperaturas y productos distintos.',book:'Semana 1: carne congelada a −18 °C o menos (NOM-194-SSA1-2004).'},
+ {id:'ser',p:'Servicios: caldera, frío y químicos',s:'Servicios',n:'Servicios: caldera, refrigeración y almacén de químicos',x:40,y:470,w:180,h:130,z:'ext',T:30,r:[],
+  what:'Genera vapor y frío; guarda detergentes, desinfectantes y lubricantes grado alimenticio bajo llave.',eq:['Caldera','Compresores de refrigeración','Almacén de químicos con hojas de seguridad'],ctl:['Químicos identificados y lejos de alimentos','Agua potable para proceso'],
+  dis:'Fuera de las salas de proceso: solo llegan tuberías.',book:'Unidad 5.2: detergentes, sanitizantes y diluciones de cloro.'},
+ {id:'res',p:'Residuos',s:'Residuos',n:'Residuos y lavado de contenedores',x:220,y:470,w:170,h:130,z:'cru',T:22,r:[],
+  what:'Basura y residuos orgánicos en contenedores con tapa.',eq:['Contenedores con tapa y pedal','Área de lavado de contenedores'],ctl:['Retiro diario','Control de plagas'],
+  dis:'Salida propia, nunca por el embarque de producto terminado.',book:'BPM (NOM-251-SSA1-2009).'},
+ {id:'man',p:'Mantenimiento',s:'Mantenimiento',n:'Taller de mantenimiento',x:390,y:470,w:240,h:130,z:'ext',T:22,r:[],
+  what:'Reparación y ajuste de equipos; afilado de cuchillas del molino y del cutter.',eq:['Banco de trabajo y herramientas','Lubricantes grado alimenticio'],ctl:['Herramientas contadas al entrar y salir de las salas','Equipo reparado se limpia y desinfecta antes de usarse'],
+  dis:'Fuera de las salas de proceso: las herramientas no se quedan en las áreas de producción.',book:'Unidad 5.3: equipo para la transformación de la carne.'},
+ {id:'dock',p:'Andén de embarque refrigerado',s:'Embarque',n:'Andén de embarque refrigerado',x:630,y:470,w:330,h:130,z:'lim',T:4,r:['cru','coc','sec','nug'],
+  what:'El producto terminado sale en vehículos refrigerados, por un andén distinto al de recepción.',eq:['Andén con abrigo y cortina de aire','Termómetro y registro de carga'],ctl:['Vehículo limpio y refrigerado','Remisión con lotes'],
+  dis:'Marcha hacia adelante: la materia prima entra por un extremo y el producto sale por el otro.',book:'Cadena de valor (Semana 1, Figura 1).'}
+];
+
+/* ===================== Flujos ===================== */
+const FLOWS={
+  cru:{n:'Crudos',c:'#dc2626',w:6,paths:[[[8,226],[95,226],[210,226],[330,226],[450,226],[570,226],[570,380],[712,380],[712,535],[992,535]],[[570,380],[570,412],[860,412],[860,535]]]},
+  coc:{n:'Cocidos',c:'#2563eb',w:6,paths:[[[8,238],[95,238],[210,238],[330,238],[450,238],[570,238],[685,238],[790,238],[900,238],[900,312],[702,312],[702,535],[992,535]]]},
+  sec:{n:'Carne seca',c:'#92400e',w:6,paths:[[[8,250],[95,250],[210,250],[330,250],[450,250],[450,268],[685,268],[685,250],[790,250],[912,250],[912,304],[694,304],[694,535],[992,535]]]},
+  nug:{n:'Nuggets',c:'#d97706',w:6,paths:[[[8,262],[95,262],[210,262],[330,262],[450,262],[590,262],[685,262],[790,262],[885,262],[885,535],[992,535]]]},
+  per:{n:'Personal',c:'#7c3aed',w:4,paths:[[[675,8],[675,105],[600,105],[600,210]],[[675,105],[770,105],[770,210]]]},
+  ins:{n:'Insumos y empaque',c:'#f97316',w:4,paths:[[[470,8],[470,120],[450,200]],[[930,8],[930,120],[900,200]]]},
+  sub:{n:'Subproductos',c:'#65a30d',w:4,paths:[[[330,300],[330,318],[95,318],[95,395]]]},
+  lim:{n:'Utensilios y limpieza',c:'#0ea5e9',w:3,paths:[[[450,312],[450,322],[300,322],[300,395]],[[130,535],[130,470],[200,470],[200,420]]]},
+  res:{n:'Residuos',c:'#78716c',w:3,paths:[[[95,440],[95,466],[305,466],[305,560],[305,632]]]}
+};
+const activeLayers=new Set(['cru','coc','sec','nug']);
+
+/* ===================== Hallazgos ===================== */
+const HAZ=[
+ {id:1,x:940,y:296,room:'emp',t:'Bote de basura sin tapa en la sala de rebanado y empaque',risk:'Es la zona más limpia de la planta: la basura atrae plagas y contamina el producto cocido, que ya no se vuelve a cocer.',fix:'Residuos en contenedores con tapa y pedal, retirados con frecuencia por la ruta de residuos.',ref:'NOM-251-SSA1-2009 (manejo de residuos).'},
+ {id:2,x:685,y:186,room:'hor',t:'Carro con carne cruda que pasa de embutido a empaque sin entrar al horno',risk:'Contaminación cruzada: el producto crudo llega a la zona limpia y contamina el producto cocido.',fix:'Flujo siempre hacia adelante; el único paso de la zona cruda a la limpia es a través del horno.',ref:'OMS (2007): separar alimentos crudos y cocinados.'},
+ {id:3,x:765,y:350,room:'camR',t:'La cámara de refrigerados marca 9 °C',risk:'Por arriba de 4 °C las bacterias se multiplican y se acorta la vida útil del producto terminado.',fix:'Mantener 0–4 °C con registro y alarma; revisar puertas y equipo de frío.',ref:'Simulador «Cadena de valor y de frío»; zona de peligro 5–60 °C.'},
+ {id:4,x:655,y:420,room:'camR',t:'Media canal cruda colgada en la cámara de producto terminado',risk:'La materia prima cruda puede gotear y contaminar el producto listo para consumirse.',fix:'Materia prima solo en sus cámaras; el producto terminado, en cámaras propias.',ref:'NOM-251-SSA1-2009 (almacenamiento separado).'},
+ {id:5,x:868,y:300,room:'emp',t:'Operario sin cofia ni cubrebocas en la sala de empaque',risk:'Cabello y gotitas de saliva con Staphylococcus aureus sobre un producto que ya no se cocerá.',fix:'Entrar solo por el filtro sanitario de la zona cocida con el equipo completo.',ref:'Figura 5 (higiene personal).'},
+ {id:6,x:300,y:290,room:'des',t:'Bidón de cloro sobre la mesa de despiece',risk:'Peligro químico: un derrame o una confusión contamina la carne.',fix:'Químicos en su almacén, identificados, y solo la dilución necesaria en recipientes rotulados.',ref:'Unidad 5.2 (POES y diluciones de cloro).'},
+ {id:7,x:490,y:296,room:'mol',t:'Cajas de cartón y tarima de madera dentro de la sala de molienda',risk:'El cartón y la madera traen polvo, humedad y plagas, y no se pueden lavar ni desinfectar.',fix:'Desempacar en el almacén y pasar los insumos en contenedores lavables.',ref:'NOM-251-SSA1-2009 (materias primas y almacenes).'},
+ {id:8,x:790,y:300,room:'enf',t:'Coladera sin rejilla en la sala de enfriamiento',risk:'Reservorio de Listeria monocytogenes, que crece en frío y contamina el producto cocido.',fix:'Coladeras sanitarias con rejilla y trampa; limpieza y desinfección diarias.',ref:'NOM-213-SSA1-2018 (productos cárnicos procesados).'}
+];
+
+/* ===================== Productos por ruta ===================== */
+const PRODS={
+ cru:[{k:'ham',n:'Hamburguesa',f:'Crudo moldeado (6.3)',ops:'Recepción → cámara → deshuese → molienda → mezclado → moldeado → empaque y congelación (≤ −18 °C) → embarque'},{k:'cho',n:'Chorizo',f:'Embutido crudo fresco (6.4)',ops:'Recepción → cámara → deshuese → molienda gruesa → mezclado con chiles y especias → embutido → empaque → refrigeración → embarque'}],
+ coc:[{k:'sal',n:'Salchicha',f:'Emulsión cocida (6.5)',ops:'Emulsión en cutter con hielo → embutido → cocción y ahumado → ducha fría → pelado y empaque al vacío'},{k:'jam',n:'Jamón cocido',f:'Curado cocido de pieza entera (6.6)',ops:'Deshuese → inyección de salmuera y masajeado → moldeado → cocción → enfriamiento → rebanado y empaque'},{k:'pat',n:'Paté de hígado',f:'Aprovechamiento de subproductos (6.9)',ops:'Hígado muy frío → pasta fina en cutter → llenado en moldes → cocción → enfriamiento → empaque'}],
+ sec:[{k:'sec',n:'Carne seca',f:'Secado y ahumado (6.7)',ops:'Fileteado delgado → marinado con sal → secado y ahumado → enfriamiento → empaque. Se conserva porque baja su actividad de agua.'}],
+ nug:[{k:'nug',n:'Nuggets',f:'Reestructurado empanizado y congelado (6.8)',ops:'Molienda → formado → rebozado y empanizado → prefreído → congelación rápida → empaque → congelados (≤ −18 °C)'}]
+};
+function prodIcon(k){const g={
+   ham:`<ellipse cx="50" cy="40" rx="38" ry="12" fill="#7c2d12"/><ellipse cx="50" cy="35" rx="38" ry="12" fill="#c2564a"/>${[[34,32],[56,37],[66,30],[42,40]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="2" fill="#f8e7d6"/>`).join('')}`,
+   cho:`${[0,1,2].map(i=>`<path d="M${10+i*28},36 q14 -20 28 0 q-14 20 -28 0z" fill="#b91c1c" stroke="#7f1d1d"/>`).join('')}`,
+   sal:`${[0,1,2].map(i=>`<rect x="14" y="${18+i*11}" width="72" height="9" rx="4.5" fill="#e98a7a" stroke="#b45a4a"/>`).join('')}`,
+   jam:`<path d="M18,24 h52 v24 h-52z" fill="#f4a9a0" stroke="#c97f74"/><path d="M18,24 l10 -10 h52 l-10 10z" fill="#f7bcb4" stroke="#c97f74"/><path d="M70,24 l10 -10 v24 l-10 10z" fill="#e0938a" stroke="#c97f74"/>`,
+   pat:`<rect x="28" y="14" width="44" height="36" rx="6" fill="#bfdbfe" opacity=".6" stroke="#64748b"/><rect x="30" y="24" width="40" height="24" rx="4" fill="#a8775e"/><rect x="26" y="10" width="48" height="7" rx="3" fill="#475569"/>`,
+   sec:`${[0,1,2,3].map(i=>`<path d="M${16+i*18},${14+i*3} q6 14 2 30 q-8 -2 -10 -4 q4 -14 -2 -26z" fill="#5b1d14" stroke="#3b0f0a"/>`).join('')}`,
+   nug:`${[[24,30],[50,26],[74,32],[38,42],[62,42]].map(([x,y])=>`<path d="M${x-12},${y} q2 -9 12 -9 q12 0 12 9 q-2 9 -12 8 q-12 0 -12 -8z" fill="#e0a64a" stroke="#a16207"/>`).join('')}`};
+  return `<svg viewBox="0 0 100 56" width="74" height="42">${g[k]}</svg>`;}
+
+/* ===================== Estado y construcción ===================== */
+const S={mode:'explore',sel:'hor',zones:false,temps:false,route:'all',found:new Set(),misses:0,t0:null,ended:false};
+const svg=$('#svg');
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);(parent||svg).appendChild(e);return e;}
+function txt(x,y,s,attrs,parent){const t=el('text',Object.assign({x,y,'font-family':'Segoe UI, system-ui, sans-serif'},attrs),parent);t.textContent=s;return t;}
+function tempColor(T){if(T<=-10)return'#ddd6fe';if(T<0)return'#e0e7ff';if(T<=8)return'#dbeafe';if(T<=25)return'#f1f5f9';if(T<=55)return'#fed7aa';return'#fecaca';}
+let gRooms,gEquip,gFlows,gHaz,gMarks;
+function build(){
+  svg.innerHTML='';
+  const defs=el('defs',{});const pat=el('pattern',{id:'grid',width:20,height:20,patternUnits:'userSpaceOnUse'},defs);el('path',{d:'M20 0H0V20',fill:'none',stroke:'#e2e8f0','stroke-width':1},pat);
+  el('rect',{x:0,y:0,width:1000,height:640,fill:'url(#grid)'});
+  txt(2,204,'Camión',{'font-size':10.5,fill:'#64748b','font-weight':700});
+  el('rect',{x:4,y:212,width:32,height:22,rx:4,fill:'#cbd5e1',stroke:'#64748b'});
+  txt(640,22,'Acceso personal',{'font-size':11,fill:'#64748b','font-weight':700});
+  txt(420,22,'Acceso insumos',{'font-size':11,fill:'#64748b','font-weight':700});
+  txt(880,22,'Acceso empaque',{'font-size':11,fill:'#64748b','font-weight':700});
+  txt(966,522,'Salida',{'font-size':10.5,fill:'#64748b','font-weight':700});
+  txt(260,628,'Salida de residuos',{'font-size':10.5,fill:'#64748b','font-weight':700});
+  gRooms=el('g',{});
+  ROOMS.forEach(r=>{
+    const g=el('g',{class:'room','data-id':r.id},gRooms);
+    el('rect',{class:'bg',x:r.x,y:r.y,width:r.w,height:r.h,fill:'#ffffff',stroke:'#334155','stroke-width':4},g);
+    const mx=Math.max(10,Math.floor((r.w-(r.w>140?62:14))/7.2));const words=r.p.split(' ');let line='',lines=[];words.forEach(w=>{if((line+' '+w).trim().length>mx){lines.push(line.trim());line=w;}else line+=' '+w;});lines.push(line.trim());
+    lines.filter(Boolean).slice(0,3).forEach((l,i)=>txt(r.x+8,r.y+18+i*13.5,l,{'font-size':11.5,'font-weight':800,fill:'#12306b'},g));
+    const tg=el('g',{class:'ttag'},g);el('rect',{x:r.x+r.w-54,y:r.y+r.h-26,width:48,height:18,rx:9,fill:'#0f1b33',opacity:.85},tg);txt(r.x+r.w-30,r.y+r.h-13,(r.T>0&&r.id==='hor'?'≥ ':'')+r.T+' °C',{'font-size':10.5,'font-weight':800,fill:'#fff','text-anchor':'middle'},tg);
+    g.addEventListener('click',ev=>onRoomClick(r.id,ev));
+  });
+  // muro interno de vestidores y barrera de hornos
+  el('line',{x1:675,y1:50,x2:675,y2:160,stroke:'#334155','stroke-width':2.5,'stroke-dasharray':'6 4','pointer-events':'none'},gRooms);
+  txt(617,148,'Filtro crudo',{'font-size':9.5,fill:'#b91c1c','font-weight':700,'text-anchor':'middle','pointer-events':'none'},gRooms);txt(733,148,'Filtro cocido',{'font-size':9.5,fill:'#047857','font-weight':700,'text-anchor':'middle','pointer-events':'none'},gRooms);
+  const doors=[[40,236,'v'],[150,236,'v'],[270,236,'v'],[390,236,'v'],[510,236,'v'],[630,236,'v'],[740,236,'v'],[840,236,'v'],[600,160,'h'],[770,160,'h'],[675,50,'h'],[450,160,'h'],[470,50,'h'],[900,160,'h'],[930,50,'h'],[95,320,'h'],[570,320,'h'],[700,320,'h'],[877,320,'h'],[300,320,'h'],[450,320,'h'],[705,460,'h'],[872,460,'h'],[960,535,'v'],[305,600,'h'],[95,460,'h'],[200,460,'h'],[630,395,'v']];
+  doors.forEach(d=>{if(d[2]==='v')el('rect',{x:d[0]-3,y:d[1]-14,width:6,height:28,fill:'#f8fafc'},gRooms);else el('rect',{x:d[0]-14,y:d[1]-3,width:28,height:6,fill:'#f8fafc'},gRooms);});
+  el('line',{x1:630,y1:172,x2:630,y2:318,stroke:'#f59e0b','stroke-width':3,'stroke-dasharray':'5 4','pointer-events':'none'},gRooms);
+  el('line',{x1:740,y1:172,x2:740,y2:318,stroke:'#10b981','stroke-width':3,'stroke-dasharray':'5 4','pointer-events':'none'},gRooms);
+  for(let i=0;i<4;i++)el('line',{x1:960,y1:526+i*6,x2:968,y2:526+i*6,stroke:'#93c5fd','stroke-width':2},gRooms);
+  gEquip=el('g',{'pointer-events':'none'});drawEquip();
+  gFlows=el('g',{'pointer-events':'none'});
+  gHaz=el('g',{'pointer-events':'none'});drawHazCues();
+  gMarks=el('g',{'pointer-events':'none'});
+  paint();drawFlows();
+}
+function drawEquip(){
+  const g=gEquip,lab=(x,y,s)=>txt(x,y,s,{'font-size':8.5,fill:'#64748b','text-anchor':'middle'},g);
+  const tank=(x,y,r,l,f='#e2e8f0')=>{el('circle',{cx:x,cy:y,r,fill:f,stroke:'#64748b','stroke-width':1.5},g);if(l)lab(x,y+r+10,l);};
+  const box=(x,y,w,h,l,f='#e2e8f0')=>{el('rect',{x,y,width:w,height:h,rx:4,fill:f,stroke:'#64748b','stroke-width':1.5},g);if(l)lab(x+w/2,y+h+10,l);};
+  box(55,96,46,20,'pH · T');box(115,96,40,20,'Estufa');box(165,96,36,20,'Incub.');
+  box(228,92,60,28,'Bitácoras','#f1f5f9');box(300,92,64,28,'Comedor','#f1f5f9');
+  ['Sal','Especias','Sales cura','Tripas'].forEach((l,i)=>box(392+i*42,94,36,24,l,'#f1f5f9'));
+  for(let i=0;i<4;i++)el('rect',{x:572+i*12,y:84,width:10,height:26,fill:'#e2e8f0',stroke:'#64748b'},g);lab(596,122,'Casilleros');box(632,92,34,18,'','#e0f2fe');lab(649,122,'Lavamanos');
+  for(let i=0;i<4;i++)el('rect',{x:685+i*12,y:84,width:10,height:26,fill:'#e2e8f0',stroke:'#64748b'},g);lab(709,122,'Casilleros');box(740,92,34,18,'','#e0f2fe');lab(757,122,'Lavamanos');
+  ['Bolsas','Etiquetas','Cajas'].forEach((l,i)=>box(805+i*50,94,42,24,l,'#f1f5f9'));
+  // recepción y cámaras
+  el('line',{x1:50,y1:270,x2:140,y2:270,stroke:'#64748b','stroke-width':2.5},g);for(let i=0;i<3;i++){el('path',{d:`M${66+i*28},270 v4 l-6 10 q6 22 6 26 q6 -4 6 -26 l-6 -10`,fill:'#f2b0a8',stroke:'#c97f74'},g);}lab(95,316,'Riel y canales');
+  box(160,274,46,30,'','#dbeafe');lab(183,316,'0–4 °C');box(214,274,46,30,'','#e0e7ff');lab(237,316,'−18 °C');
+  box(282,276,96,24,'Mesas de despiece');box(400,276,36,24,'Molino');tank(462,288,12,'Cutter');
+  box(522,272,34,30,'Embutidora');box(564,280,58,20,'Formadora');
+  box(642,270,86,34,'Horno doble puerta','#fed7aa');
+  box(750,278,80,24,'Ducha y túnel','#dbeafe');
+  box(850,278,40,24,'Rebanad.');box(898,278,54,24,'Vacío');
+  tank(80,410,13,'Huesos');tank(118,410,13,'Grasa');
+  [0,1,2].forEach(i=>box(170+i*68,392,58,32,['Lavar','Enjuagar','Desinfectar'][i],'#e0f2fe'));
+  box(410,392,90,32,'Empacadora');box(520,392,90,32,'Congelador placas','#ede9fe');
+  for(let i=0;i<3;i++)el('rect',{x:655+i*48,y:368,width:38,height:70,fill:'#f1f5f9',stroke:'#64748b'},g);
+  for(let i=0;i<3;i++)el('rect',{x:820+i*48,y:368,width:38,height:70,fill:'#ede9fe',stroke:'#64748b'},g);
+  box(60,520,44,30,'Caldera');box(116,520,44,30,'Frío');box(170,520,40,30,'Químicos','#fef3c7');
+  box(240,520,44,30,'Orgánicos');box(296,520,44,30,'Reciclab.');box(420,515,90,34,'Banco de trabajo','#f1f5f9');box(530,515,70,34,'Refacciones','#f1f5f9');
+  for(let i=0;i<3;i++)el('rect',{x:660+i*100,y:520,width:80,height:46,rx:4,fill:'#e2e8f0',stroke:'#64748b'},g);lab(795,580,'Tarimas de producto terminado');
+  person(g,604,300,true);
+}
+function person(g,x,y,ok){el('circle',{cx:x,cy:y-14,r:6,fill:'#fcd34d',stroke:'#92400e'},g);
+  if(ok){el('path',{d:`M${x-7} ${y-17} Q${x} ${y-27} ${x+7} ${y-17} Z`,fill:'#fff',stroke:'#64748b'},g);el('rect',{x:x-5,y:y-13,width:10,height:4,fill:'#bfdbfe'},g);}
+  else el('path',{d:`M${x-6} ${y-18} q3 -5 6 -3 q3 -4 6 2`,fill:'none',stroke:'#78350f','stroke-width':2},g);
+  el('rect',{x:x-6,y:y-7,width:12,height:16,rx:3,fill:ok?'#fff':'#60a5fa',stroke:'#64748b'},g);}
+function drawHazCues(){
+  const g=gHaz;
+  el('rect',{x:931,y:286,width:18,height:22,rx:2,fill:'#78350f'},g);el('path',{d:'M929 286 l6 -6 h10',stroke:'#1f2937','stroke-width':2,fill:'none'},g);
+  el('path',{d:'M600 186 L770 186',stroke:'#78716c','stroke-width':3,'stroke-dasharray':'5 4'},g);el('rect',{x:672,y:177,width:26,height:14,rx:2,fill:'#94a3b8',stroke:'#475569'},g);el('ellipse',{cx:685,cy:178,rx:10,ry:5,fill:'#e8958b'},g);el('circle',{cx:676,cy:193,r:3,fill:'#1f2937'},g);el('circle',{cx:694,cy:193,r:3,fill:'#1f2937'},g);
+  el('rect',{x:744,y:340,width:42,height:20,rx:3,fill:'#0f172a'},g);txt(765,355,'9.0°C',{'font-size':11,'font-weight':700,fill:'#f87171','text-anchor':'middle',style:'font-family:monospace'},g);
+  el('line',{x1:640,y1:400,x2:670,y2:400,stroke:'#475569','stroke-width':2},g);el('path',{d:'M650 400 v6 l-5 9 q5 22 5 26 q5 -4 5 -26 l-5 -9',fill:'#f2b0a8',stroke:'#c97f74'},g);
+  person(g,868,312,false);
+  el('rect',{x:290,y:278,width:18,height:24,rx:3,fill:'#2563eb'},g);txt(299,294,'⚠',{'font-size':10,fill:'#fff','text-anchor':'middle'},g);
+  el('rect',{x:472,y:300,width:36,height:6,fill:'#a16207'},g);el('rect',{x:476,y:284,width:28,height:16,fill:'#c39c66',stroke:'#8a6338'},g);
+  el('rect',{x:782,y:292,width:16,height:16,fill:'#1f2937',stroke:'#475569'},g);
+}
+function paint(){
+  if(gHaz)gHaz.style.display=S.mode==='audit'?'':'none';
+  $$('.room').forEach(g=>{const r=ROOMS.find(x=>x.id===g.dataset.id),bg=g.querySelector('rect.bg');
+    let fill='#ffffff';if(S.zones)fill=ZONE[r.z].fill;else if(S.temps)fill=tempColor(r.T);else if(S.mode==='explore'&&S.sel===r.id)fill='#eef3ff';
+    bg.setAttribute('fill',fill);
+    const dim=S.mode==='explore'&&S.route!=='all'&&!r.r.includes(S.route)&&!['ves','ser','lab','ofi','lav','sub','res'].includes(r.id);
+    g.style.opacity=dim?0.35:1;
+    const sel=S.mode==='explore'&&S.sel===r.id;bg.setAttribute('stroke',sel?'#f05a28':'#334155');bg.setAttribute('stroke-width',sel?5:4);
+    g.querySelector('.ttag').style.display=S.temps&&S.mode==='explore'?'':'none';});
+  renderLegend();
+}
+let dots=[];
+function polyLen(p){let L=0;for(let i=1;i<p.length;i++)L+=Math.hypot(p[i][0]-p[i-1][0],p[i][1]-p[i-1][1]);return L;}
+function pointAt(p,d){for(let i=1;i<p.length;i++){const s=Math.hypot(p[i][0]-p[i-1][0],p[i][1]-p[i-1][1]);if(d<=s){const f=d/s;return[p[i-1][0]+(p[i][0]-p[i-1][0])*f,p[i-1][1]+(p[i][1]-p[i-1][1])*f];}d-=s;}return p[p.length-1];}
+function drawFlows(){
+  gFlows.innerHTML='';dots=[];if(S.mode!=='explore')return;
+  for(const k of activeLayers){if(RT[k]&&S.route!=='all'&&S.route!==k)continue;const F=FLOWS[k];
+    F.paths.forEach(p=>{el('polyline',{points:p.map(q=>q.join(',')).join(' '),fill:'none',stroke:F.c,'stroke-width':F.w,'stroke-opacity':.35,'stroke-linejoin':'round','stroke-linecap':'round'},gFlows);
+      const L=polyLen(p),n=Math.max(2,Math.round(L/60));for(let i=0;i<n;i++){const c=el('circle',{r:F.w>4?4.5:3.5,fill:F.c,stroke:'#fff','stroke-width':1},gFlows);dots.push({c,p,L,d:i*L/n});}});}
+}
+let last=performance.now();
+function loop(now){requestAnimationFrame(loop);const dt=Math.min(0.05,(now-last)/1000);last=now;
+  dots.forEach(o=>{o.d=(o.d+dt*45)%o.L;const q=pointAt(o.p,o.d);o.c.setAttribute('cx',q[0]);o.c.setAttribute('cy',q[1]);});
+  if(S.mode==='audit'&&!S.ended&&$('#aTime'))$('#aTime').textContent=fmtTime((Date.now()-S.t0)/1000);}
+const fmtTime=s=>`${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
+
+/* ===================== interacción ===================== */
+function svgPoint(ev){const pt=svg.createSVGPoint();pt.x=ev.clientX;pt.y=ev.clientY;return pt.matrixTransform(svg.getScreenCTM().inverse());}
+function onRoomClick(id,ev){if(S.mode==='explore'){S.sel=id;paint();renderSide();return;}auditClick(svgPoint(ev));}
+svg.addEventListener('click',ev=>{if(S.mode==='audit'&&!ev.target.closest('.room'))auditClick(svgPoint(ev));});
+function auditClick(p){if(S.ended)return;const h=HAZ.find(h=>!S.found.has(h.id)&&Math.hypot(h.x-p.x,h.y-p.y)<30);
+  if(h){S.found.add(h.id);mark(h,true);toast('✅ ¡Hallazgo! '+h.t);if(S.found.size===HAZ.length)endAudit();}
+  else{S.misses++;const c=el('circle',{cx:p.x,cy:p.y,r:10,fill:'none',stroke:'#94a3b8','stroke-width':2},gMarks);setTimeout(()=>c.remove(),700);toast('Aquí no hay una no conformidad. Sigue buscando.');}
+  renderSide();}
+function mark(h,ok){const g=el('g',{},gMarks);el('circle',{cx:h.x,cy:h.y,r:20,fill:ok?'rgba(22,163,74,.15)':'rgba(220,38,38,.15)',stroke:ok?'#16a34a':'#dc2626','stroke-width':2.5},g);
+  el('circle',{cx:h.x+16,cy:h.y-16,r:10,fill:ok?'#16a34a':'#dc2626'},g);txt(h.x+16,h.y-12,String(h.id),{'font-size':11,'font-weight':800,fill:'#fff','text-anchor':'middle'},g);}
+let toastT;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2200);}
+function endAudit(){S.ended=true;S.tEnd=(Date.now()-S.t0)/1000;HAZ.forEach(h=>{if(!S.found.has(h.id)){mark(h,false);el('circle',{cx:h.x,cy:h.y,r:18,fill:'none',stroke:'#dc2626','stroke-width':2,class:'pulse'},gMarks);}});renderSide();}
+function startAudit(){S.found=new Set();S.misses=0;S.t0=Date.now();S.ended=false;S.hintTxt='';gMarks.innerHTML='';renderSide();}
+
+/* ===================== panel lateral ===================== */
+function renderSide(){
+  const side=$('#side');
+  if(S.mode==='explore'){
+    const r=ROOMS.find(x=>x.id===S.sel),Z=ZONE[r.z];
+    const rc=S.route!=='all'?`<div class="card"><span class="badge" style="background:${RT[S.route].c};color:#fff">Ruta</span><h2>${RT[S.route].n}</h2>${PRODS[S.route].map(p=>`<div class="prod">${prodIcon(p.k)}<div><b>${p.n}</b> <small>${p.f}</small><div class="ops">${p.ops}</div></div></div>`).join('')}</div>`:'';
+    side.innerHTML=`${rc}<div class="card"><div class="pills">${ROOMS.map(x=>`<button class="pill ${x.id===S.sel?'on':''}" data-r="${x.id}">${x.s}</button>`).join('')}</div></div>
+     <div class="card info"><span class="badge" style="background:${Z.fill};color:${Z.c};border:1px solid ${Z.c}">${Z.name}</span> <span class="badge" style="background:${tempColor(r.T)};color:#0f1b33;border:1px solid #cbd5e1">🌡️ ${r.id==='hor'?'producto ≥ T interna validada':'≈ '+r.T+' °C'}</span>
+     <h2>${r.n}</h2><div>${r.what}</div>
+     ${r.r.length?`<div class="rtags">${r.r.map(k=>`<span style="background:${RT[k].c}">${RT[k].s}</span>`).join('')}</div>`:''}
+     <h4>🔧 Equipos</h4><ul>${r.eq.map(e=>`<li>${e}</li>`).join('')}</ul>
+     <h4>🔬 Controles</h4><ul>${r.ctl.map(e=>`<li>${e}</li>`).join('')}</ul>
+     <h4>📐 Diseño sanitario</h4><div>${r.dis}</div>
+     <div class="book">📘 <b>En tu CECYBOOK:</b> ${r.book}</div></div>`;
+    side.querySelectorAll('.pill').forEach(b=>b.addEventListener('click',()=>{S.sel=b.dataset.r;paint();renderSide();}));
+  }else{
+    const found=HAZ.filter(h=>S.found.has(h.id)),missed=S.ended?HAZ.filter(h=>!S.found.has(h.id)):[];const pct=Math.round(S.found.size/HAZ.length*100);
+    side.innerHTML=`<div class="card"><h2 style="margin-top:0">🕵️ Auditoría sanitaria</h2><div>Haz clic donde veas una <b>no conformidad</b>. Hay <b>${HAZ.length}</b> en el plano.</div>
+     <div class="score" style="margin-top:10px"><div><b>${S.found.size}/${HAZ.length}</b><span>Hallazgos</span></div><div><b>${S.misses}</b><span>Clics fallidos</span></div><div><b id="aTime">${S.ended?fmtTime(S.tEnd):'0:00'}</b><span>Tiempo</span></div></div>
+     <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn btn-ghost" id="hint" ${S.ended?'disabled':''}>💡 Pista</button><button class="btn btn-ghost" id="finish" ${S.ended?'disabled':''}>🏁 Terminar</button><button class="btn btn-primary" id="restartA">↺ Reiniciar</button></div>
+     ${S.hintTxt&&!S.ended?`<div style="margin-top:8px;font-size:12.5px;color:#9a3412">${S.hintTxt}</div>`:''}
+     ${S.ended?`<div style="margin-top:10px;font-weight:700;color:${pct===100?'#166534':'#9a3412'}">${pct===100?'🏆 ¡Auditoría perfecta!':`Encontraste ${S.found.size} de ${HAZ.length}. Revisa los marcados en rojo.`}</div>`:''}</div>
+     <div class="card"><h4 style="margin-top:0">📋 Informe de hallazgos</h4>${found.length+missed.length===0?'<div style="color:var(--muted)">Aún no registras hallazgos.</div>':''}
+     ${[...found.map(h=>[h,false]),...missed.map(h=>[h,true])].map(([h,m])=>`<div class="finding ${m?'missed':''}"><div class="t">${h.id}. ${h.t}${m?' (no detectado)':''}</div><div><b>Riesgo:</b> ${h.risk}</div><div><b>Acción correctiva:</b> ${h.fix}</div><div style="color:#64748b"><b>Referencia:</b> ${h.ref}</div></div>`).join('')}</div>`;
+    $('#hint').onclick=()=>{const rem=HAZ.filter(h=>!S.found.has(h.id));if(!rem.length)return;const h=rem[Math.floor(Math.random()*rem.length)];S.hintTxt=`💡 Hay algo que revisar en: <b>${ROOMS.find(x=>x.id===h.room).n}</b>.`;renderSide();};
+    $('#finish').onclick=endAudit;$('#restartA').onclick=startAudit;
+  }
+}
+
+/* ===================== rendimiento ===================== */
+function renderKPIs(){
+  let C=+$('#C').value,rd=+$('#rd').value,pj=+$('#pj').value,ps=+$('#ps').value,pc=+$('#pc').value;
+  if(pj+ps+pc>100){pc=Math.max(0,100-pj-ps);$('#pc').value=pc;}
+  const ph=100-pj-ps-pc;
+  $('#v-C').textContent=C.toLocaleString('es-MX')+' kg';$('#v-rd').textContent=rd+' %';$('#v-pj').textContent=pj+' %';$('#v-ps').textContent=ps+' %';$('#v-pc').textContent=pc+' % · hamburguesa: '+ph+' %';
+  const M=C*rd/100, H=C-M, mj=M*pj/100, ms=M*ps/100, mc=M*pc/100, mh=M*ph/100;
+  const jam=mj*1.25*0.88, sal=ms/0.55*0.92, cho=mc/0.90, ham=mh/0.92;
+  const f=n=>Math.round(n).toLocaleString('es-MX');
+  $('#kpis').innerHTML=`
+   <div class="kpi"><div class="k">Carne deshuesada</div><div class="v">${f(M)} kg</div><div class="s">${rd} % de ${f(C)} kg en canal</div></div>
+   <div class="kpi"><div class="k">Huesos y recortes</div><div class="v">${f(H)} kg</div><div class="s">subproductos</div></div>
+   <div class="kpi"><div class="k">Jamón cocido</div><div class="v">${f(jam)} kg</div><div class="s">de ${f(mj)} kg de pierna</div></div>
+   <div class="kpi"><div class="k">Salchicha</div><div class="v">${f(sal)} kg</div><div class="s">de ${f(ms)} kg de carne</div></div>
+   <div class="kpi"><div class="k">Chorizo</div><div class="v">${f(cho)} kg</div><div class="s">de ${f(mc)} kg de carne</div></div>
+   <div class="kpi"><div class="k">Hamburguesa</div><div class="v">${f(ham)} kg</div><div class="s">de ${f(mh)} kg de carne</div></div>`;
+}
+['C','rd','pj','ps','pc'].forEach(id=>$('#'+id).addEventListener('input',renderKPIs));
+
+/* ===================== leyenda y controles ===================== */
+function renderLegend(){
+  const Lg=$('#legend');
+  if(S.mode==='audit'||S.zones){Lg.innerHTML=Object.values(ZONE).map(z=>`<span><i class="sw" style="background:${z.fill};border:1px solid ${z.c}"></i>${z.name}</span>`).join('')+(S.mode==='audit'?'<span>🔍 Haz clic donde veas un problema</span>':'');return;}
+  if(S.temps){Lg.innerHTML=[['#ddd6fe','≤ −10 °C congelación'],['#e0e7ff','−10 a 0 °C'],['#dbeafe','0–8 °C refrigeración'],['#f1f5f9','ambiente'],['#fed7aa','25–55 °C'],['#fecaca','> 55 °C cocción']].map(([c,l])=>`<span><i class="sw" style="background:${c};border:1px solid #94a3b8"></i>${l}</span>`).join('');return;}
+  Lg.innerHTML='<span>Haz clic en un área para ver su información</span>'+[...activeLayers].map(k=>`<span><i class="sw" style="background:${FLOWS[k].c}"></i>${FLOWS[k].n}</span>`).join('')+'<span style="color:#64748b">Línea punteada naranja: entrada de hornos · verde: salida a zona limpia</span>';
+}
+$('#routes').innerHTML=`<button class="rt on" data-r="all" style="background:#12306b">Todas</button>`+Object.entries(RT).map(([k,v])=>`<button class="rt" data-r="${k}">${v.s}</button>`).join('');
+$$('.rt').forEach(b=>b.addEventListener('click',()=>{S.route=b.dataset.r;$$('.rt').forEach(x=>{const on=x===b;x.classList.toggle('on',on);x.style.background=on?(x.dataset.r==='all'?'#12306b':RT[x.dataset.r].c):'#fff';});
+  if(S.route!=='all'){const first={cru:'crd',coc:'hor',sec:'hor',nug:'emb'}[S.route];S.sel=first;}paint();drawFlows();renderSide();}));
+$('#layers').innerHTML=Object.entries(FLOWS).filter(([k])=>!RT[k]).map(([k,F])=>`<button class="lay ${activeLayers.has(k)?'on':''}" data-l="${k}"><i style="background:${F.c}"></i>${F.n}</button>`).join('');
+$$('#layers .lay').forEach(b=>b.addEventListener('click',()=>{const k=b.dataset.l;activeLayers.has(k)?activeLayers.delete(k):activeLayers.add(k);b.classList.toggle('on');drawFlows();renderLegend();}));
+$('#zoneBtn').addEventListener('click',()=>{S.zones=!S.zones;if(S.zones){S.temps=false;$('#tempBtn').classList.remove('on');}$('#zoneBtn').classList.toggle('on',S.zones);paint();});
+$('#tempBtn').addEventListener('click',()=>{S.temps=!S.temps;if(S.temps){S.zones=false;$('#zoneBtn').classList.remove('on');}$('#tempBtn').classList.toggle('on',S.temps);paint();});
+$$('.mode').forEach(b=>b.addEventListener('click',()=>{S.mode=b.dataset.m;$$('.mode').forEach(x=>x.classList.toggle('on',x===b));
+  $('#tbExplore').style.display=S.mode==='explore'?'':'none';$('#balBox').style.display=S.mode==='explore'?'':'none';
+  $('#planBox').classList.toggle('audit',S.mode==='audit');
+  if(S.mode==='audit'){S.zones=false;S.temps=false;$('#zoneBtn').classList.remove('on');$('#tempBtn').classList.remove('on');startAudit();}else gMarks.innerHTML='';
+  paint();drawFlows();renderSide();}));
+build();renderSide();renderKPIs();requestAnimationFrame(loop);
+</script>
+</body>
+</html>
